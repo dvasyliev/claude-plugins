@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier/flat";
 import { createNodeResolver, importX } from "eslint-plugin-import-x";
+import jsxA11y from "eslint-plugin-jsx-a11y-x";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
@@ -31,6 +32,9 @@ export default defineConfig([
       "@typescript-eslint/consistent-type-imports": "error",
     },
   },
+  // Accessibility: the strict jsx-a11y rules. The eslint-community fork, since
+  // eslint-plugin-jsx-a11y does not install next to ESLint 10.
+  { files: ["**/*.{jsx,tsx}"], ...jsxA11y.configs.strict },
   // File-size limit. Tests are exempt.
   {
     files: ["**/*.{ts,tsx,mts,mjs}"],

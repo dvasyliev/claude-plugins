@@ -3,11 +3,19 @@ import boundaries from "eslint-plugin-boundaries";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import tseslint from "typescript-eslint";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // Accessibility: the strict jsx-a11y rules, as errors. eslint-config-next
+  // already registers the plugin (with a few of its rules as warnings), so only
+  // the rules are added here.
+  {
+    files: ["**/*.{jsx,tsx}"],
+    rules: jsxA11y.flatConfigs.strict.rules,
+  },
   // Type-aware rules (floating promises, misused async, etc.).
   {
     files: ["**/*.{ts,tsx,mts,cts}"],

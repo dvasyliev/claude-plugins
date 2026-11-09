@@ -181,7 +181,7 @@
       }
     },
     "eslint": {
-      "description": "ESLint with type-aware typescript-eslint rules, no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
+      "description": "ESLint with type-aware typescript-eslint rules, strict accessibility rules (jsx-a11y), no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
       "category": "code-quality",
       "detect": {
         "devDependencies": ["eslint"]
@@ -217,13 +217,18 @@
         "typescript-eslint"
       ],
       "frameworkDevDependencies": {
-        "nextjs": ["eslint-config-next", "eslint-plugin-boundaries"],
+        "nextjs": [
+          "eslint-config-next",
+          "eslint-plugin-boundaries",
+          "eslint-plugin-jsx-a11y"
+        ],
         "react": [
           "@eslint/js",
           "globals",
           "eslint-plugin-react-hooks",
           "eslint-plugin-react-refresh",
-          "eslint-plugin-import-x"
+          "eslint-plugin-import-x",
+          "eslint-plugin-jsx-a11y-x"
         ]
       }
     },
