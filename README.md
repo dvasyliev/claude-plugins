@@ -116,6 +116,7 @@ Pick only what you need. `core` is always on, you pick one linter, and `tailwind
 | `context7` | Lets Claude read the current docs of your libraries, not old ones from memory. |
 | `libraries` | One chosen library for each job, so Claude does not add new ones. |
 | `next-docs` | Gives Claude the docs of your exact Next.js version. |
+| `resilience` | Calls to other services get time limits and safe retries, failures show an error you can act on, and a change clears old cached data. |
 | `page-speed` | Rules for fast pages, a browser tool to measure them, and a size limit for your code bundle (React). |
 
 <!-- COURSES:START -->

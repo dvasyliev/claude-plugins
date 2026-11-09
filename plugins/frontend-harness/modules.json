@@ -469,6 +469,12 @@
         }
       }
     },
+    "resilience": {
+      "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write.",
+      "category": "best-practices",
+      "audit": [".claude/rules/external-requests.md"],
+      "recommended": true
+    },
     "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
       "category": "performance",
