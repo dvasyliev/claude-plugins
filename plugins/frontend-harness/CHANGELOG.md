@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.43.0 (2026-11-10)
+
+### Features
+
+- add the resilience module for calls to outside services (a27371f)
+- lint accessibility with the strict jsx-a11y rules (b7f5ca6)
+
 ## 0.42.0 (2026-11-07)
 
 ### Features
