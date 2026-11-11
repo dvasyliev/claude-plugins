@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.43.2 (2026-11-11)
+
+### Fixes
+
+- find the plugin scope to update by where it is installed (22431b8)
+
 ## 0.43.1 (2026-11-11)
 
 ### Fixes
