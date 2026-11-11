@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.43.1 (2026-11-11)
+
+### Fixes
+
+- install superpowers at user scope (874dafa)
+
 ## 0.43.0 (2026-11-10)
 
 ### Features
