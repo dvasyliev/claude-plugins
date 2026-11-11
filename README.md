@@ -61,6 +61,16 @@ claude plugin install frontend-harness@frontend-harness --scope local
 
 `--scope local` turns it on only for you in this project; `--scope project` for everyone on the project; `--scope user` in all your projects.
 
+For several projects, install it once with `--scope user`, turn it off for all of them in `~/.claude/settings.json` and on in each project's `.claude/settings.json`. Each project keeps its own setup; they share one plugin version.
+
+```json
+// ~/.claude/settings.json
+{ "enabledPlugins": { "frontend-harness@frontend-harness": false } }
+
+// <project>/.claude/settings.json
+{ "enabledPlugins": { "frontend-harness@frontend-harness": true } }
+```
+
 Then open Claude Code in the project and run `/frontend-harness:setup`. It asks which framework and modules you want, adds the files, keeps what the project already had, runs the checks and commits. The files it adds: hooks, rules and settings in `.claude/`, git hooks in `.githooks/`, configs for the tools you picked, and scripts in `package.json`.
 
 ## Update
