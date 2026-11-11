@@ -157,7 +157,7 @@
       },
       "install": [
         {
-          "command": "claude plugin install superpowers@claude-plugins-official --scope project"
+          "command": "claude plugin install superpowers@claude-plugins-official --scope user"
         }
       ]
     },
