@@ -19,6 +19,15 @@ Caching APIs (`"use cache"`, `cacheLife`, `cacheTag`) follow the Next.js docs bu
 
 - Set each cache lifetime by how often that data changes: short for data that changes outside the app, long for data that barely changes. Cache an expensive aggregate as a whole, not only its parts.
 - After a write, expire the cache tag of what changed instead of shortening the cache for everyone.
+- A cached function that calls other cached functions takes on their tags, so expiring any of them expires it too. When it must not follow those tags, it reads that data through uncached functions.
+
+### Serverless hosting
+
+Only when the app runs as serverless functions, not as one long-running server. What the host provides, needs set up and bills changes often: read it in the host's current docs (through Context7 when available), never from memory.
+
+- `"use cache"` lives in one instance's memory, so most visits find it empty. Data that is slow to get and read on many visits goes in `"use cache: remote"`, with a `cacheLife` profile of its own in `next.config` when no built-in one fits. Without a shared cache behind it, `"use cache: remote"` is in memory too: check in the host's docs whether it provides one or what to set up. One user's data goes there only when the source is slow; otherwise read it from the source.
+- When the host or a store bills reads and writes or caps them on its plan, estimate what one page view costs in each, times the expected users, against those limits before choosing where to cache.
+- The remote cache starts empty after each deployment. When the first visits after one are too slow, expensive parts that barely change and belong to no one user (public details of an item, say) can go in a store that outlives deployments; ask the user before adding a store the project does not have. Read many keys in one command, give every key a time to live, put a version in the key name so a new shape does not read the old, keep the end-to-end tests' keys apart, and read the source when the store fails. Never keep a copy of data the user changes there: the source stays the only truth.
 
 ## Measure
 
@@ -26,5 +35,6 @@ Before changing a page, and again before calling the change done:
 
 - Time it twice, signed in: `curl -w "ttfb=%{time_starttransfer} total=%{time_total} size=%{size_download}"`. The first call is cold, the second warm. In dev a code edit can empty the cache, so cold numbers there are rough.
 - With the `chrome-devtools` MCP server, record a performance trace: the top of the page shows (LCP) before the slow parts, and navigation is instant.
+- When a change is meant to speed up the first visit after a deployment, time that visit on production too. When bot protection blocks `curl` there, time `fetch` from the page in the `chrome-devtools` browser, signed in with the session cookie.
 - Count what the page sends: items rendered and HTML size. Give the numbers before and after the change in the final message.
 - Targets: warm page under 1 s, HTML under ~300 KB, no media requests through an optimizing proxy.

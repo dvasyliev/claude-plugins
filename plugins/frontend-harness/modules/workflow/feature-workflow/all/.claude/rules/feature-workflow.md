@@ -5,6 +5,16 @@
 - For every user-facing feature, use the `feature-workflow` skill before writing any code.
 - After a large change made without that skill (a refactor, the fixes of an audit), invoke the `improve-harness` skill.
 
+## Setup outside the code
+
+When a change needs something the code cannot set up itself (a store or bucket on the host, a binding, an environment variable, a setting in the host's dashboard):
+
+- Read how to set it up and what it costs in the service's current docs (through Context7 when available), never from memory.
+- Before building it, tell the user what it needs and what it costs on their plan.
+- Do what the service's CLI can do after the user agrees; for a dashboard step, give the exact place and value.
+- Write each new environment variable into the project's docs, and into its example env file when it has one, so the next deployment has it.
+- Before calling the work done, check the setup is in place (the CLI lists it, or the deployed page uses it); until then, say plainly that it is not.
+
 ## Several agents on `main`
 
 - Work on `main`; no branches, worktrees or PRs, even when a skill suggests them.

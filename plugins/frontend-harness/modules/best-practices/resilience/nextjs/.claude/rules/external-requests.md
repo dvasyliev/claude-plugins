@@ -11,6 +11,7 @@ Every call to a service outside the app (an API, a database over HTTP, an auth p
 ## One function per service
 
 - Every call to a service goes through one shared function that sets the time limit, retries and error handling below. A call never sets them on its own.
+- Code that sends many requests to one service at once (one per item of a list) caps how many run together, below the point where the service starts refusing them. Make the limiter inside the function that sends them: one at module level is shared by cached functions and requests, so a cached function can end up waiting on another request's work.
 
 ## Time limits
 
