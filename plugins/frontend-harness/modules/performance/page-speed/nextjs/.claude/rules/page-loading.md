@@ -38,3 +38,4 @@ Before changing a page, and again before calling the change done:
 - When a change is meant to speed up the first visit after a deployment, time that visit on production too. When bot protection blocks `curl` there, time `fetch` from the page in the `chrome-devtools` browser, signed in with the session cookie.
 - Count what the page sends: items rendered and HTML size. Give the numbers before and after the change in the final message.
 - Targets: warm page under 1 s, HTML under ~300 KB, no media requests through an optimizing proxy.
+- A page on the dev server that fails with "… is not a function" (or another missing export) for new code that type-checks means the server is stale. Do not restart a dev server you did not start: run `npm run build` and measure and check on `npx next start -p <the next port>`, then stop it.
