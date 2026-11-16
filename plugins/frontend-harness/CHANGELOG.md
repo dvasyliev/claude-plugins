@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.44.0 (2026-11-16)
+
+### Features
+
+- find e2e elements by their whole name (f239392)
+- add Next.js rules for e2e locators, server actions and a stale dev server (5ce11fa)
+- add serverless caching, outside-code setup and request concurrency rules (11ce5b6)
+
 ## 0.43.2 (2026-11-11)
 
 ### Fixes
