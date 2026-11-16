@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.44.1 (2026-11-16)
+
+### Fixes
+
+- trim the serverless caching rules (73bdbf1)
+
 ## 0.44.0 (2026-11-16)
 
 ### Features
