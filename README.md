@@ -121,7 +121,7 @@ Pick only what you need. `core` is always on, you pick one linter, and `tailwind
 | `e2e` | Runs browser tests (Playwright) and checks pages for accessibility problems before you push. |
 | `commitlint` | Checks that commit messages follow one format. |
 | `pre-commit` | Before each commit, looks for passwords and keys and checks the changed files. |
-| `sync-deps` | Runs `npm install` for you after a pull that changed packages. |
+| `sync-deps` | Runs the package install (`npm install` or `pnpm install`) for you after a pull that changed the lockfile. |
 | `best-practices` | Gives Claude Vercel's React and Next.js guides. |
 | `context7` | Lets Claude read the current docs of your libraries, not old ones from memory. |
 | `libraries` | One chosen library for each job, so Claude does not add new ones. |
@@ -168,7 +168,7 @@ I teach developers what I use in production: practical, project-based courses on
 
 Have a question, found a bug or have an idea? [Open an issue](https://github.com/dvasyliev/frontend-harness/issues). Pull requests are welcome.
 
-After you clone the repo, run `npm install` once. It turns on git checks for your commits. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org), for example `fix(frontend-harness): ...`. Versions and the changelog are made from these messages, so do not change them by hand. Commit rules: [CLAUDE.md](CLAUDE.md). How the plugin is built: [plugin's CLAUDE.md](plugins/frontend-harness/CLAUDE.md).
+After you clone the repo, run `pnpm install` once. It turns on git checks for your commits. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org), for example `fix(frontend-harness): ...`. Versions and the changelog are made from these messages, so do not change them by hand. Commit rules: [CLAUDE.md](CLAUDE.md). How the plugin is built: [plugin's CLAUDE.md](plugins/frontend-harness/CLAUDE.md).
 
 ## License
 
