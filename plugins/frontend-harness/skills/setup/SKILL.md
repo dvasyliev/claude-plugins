@@ -5,7 +5,7 @@ description: Use when the user wants to set up the frontend harness (Claude Code
 
 # Set up the harness
 
-This skill picks the modules that fit the project, runs `tasks/apply.mjs` to write them, and finishes what the script cannot: merge conflicts, `CLAUDE.md`, MCP sign-in, and a green `npm run check`.
+This skill picks the modules that fit the project, runs `tasks/apply.mjs` to write them, and finishes what the script cannot: merge conflicts, `CLAUDE.md`, MCP sign-in, and a green `check` script.
 
 **Template:** `$HARNESS_TEMPLATE` if set (a local checkout of this plugin, to try changes), else this plugin's folder: two folders up from this skill's base directory. Its version is `version` in `.claude-plugin/plugin.json`.
 
@@ -75,7 +75,7 @@ Then read the `harness:` lines it printed, `git status` and `git diff`:
 
 1. **MCP:** for each server in `.claude/harness.json` `mcp`, check `claude mcp list`. A server that needs sign-in: tell the user to run `/mcp`.
 2. **Typed links (Next.js with TypeScript):** if `next.config` has no `typedRoutes: true`, add it, so the type check rejects a link to a page that does not exist. Run `npm run typecheck` and fix each link it flags: an address written in the code gets the type `Route` from `next`; only an address built at run time (from the current page, say) is cast with `as Route`. Commit this on its own.
-3. **Checks:** run `npm install`, then `npm run check`. When a check fails on code the harness did not touch (for example `dupes` in an old project), ask: fix it now, or turn the check off (rerun step 3 with the check's name added to `skipChecks`).
+3. **Checks:** run the package install (`npm install`, or `pnpm install` when the project has `pnpm-lock.yaml`), then the `check` script. When a check fails on code the harness did not touch (for example `dupes` in an old project), ask: fix it now, or turn the check off (rerun step 3 with the check's name added to `skipChecks`).
 4. **`CLAUDE.md`:** if "What this is" or "Architecture" still hold the `<...>` placeholders, read the project (`package.json`, README, folders, main modules) and write them, then show the user what you wrote.
 5. **Commit** only the files the harness wrote or you merged (including the removal of `.claude/harness-base/` in a project from before 0.28), with the message `chore(harness): install harness <version>` or `chore(harness): update harness to <version>`.
 6. Tell the user, in short: modules installed or removed, version, what still needs them (`/mcp` sign-in, a conflict you could not merge).

@@ -27,6 +27,8 @@ const folderPort = () => 3000 + [...basename(process.cwd())].reduce((h, c) => (h
 const port = devPort ?? folderPort();
 const skip = new Set(answers.skipChecks);
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
+// The project's package manager: pnpm when it has a pnpm lockfile or says so in `packageManager`, else npm.
+const pm = existsSync("pnpm-lock.yaml") || String(pkg.packageManager ?? "").startsWith("pnpm") ? "pnpm" : "npm";
 
 function fail(message) {
   console.error(`harness: ${message}`);
@@ -308,15 +310,16 @@ const md = [
   "## Commands",
   "",
   "```bash",
-  "npm run dev".padEnd(24) + `# http://localhost:${port}`,
-  ...Object.entries(scripts).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.description}`),
+  `${pm} run dev`.padEnd(24) + `# http://localhost:${port}`,
+  ...Object.entries(scripts).map(([name, s]) => `${pm} run ${name}`.padEnd(24) + `# ${s.description}`),
   "```",
   "",
+  ...(pm === "pnpm" ? ["The project uses pnpm: where a harness rule or skill says `npm run <script>` or `npx <tool>`, run `pnpm run <script>` or `pnpm exec <tool>`.", ""] : []),
 ].join("\n");
 write(".claude/rules/harness.md", md);
 
 // Hooks must be executable, and git must use .githooks/ (when a module brings git hooks)
-// even before the next npm install; without them, git goes back to the project's own hooks.
+// even before the next install; without them, git goes back to the project's own hooks.
 // A project whose git hooks live elsewhere (husky) keeps them there.
 for (const dir of [".claude/hooks", ".githooks"]) {
   if (!existsSync(dir)) continue;
@@ -329,22 +332,22 @@ try {
   } else if (!hooksPath || hooksPath === ".githooks") execSync("git config core.hooksPath .githooks", { stdio: "ignore" });
   else notes.push(`git runs its hooks from ${hooksPath}, so the harness git hooks in .githooks/ do not run; call them from there`);
 } catch {
-  // Not a git repo yet; `npm install` runs `prepare` later.
+  // Not a git repo yet; the install runs `prepare` later.
 }
 
 console.log(`harness ${version}: ${modules.map(([id]) => id).join(", ")} on ${frameworkId}`);
 for (const note of notes) console.log(`harness: ${note}`);
 
-// npm packages last, so every file above is written even when the install fails.
+// Packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
 const frameworkDeps = modules.flatMap(([, m]) => m.frameworkDevDependencies?.[frameworkId] ?? []);
 const missing = [...new Set([...collect("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));
 if (missing.length && !noInstall) {
   try {
-    execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });
+    execSync(`${pm === "pnpm" ? "pnpm add --save-dev" : "npm install --save-dev"} ${missing.join(" ")}`, { stdio: "inherit" });
   } catch {
-    fail(`npm install failed; install these by hand: ${missing.join(" ")}`);
+    fail(`${pm} install failed; install these by hand: ${missing.join(" ")}`);
   }
 }
 

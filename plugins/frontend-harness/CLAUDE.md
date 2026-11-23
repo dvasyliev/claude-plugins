@@ -46,6 +46,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 - Modules stand alone: no file needs another module to be installed. A step that only applies with another module says so in plain text ("With `e2e`: ...").
 - The project's own work wins: edited files are merged, not overwritten; a script, setting or hooks path the project set stays; the harness takes back only what it added.
 - `modules.json` is ordered by category; checks run in module order, so cheap ones come first.
+- Package manager: npm or pnpm, whichever the project has (`pnpm-lock.yaml` means pnpm). Scripts and hooks check for the lockfile and use `pnpm` / `pnpm exec`, else `npm` / `npx`. Prose may write `npm run <script>` or `npx <tool>`; `apply.mjs` adds a line to `.claude/rules/harness.md` that says what to run instead in a pnpm project. Where a step only needs "the script", say "the `check` script".
 - Everything in the plugin is written in English.
 - Files are written for any project: no file, route, component or service name from the project where a fix was found.
 
@@ -61,5 +62,5 @@ A module that goes takes its files (unless the project edited them), scripts, se
   HARNESS_NO_INSTALL=1 node <plugin>/tasks/apply.mjs '{"framework": "react", "modules": ["core", "oxlint"]}'
   ```
 
-  `HARNESS_NO_INSTALL=1` skips npm packages and install commands.
+  `HARNESS_NO_INSTALL=1` skips packages and install commands.
 - Release: on push, as the repository's `CLAUDE.md` says (version, `CHANGELOG.md` and tag come from the commits). Projects get it with `claude plugin update`, or right away with `HARNESS_TEMPLATE` set to this folder.

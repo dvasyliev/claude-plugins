@@ -10,6 +10,9 @@ path=$(jq -r '.tool_input.file_path // empty' <<<"$input")
 
 cd "$CLAUDE_PROJECT_DIR" || exit 0
 
+# The project's package manager.
+if [ -f pnpm-lock.yaml ]; then pm=pnpm; else pm=npm; fi
+
 # Skip files outside the project; its tools do not cover them.
 [[ "$path" == "$CLAUDE_PROJECT_DIR"/* ]] || exit 0
 ext=${path##*.}
@@ -17,7 +20,7 @@ ext=${path##*.}
 # Run each file check from .claude/harness.json that covers this extension.
 # A blocking check (lint) makes Claude fix the errors right away; the others (format) run silently.
 while IFS=$'\t' read -r name script block; do
-  if ! out=$(npm run -s "$script" -- "$path" 2>&1 </dev/null) && [ "$block" = "true" ]; then
+  if ! out=$("$pm" run -s "$script" -- "$path" 2>&1 </dev/null) && [ "$block" = "true" ]; then
     {
       echo "$name failed on $path. Fix these before moving on:"
       tail -n 40 <<<"$out"

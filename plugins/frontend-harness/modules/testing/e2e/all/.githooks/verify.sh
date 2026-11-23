@@ -20,7 +20,7 @@ state() {
 stamp="$(git rev-parse --git-dir)/e2e-green"
 before=$(state)
 rm -f "$stamp"
-npx playwright test "$@" || exit $?
+if [ -f pnpm-lock.yaml ]; then pnpm exec playwright test "$@" || exit $?; else npx playwright test "$@" || exit $?; fi
 
 # Only the whole suite counts, and only for code that stayed the same.
 if [ $# -eq 0 ] && [ -n "$before" ] && [ "$(state)" = "$before" ]; then

@@ -27,10 +27,11 @@ else
 	# Run the end-to-end tests. If they fail, the push is cancelled.
 	# On macOS caffeinate keeps the Mac awake: a Mac that sleeps fails random tests.
 	echo "pre-push: running npm run verify"
+	if [ -f pnpm-lock.yaml ]; then pm=pnpm; else pm=npm; fi
 	if command -v caffeinate >/dev/null 2>&1; then
-		caffeinate -dims npm run -s verify || exit 1
+		caffeinate -dims "$pm" run -s verify || exit 1
 	else
-		npm run -s verify || exit 1
+		"$pm" run -s verify || exit 1
 	fi
 fi
 

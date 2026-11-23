@@ -354,7 +354,7 @@
         },
         "prepare": {
           "command": "git config core.hooksPath .githooks",
-          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
+          "description": "turns on the git hooks in .githooks/ (the install runs it)"
         }
       },
       "devDependencies": [
@@ -377,7 +377,7 @@
       "scripts": {
         "prepare": {
           "command": "git config core.hooksPath .githooks",
-          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
+          "description": "turns on the git hooks in .githooks/ (the install runs it)"
         }
       },
       "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"],
@@ -395,7 +395,7 @@
       "scripts": {
         "prepare": {
           "command": "git config core.hooksPath .githooks",
-          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
+          "description": "turns on the git hooks in .githooks/ (the install runs it)"
         }
       },
       "devDependencies": [
@@ -405,12 +405,12 @@
       ]
     },
     "sync-deps": {
-      "description": "post-merge and post-checkout git hooks that run npm install when package-lock.json changed.",
+      "description": "post-merge and post-checkout git hooks that run the install when the lockfile changed.",
       "category": "git",
       "scripts": {
         "prepare": {
           "command": "git config core.hooksPath .githooks",
-          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
+          "description": "turns on the git hooks in .githooks/ (the install runs it)"
         }
       }
     },

@@ -70,10 +70,10 @@ Otherwise write the chosen findings as the **audit spec**, `docs/superpowers/spe
 The fixes keep what the user can do in the app; how it loads and looks may change where a rule asks for it (batches, skeletons, caching). A fix to a file the harness writes goes into the template first (the setup skill's "Improving the harness itself"); what only this project needs is then added in the project. One area at a time, in the order of the audit spec; libraries one library at a time. For each area:
 
 1. **With `feature-workflow`** (it brings superpowers): plan the area with `superpowers:writing-plans`, the audit spec as its spec, against the code as it is now (an earlier area may have moved it); one task per finding, a finding over about 15 files split by folder or route. Write the plan's path on the area's line, then carry it out as `.claude/rules/plan-execution.md` says. **Without it:** make the fixes yourself and commit them.
-2. Run `npm run check`. If it fails, say in a line what broke and ask: fix it (recommended), undo the area (`git revert` its commits, newest first; never `git reset`) and go on with the next, or stop here.
+2. Run the `check` script. If it fails, say in a line what broke and ask: fix it (recommended), undo the area (`git revert` its commits, newest first; never `git reset`) and go on with the next, or stop here.
 3. Tick the area in the audit spec (an undone one with "(undone)" after it) and commit that.
 
-With `e2e`: after the last area, run `npm run verify` once; moved pages can break in ways the types do not catch.
+With `e2e`: after the last area, run the `verify` script once; moved pages can break in ways the types do not catch.
 
 Going on later: start at the first unticked area of the audit spec; a plan already written there goes on from where its execution stopped.
 
