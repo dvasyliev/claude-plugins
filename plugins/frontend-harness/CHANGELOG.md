@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.45.0 (2026-11-23)
+
+### Features
+
+- work with npm or pnpm, whichever the project uses (54b6471)
+
 ## 0.44.1 (2026-11-16)
 
 ### Fixes
