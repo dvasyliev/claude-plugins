@@ -35,24 +35,75 @@ test('a stack without a linter fails', () => {
 });
 
 test('old module names become their new ones, and the split core modules are added', () => {
-  const old = { stacks: ['react'], modules: ['core', 'oxlint', 'knip', 'jscpd'] };
+  const old = { stacks: ['react'], modules: ['core', 'oxlint', 'unused', 'jscpd'] };
   const dir = makeProject({ 'package.json': REACT_PKG, '.claude/harness.json': JSON.stringify(old) });
   const r = apply(dir, {});
   assert.equal(r.status, 0, r.stderr);
   const json = harnessJson(dir);
-  for (const id of ['unused', 'dupes', 'prettier', 'types']) assert.ok(json.modules.includes(id), id);
-  for (const id of ['knip', 'jscpd']) assert.ok(!json.modules.includes(id), id);
+  for (const id of ['knip', 'dupes', 'prettier', 'tsc']) assert.ok(json.modules.includes(id), id);
+  for (const id of ['unused', 'jscpd', 'vulture', 'deptry']) assert.ok(!json.modules.includes(id), id);
   const names = json.checks.map((c) => c.name);
   for (const name of ['knip', 'dupes', 'types', 'format']) assert.ok(names.includes(name), name);
 });
 
 test('passed answers with old module names are renamed too', () => {
   const dir = makeProject({ 'package.json': REACT_PKG });
-  const r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'knip', 'jscpd'] });
+  const r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'unused', 'jscpd', 'e2e'] });
   assert.equal(r.status, 0, r.stderr);
   const json = harnessJson(dir);
-  assert.ok(json.modules.includes('unused') && json.modules.includes('dupes'));
-  assert.ok(!json.modules.includes('knip') && !json.modules.includes('jscpd'));
+  for (const id of ['knip', 'dupes', 'playwright']) assert.ok(json.modules.includes(id), id);
+  for (const id of ['unused', 'jscpd', 'e2e']) assert.ok(!json.modules.includes(id), id);
+});
+
+test('a react + python project with the old modules updates to the new ones that apply, and again changes nothing', () => {
+  const old = {
+    stacks: ['react', 'python'],
+    srcDirs: { python: ['app'] },
+    modules: ['core', 'oxlint', 'ruff', 'types', 'unused', 'unit', 'best-practices', 'resilience', 'e2e'],
+  };
+  const dir = makeProject({
+    'package.json': REACT_PKG,
+    'pyproject.toml': '[project]\nname = "app"\nversion = "0.1.0"\n',
+    '.claude/harness.json': JSON.stringify(old),
+  });
+  assert.equal(apply(dir, {}).status, 0);
+  const json = harnessJson(dir);
+  const expected = ['core', 'oxlint', 'ruff', 'prettier', 'tsc', 'basedpyright', 'knip', 'vulture', 'deptry', 'vitest', 'pytest',
+    'react-practices', 'python-practices', 'playwright'];
+  assert.deepEqual([...json.modules].sort(), [...expected].sort());
+  const files = (d) => Object.fromEntries(readdirSync(d, { recursive: true, withFileTypes: true })
+    .filter((e) => e.isFile() && !e.parentPath.includes('.git/') && !e.parentPath.endsWith('.git'))
+    .map((e) => [join(e.parentPath, e.name), readFileSync(join(e.parentPath, e.name), 'utf8')]));
+  const before = files(dir);
+  const again = apply(dir, {});
+  assert.equal(again.status, 0, again.stderr);
+  assert.deepEqual(files(dir), before);
+});
+
+test('a module whose group covers none of the chosen stacks is not written, even when passed', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG });
+  const r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'vulture', 'node-practices', 'next-docs'] });
+  assert.equal(r.status, 0, r.stderr);
+  const json = harnessJson(dir);
+  for (const id of ['vulture', 'node-practices', 'next-docs']) assert.ok(!json.modules.includes(id), id);
+  assert.ok(!json.checks.some((c) => c.name === 'vulture'));
+});
+
+test('every module is in a group, its files are in modules/<group>/<module>/, and every folder there is a module', () => {
+  const plugin = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const catalog = JSON.parse(readFileSync(join(plugin, 'modules.json'), 'utf8'));
+  for (const [id, m] of Object.entries(catalog.modules)) {
+    assert.ok(m.group in catalog.groups, `${id}: group ${m.group}`);
+    for (const group of Object.keys(catalog.groups))
+      if (group !== m.group) assert.ok(!existsSync(join(plugin, 'modules', group, id)), `${id} is in modules/${group}/`);
+  }
+  for (const group of readdirSync(join(plugin, 'modules'))) {
+    assert.ok(group in catalog.groups, `modules/${group}/ is no group`);
+    for (const id of readdirSync(join(plugin, 'modules', group)))
+      assert.equal(catalog.modules[id]?.group, group, `modules/${group}/${id}/ belongs to no module`);
+  }
+  for (const [old, next] of Object.entries(catalog.renamed))
+    for (const id of [next].flat()) assert.ok(id in catalog.modules || id in catalog.renamed, `${old} -> ${id}`);
 });
 
 // A fake `npm` on PATH logs its arguments instead of installing.

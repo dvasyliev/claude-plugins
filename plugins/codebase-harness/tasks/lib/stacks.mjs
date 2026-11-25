@@ -17,12 +17,24 @@ const detectMatches = (detect, has, pkg) =>
     names.some((name) => (field === "files" ? has(name) : name in (pkg[field] ?? {}))),
   );
 
+// A module's stacks: its own `stacks`, else its group's (`null`: every stack).
 export function applies(module, stackId, catalog, has, pkg) {
   const language = catalog.stacks[stackId].language;
-  if (module.stacks && !module.stacks.includes(stackId) && !module.stacks.includes(language)) return false;
+  const stacks = module.stacks ?? catalog.groups?.[module.group]?.stacks;
+  if (stacks && !stacks.includes(stackId) && !stacks.includes(language)) return false;
   return [module.by?.[language]?.detect, module.by?.[stackId]?.detect].every(
     (detect) => !detect || detectMatches(detect, has, pkg),
   );
+}
+
+// Old module names (`renamed`: a name or a list of names) to their new ones, followed through every rename,
+// each name once. A name already being followed is kept as it is, so a loop ends.
+export function renameModules(ids, renamed = {}) {
+  const expand = (id, seen) => {
+    if (!(id in renamed) || seen.has(id)) return [id];
+    return [renamed[id]].flat().flatMap((next) => expand(next, new Set([...seen, id])));
+  };
+  return [...new Set(ids.flatMap((id) => expand(id, new Set())))];
 }
 
 export function mergeBy(a, b) {

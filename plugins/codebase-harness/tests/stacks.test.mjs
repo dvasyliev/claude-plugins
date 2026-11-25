@@ -1,12 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applies, checkStacks, combine, effective, mergeBy } from '../tasks/lib/stacks.mjs';
+import { applies, checkStacks, combine, effective, mergeBy, renameModules } from '../tasks/lib/stacks.mjs';
 
 const cat = {
   stacks: {
     react: { language: 'js', srcDirs: ['src'] },
     nextjs: { language: 'js', excludes: ['react'], srcDirs: ['app'] },
     python: { language: 'python', srcDirs: ['app'] },
+    node: { language: 'js', excludes: ['react', 'nextjs'], srcDirs: [] },
+  },
+  groups: {
+    shared: { stacks: null },
+    js: { stacks: ['react', 'nextjs', 'node'] },
+    web: { stacks: ['react', 'nextjs'] },
+    python: { stacks: ['python'] },
   },
 };
 
@@ -28,6 +35,25 @@ test('applies', () => {
   const d = { by: { react: { detect: { dependencies: ['x'] } } } };
   assert.equal(applies(d, 'react', cat, () => false, { dependencies: { x: '1' } }), true);
   assert.equal(applies(d, 'react', cat, () => false, {}), false);
+});
+
+test('applies: a module applies to its group\'s stacks unless it names its own', () => {
+  const no = () => false;
+  assert.equal(applies({ group: 'python' }, 'react', cat, no, {}), false);
+  assert.equal(applies({ group: 'js' }, 'node', cat, no, {}), true);
+  assert.equal(applies({ group: 'shared' }, 'python', cat, no, {}), true);
+  assert.equal(applies({ group: 'web' }, 'node', cat, no, {}), false);
+  assert.equal(applies({ group: 'js', stacks: ['react'] }, 'node', cat, no, {}), false);
+  const tsc = { group: 'js', by: { node: { detect: { files: ['tsconfig.json'] } } } };
+  assert.equal(applies(tsc, 'node', cat, no, {}), false);
+  assert.equal(applies(tsc, 'react', cat, no, {}), true);
+});
+
+test('renameModules follows every rename, once each, and ends on a loop', () => {
+  const renamed = { types: ['tsc', 'basedpyright'], old: 'types', jscpd: 'dupes', a: 'b', b: ['a', 'c'] };
+  assert.deepEqual(renameModules(['core', 'old', 'types', 'jscpd'], renamed), ['core', 'tsc', 'basedpyright', 'dupes']);
+  assert.deepEqual(renameModules(['a'], renamed), ['a', 'c']);
+  assert.deepEqual(renameModules(['x'], undefined), ['x']);
 });
 
 test('effective', () => {

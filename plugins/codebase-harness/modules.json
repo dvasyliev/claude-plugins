@@ -1,5 +1,5 @@
 {
-  "$comment": "Every stack and module the harness can install. A project chooses one or more `stacks`; each has a `language` (stacks of one language share tools), `srcDirs` (its source folders, the default answer), `detect`, a default `linter`, and the stacks it `excludes`. A module applies to the stacks or languages in its `stacks` (every stack when absent). Its files are in modules/<category>/<module>/: all/ for every stack it applies to, then <language>/, then <stack>/, a later folder replacing the same path; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (in package.json when the module brings the script on a `js` stack; otherwise, such as a `by.python` script even with a `js` stack chosen, the hooks run its `command` as written, its first word from `npx -y <npx>` when the script has an `npx` field), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `reports` (commands for audits, not run by the hooks), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` (a name, or `name@version` for packages that must match each other), and `audit` (the rule files and skill folders, at their paths in the project, that the audit skill checks existing code against). `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own for each chosen stack (language first, then stack; a `detect` in it limits the module to stacks where it matches). `{srcDirs}` in a command is the folders of every chosen stack, or inside `by` those of its language or stack. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module per chosen stack that has one is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in). `renamed` maps a module's old name to its new one, for projects that still list the old.",
+  "$comment": "Every stack and module the harness can install. A project chooses one or more `stacks`; each has a `language` (stacks of one language share tools), `srcDirs` (its source folders, the default answer), `detect`, a default `linter`, and the stacks it `excludes`. Each module is in a `group` (`groups`: the stacks its modules apply to, every stack when `null`); a module narrows it with its own `stacks` (stack or language names). Its files are in modules/<group>/<module>/: all/ for every stack it applies to, then <language>/, then <stack>/, a later folder replacing the same path; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (in package.json when the module brings the script on a `js` stack; otherwise, such as a `by.python` script even with a `js` stack chosen, the hooks run its `command` as written, its first word from `npx -y <npx>` when the script has an `npx` field), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `reports` (commands for audits, not run by the hooks), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` (a name, or `name@version` for packages that must match each other), and `audit` (the rule files and skill folders, at their paths in the project, that the audit skill checks existing code against). `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own for each chosen stack (language first, then stack; a `detect` in it limits the module to stacks where it matches). `{srcDirs}` in a command is the folders of every chosen stack the module applies to, or inside `by` those of its language or stack. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module per chosen stack that has one is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `group`, then by `category` (the kind of check). Modules are listed in the order their checks run. `renamed` maps a module's old name to its new one or ones, for projects that still list the old; a new name that applies to none of the chosen stacks is dropped.",
   "stacks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -40,9 +40,36 @@
       "linter": "ruff"
     }
   },
+  "groups": {
+    "shared": {
+      "description": "Every stack",
+      "stacks": null
+    },
+    "js": {
+      "description": "JavaScript and TypeScript: React, Next.js and Node",
+      "stacks": ["react", "nextjs", "node"]
+    },
+    "web": {
+      "description": "Web apps: React and Next.js",
+      "stacks": ["react", "nextjs"]
+    },
+    "nextjs": {
+      "description": "Next.js only",
+      "stacks": ["nextjs"]
+    },
+    "node": {
+      "description": "Node.js only",
+      "stacks": ["node"]
+    },
+    "python": {
+      "description": "Python",
+      "stacks": ["python"]
+    }
+  },
   "modules": {
     "core": {
       "description": "Claude Code hooks, the structure and hooks rules, and the `check` script that runs every check.",
+      "group": "shared",
       "category": "core",
       "audit": [".claude/rules/structure.md"],
       "required": true,
@@ -122,26 +149,25 @@
         }
       }
     },
-    "types": {
-      "description": "Type checking on every turn: TypeScript with `tsc -b` (on Next.js after regenerating the route types), basedpyright on Python.",
+    "tsc": {
+      "description": "TypeScript type checking with `tsc -b` on every turn (on Next.js after regenerating the route types; on Node only with a tsconfig.json).",
+      "group": "js",
       "category": "types",
       "required": true,
+      "scripts": {
+        "typecheck": {
+          "command": "tsc -b",
+          "description": "TypeScript; never `tsc --noEmit`"
+        }
+      },
+      "checks": [
+        {
+          "name": "types",
+          "script": "typecheck"
+        }
+      ],
+      "devDependencies": ["typescript"],
       "by": {
-        "js": {
-          "scripts": {
-            "typecheck": {
-              "command": "tsc -b",
-              "description": "TypeScript; never `tsc --noEmit`"
-            }
-          },
-          "checks": [
-            {
-              "name": "types",
-              "script": "typecheck"
-            }
-          ],
-          "devDependencies": ["typescript"]
-        },
         "nextjs": {
           "scripts": {
             "typecheck": {
@@ -154,29 +180,33 @@
           "detect": {
             "files": ["tsconfig.json"]
           }
-        },
-        "python": {
-          "scripts": {
-            "basedpyright": {
-              "command": "uv run basedpyright",
-              "description": "Python types (basedpyright)"
-            }
-          },
-          "checks": [
-            {
-              "name": "basedpyright",
-              "script": "basedpyright"
-            }
-          ],
-          "devDependencies": ["basedpyright"]
         }
       }
     },
+    "basedpyright": {
+      "description": "Python type checking with basedpyright on every turn.",
+      "group": "python",
+      "category": "types",
+      "required": true,
+      "scripts": {
+        "basedpyright": {
+          "command": "uv run basedpyright",
+          "description": "Python types (basedpyright)"
+        }
+      },
+      "checks": [
+        {
+          "name": "basedpyright",
+          "script": "basedpyright"
+        }
+      ],
+      "devDependencies": ["basedpyright"]
+    },
     "prettier": {
       "description": "Prettier formats each file Claude edits and is checked at the end of every turn.",
+      "group": "js",
       "category": "formatting",
       "required": true,
-      "stacks": ["js"],
       "scripts": {
         "format": {
           "command": "prettier --write .",
@@ -209,6 +239,7 @@
     },
     "feature-workflow": {
       "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, several at once), the rule for carrying out a plan (yourself or with subagents), the superpowers plugin and the improve-harness skill.",
+      "group": "shared",
       "category": "workflow",
       "recommended": true,
       "settings": {
@@ -224,6 +255,7 @@
     },
     "context-size": {
       "description": "Warns before every message once the session is over 200K tokens, so you /compact or start over with /clear.",
+      "group": "shared",
       "category": "workflow",
       "recommended": true,
       "settings": {
@@ -243,8 +275,8 @@
     },
     "eslint": {
       "description": "ESLint with type-aware typescript-eslint rules, strict accessibility rules (jsx-a11y), no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
+      "group": "web",
       "category": "linting",
-      "stacks": ["react", "nextjs"],
       "detect": {
         "devDependencies": ["eslint"]
       },
@@ -292,8 +324,8 @@
     },
     "oxlint": {
       "description": "oxlint (what create-vite sets up; works with TypeScript 7) with accessibility rules, no import cycles and a 400-line file limit.",
+      "group": "js",
       "category": "linting",
-      "stacks": ["js"],
       "detect": {
         "devDependencies": ["oxlint"]
       },
@@ -325,20 +357,10 @@
       "devDependencies": ["oxlint"]
     },
     "ruff": {
-      "description": "Ruff formats and lints Python (checked at the end of every turn, and on each edited file), plus a 500-line file limit and a strict report.",
+      "description": "Ruff formats and lints Python (checked at the end of every turn, and on each edited file), plus a strict report.",
+      "group": "python",
       "category": "linting",
-      "stacks": ["python"],
       "linter": true,
-      "by": {
-        "python": {
-          "scripts": {
-            "file-size": {
-              "command": "bash .claude/checks/file-size.sh {srcDirs}",
-              "description": "fails for a .py file over 500 lines"
-            }
-          }
-        }
-      },
       "scripts": {
         "ruff": {
           "command": "uv run ruff check .",
@@ -365,10 +387,6 @@
         {
           "name": "ruff",
           "script": "ruff"
-        },
-        {
-          "name": "file-size",
-          "script": "file-size"
         }
       ],
       "fileChecks": [
@@ -393,53 +411,84 @@
       ],
       "devDependencies": ["ruff"]
     },
-    "unused": {
-      "description": "knip: unused files, exports and dependencies, checked at the end of every turn.",
+    "file-size": {
+      "description": "Fails for a Python file over 500 lines in the source folders, checked at the end of every turn.",
+      "group": "python",
       "category": "code-health",
       "recommended": true,
-      "by": {
-        "js": {
-          "scripts": {
-            "knip": {
-              "command": "knip --no-progress --reporter compact",
-              "description": "unused files, exports and dependencies"
-            }
-          },
-          "checks": [
-            {
-              "name": "knip",
-              "script": "knip"
-            }
-          ],
-          "devDependencies": ["knip"]
-        },
-        "python": {
-          "scripts": {
-            "vulture": {
-              "command": "uv run vulture {srcDirs} --min-confidence 80",
-              "description": "unused Python code (vulture)"
-            },
-            "deptry": {
-              "command": "uv run deptry . --experimental-namespace-package",
-              "description": "unused, missing and transitive Python dependencies (deptry); a folder without __init__.py counts as the project's own package"
-            }
-          },
-          "checks": [
-            {
-              "name": "vulture",
-              "script": "vulture"
-            },
-            {
-              "name": "deptry",
-              "script": "deptry"
-            }
-          ],
-          "devDependencies": ["vulture", "deptry"]
+      "scripts": {
+        "file-size": {
+          "command": "bash .claude/checks/file-size.sh {srcDirs}",
+          "description": "fails for a .py file over 500 lines"
         }
-      }
+      },
+      "checks": [
+        {
+          "name": "file-size",
+          "script": "file-size"
+        }
+      ]
+    },
+    "knip": {
+      "description": "knip: unused files, exports and dependencies, checked at the end of every turn.",
+      "group": "js",
+      "category": "code-health",
+      "recommended": true,
+      "scripts": {
+        "knip": {
+          "command": "knip --no-progress --reporter compact",
+          "description": "unused files, exports and dependencies"
+        }
+      },
+      "checks": [
+        {
+          "name": "knip",
+          "script": "knip"
+        }
+      ],
+      "devDependencies": ["knip"]
+    },
+    "vulture": {
+      "description": "vulture: unused Python code in the source folders, checked at the end of every turn.",
+      "group": "python",
+      "category": "code-health",
+      "recommended": true,
+      "scripts": {
+        "vulture": {
+          "command": "uv run vulture {srcDirs} --min-confidence 80",
+          "description": "unused Python code (vulture)"
+        }
+      },
+      "checks": [
+        {
+          "name": "vulture",
+          "script": "vulture"
+        }
+      ],
+      "devDependencies": ["vulture"]
+    },
+    "deptry": {
+      "description": "deptry: unused, missing and transitive Python dependencies, checked at the end of every turn.",
+      "group": "python",
+      "category": "code-health",
+      "recommended": true,
+      "scripts": {
+        "deptry": {
+          "command": "uv run deptry . --experimental-namespace-package",
+          "description": "unused, missing and transitive Python dependencies (deptry); a folder without __init__.py counts as the project's own package"
+        }
+      },
+      "checks": [
+        {
+          "name": "deptry",
+          "script": "deptry"
+        }
+      ],
+      "devDependencies": ["deptry"]
     },
     "dupes": {
       "description": "jscpd: duplicated JavaScript, TypeScript and Python code in the source folders, checked at the end of every turn. Often red in older projects.",
+      "group": "shared",
       "category": "code-health",
       "recommended": true,
       "by": {
@@ -461,10 +510,10 @@
         }
       ]
     },
-    "imports": {
+    "import-linter": {
       "description": "import-linter: the import contracts in .importlinter or [tool.importlinter] in pyproject.toml (layers, forbidden imports), checked at the end of every turn.",
+      "group": "python",
       "category": "code-health",
-      "stacks": ["python"],
       "scripts": {
         "imports": {
           "command": "uv run lint-imports",
@@ -481,8 +530,8 @@
     },
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
+      "group": "web",
       "category": "formatting",
-      "stacks": ["react", "nextjs"],
       "auto": true,
       "detect": {
         "dependencies": ["tailwindcss"],
@@ -490,65 +539,68 @@
       },
       "devDependencies": ["prettier-plugin-tailwindcss"]
     },
-    "unit": {
+    "vitest": {
       "description": "Vitest unit tests, run at the end of every turn.",
+      "group": "js",
       "category": "testing",
       "recommended": true,
       "detect": {
         "devDependencies": ["vitest"]
       },
+      "audit": [".claude/rules/tests-unit.md"],
+      "scripts": {
+        "test": {
+          "command": "vitest run --passWithNoTests",
+          "description": "all unit tests (Vitest); `npx vitest run <file>` for one"
+        }
+      },
+      "checks": [
+        {
+          "name": "test",
+          "script": "test"
+        }
+      ],
+      "devDependencies": ["vitest"],
       "by": {
-        "js": {
-          "audit": [".claude/rules/tests-unit.md"],
-          "scripts": {
-            "test": {
-              "command": "vitest run --passWithNoTests",
-              "description": "all unit tests (Vitest); `npx vitest run <file>` for one"
-            }
-          },
-          "checks": [
-            {
-              "name": "test",
-              "script": "test"
-            }
-          ],
-          "devDependencies": ["vitest"]
-        },
         "react": {
           "devDependencies": ["jsdom", "@vitejs/plugin-react", "@testing-library/react", "@testing-library/dom"]
         },
         "nextjs": {
           "devDependencies": ["jsdom", "@vitejs/plugin-react", "@testing-library/react", "@testing-library/dom"]
-        },
-        "python": {
-          "scripts": {
-            "pytest": {
-              "command": "uv run pytest || [ $? -eq 5 ]",
-              "description": "all Python tests (pytest); green with none yet (exit 5, no tests collected)"
-            }
-          },
-          "checks": [
-            {
-              "name": "pytest",
-              "script": "pytest"
-            }
-          ],
-          "reports": [
-            {
-              "name": "coverage",
-              "command": "uv run pytest --cov=. --cov-report=term:skip-covered"
-            }
-          ],
-          "devDependencies": ["pytest", "pytest-cov", "responses"],
-          "gitignore": ["/.coverage"],
-          "audit": [".claude/rules/tests-python.md"]
         }
       }
     },
-    "e2e": {
-      "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
+    "pytest": {
+      "description": "pytest with coverage and HTTP mocks (responses), run at the end of every turn.",
+      "group": "python",
       "category": "testing",
-      "stacks": ["react", "nextjs"],
+      "recommended": true,
+      "scripts": {
+        "pytest": {
+          "command": "uv run pytest || [ $? -eq 5 ]",
+          "description": "all Python tests (pytest); green with none yet (exit 5, no tests collected)"
+        }
+      },
+      "checks": [
+        {
+          "name": "pytest",
+          "script": "pytest"
+        }
+      ],
+      "reports": [
+        {
+          "name": "coverage",
+          "command": "uv run pytest --cov=. --cov-report=term:skip-covered"
+        }
+      ],
+      "devDependencies": ["pytest", "pytest-cov", "responses"],
+      "gitignore": ["/.coverage"],
+      "audit": [".claude/rules/tests-python.md"]
+    },
+    "playwright": {
+      "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
+      "group": "web",
+      "category": "testing",
       "audit": [".claude/rules/tests-e2e.md"],
       "recommended": true,
       "detect": {
@@ -575,6 +627,7 @@
     },
     "commitlint": {
       "description": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
+      "group": "shared",
       "category": "git",
       "recommended": true,
       "by": {
@@ -597,6 +650,7 @@
     },
     "pre-commit": {
       "description": "A pre-commit git hook that looks for secrets in the staged files (secretlint) and formats and lints the staged code (lint-staged), for commits made without Claude.",
+      "group": "shared",
       "category": "git",
       "recommended": true,
       "by": {
@@ -613,6 +667,7 @@
     },
     "sync-deps": {
       "description": "post-merge and post-checkout git hooks that run the install when the lockfile changed.",
+      "group": "shared",
       "category": "git",
       "by": {
         "js": {
@@ -625,114 +680,102 @@
         }
       }
     },
-    "best-practices": {
-      "description": "Best-practice skills: on React and Next.js, Vercel's performance rules, composition patterns and the Web Interface Guidelines review; on Node, wshobson's backend, modern JavaScript and testing patterns; on Python, wshobson's anti-patterns, code style, error handling, project structure, resilience and testing patterns.",
+    "react-practices": {
+      "description": "Vercel's performance rules, composition patterns and Web Interface Guidelines review skills, and a rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write.",
+      "group": "web",
       "category": "best-practices",
       "recommended": true,
-      "by": {
-        "react": {
-          "audit": [
-            ".claude/skills/vercel-react-best-practices",
-            ".claude/skills/vercel-composition-patterns",
-            ".claude/skills/web-design-guidelines"
-          ],
-          "install": [
-            {
-              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
-              "creates": [".claude/skills/vercel-react-best-practices"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
-              "creates": [".claude/skills/vercel-composition-patterns"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
-              "creates": [".claude/skills/web-design-guidelines"]
-            }
-          ]
+      "audit": [
+        ".claude/skills/vercel-react-best-practices",
+        ".claude/skills/vercel-composition-patterns",
+        ".claude/skills/web-design-guidelines",
+        ".claude/rules/external-requests.md"
+      ],
+      "install": [
+        {
+          "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
+          "creates": [".claude/skills/vercel-react-best-practices"]
         },
-        "nextjs": {
-          "audit": [
-            ".claude/skills/vercel-react-best-practices",
-            ".claude/skills/vercel-composition-patterns",
-            ".claude/skills/web-design-guidelines"
-          ],
-          "install": [
-            {
-              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
-              "creates": [".claude/skills/vercel-react-best-practices"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
-              "creates": [".claude/skills/vercel-composition-patterns"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
-              "creates": [".claude/skills/web-design-guidelines"]
-            }
-          ]
+        {
+          "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
+          "creates": [".claude/skills/vercel-composition-patterns"]
         },
-        "node": {
-          "audit": [
-            ".claude/skills/nodejs-backend-patterns",
-            ".claude/skills/modern-javascript-patterns",
-            ".claude/skills/javascript-testing-patterns"
-          ],
-          "install": [
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill nodejs-backend-patterns -a claude-code --copy -y",
-              "creates": [".claude/skills/nodejs-backend-patterns"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill modern-javascript-patterns -a claude-code --copy -y",
-              "creates": [".claude/skills/modern-javascript-patterns"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill javascript-testing-patterns -a claude-code --copy -y",
-              "creates": [".claude/skills/javascript-testing-patterns"]
-            }
-          ]
-        },
-        "python": {
-          "audit": [
-            ".claude/skills/python-anti-patterns",
-            ".claude/skills/python-code-style",
-            ".claude/skills/python-error-handling",
-            ".claude/skills/python-project-structure",
-            ".claude/skills/python-resilience",
-            ".claude/skills/python-testing-patterns"
-          ],
-          "install": [
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-anti-patterns -a claude-code --copy -y",
-              "creates": [".claude/skills/python-anti-patterns"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-code-style -a claude-code --copy -y",
-              "creates": [".claude/skills/python-code-style"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-error-handling -a claude-code --copy -y",
-              "creates": [".claude/skills/python-error-handling"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-project-structure -a claude-code --copy -y",
-              "creates": [".claude/skills/python-project-structure"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-resilience -a claude-code --copy -y",
-              "creates": [".claude/skills/python-resilience"]
-            },
-            {
-              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-testing-patterns -a claude-code --copy -y",
-              "creates": [".claude/skills/python-testing-patterns"]
-            }
-          ]
+        {
+          "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
+          "creates": [".claude/skills/web-design-guidelines"]
         }
-      }
+      ]
+    },
+    "node-practices": {
+      "description": "wshobson's backend, modern JavaScript and testing pattern skills, and a rule for calls to outside services: timeouts, retries only inside a service's client, HTTP mocked in tests.",
+      "group": "node",
+      "category": "best-practices",
+      "recommended": true,
+      "audit": [
+        ".claude/skills/nodejs-backend-patterns",
+        ".claude/skills/modern-javascript-patterns",
+        ".claude/skills/javascript-testing-patterns",
+        ".claude/rules/external-requests.md"
+      ],
+      "install": [
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill nodejs-backend-patterns -a claude-code --copy -y",
+          "creates": [".claude/skills/nodejs-backend-patterns"]
+        },
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill modern-javascript-patterns -a claude-code --copy -y",
+          "creates": [".claude/skills/modern-javascript-patterns"]
+        },
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill javascript-testing-patterns -a claude-code --copy -y",
+          "creates": [".claude/skills/javascript-testing-patterns"]
+        }
+      ]
+    },
+    "python-practices": {
+      "description": "wshobson's anti-patterns, code style, error handling, project structure, resilience and testing pattern skills, and a rule for calls to outside services: timeouts, retries only inside a service's client, HTTP mocked in tests.",
+      "group": "python",
+      "category": "best-practices",
+      "recommended": true,
+      "audit": [
+        ".claude/skills/python-anti-patterns",
+        ".claude/skills/python-code-style",
+        ".claude/skills/python-error-handling",
+        ".claude/skills/python-project-structure",
+        ".claude/skills/python-resilience",
+        ".claude/skills/python-testing-patterns",
+        ".claude/rules/external-requests-python.md"
+      ],
+      "install": [
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-anti-patterns -a claude-code --copy -y",
+          "creates": [".claude/skills/python-anti-patterns"]
+        },
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-code-style -a claude-code --copy -y",
+          "creates": [".claude/skills/python-code-style"]
+        },
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-error-handling -a claude-code --copy -y",
+          "creates": [".claude/skills/python-error-handling"]
+        },
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-project-structure -a claude-code --copy -y",
+          "creates": [".claude/skills/python-project-structure"]
+        },
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-resilience -a claude-code --copy -y",
+          "creates": [".claude/skills/python-resilience"]
+        },
+        {
+          "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-testing-patterns -a claude-code --copy -y",
+          "creates": [".claude/skills/python-testing-patterns"]
+        }
+      ]
     },
     "context7": {
       "description": "Context7 MCP server, rule and skill for current library docs.",
+      "group": "shared",
       "category": "best-practices",
       "recommended": true,
       "mcp": ["context7"],
@@ -745,14 +788,15 @@
     },
     "libraries": {
       "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more; on Node: validation, dates, HTTP, retries, HTTP mocks; on Python: HTTP, retries, HTTP mocks, command line, validation).",
+      "group": "shared",
       "category": "best-practices",
       "audit": [".claude/rules/libraries.md"],
       "recommended": true
     },
     "next-docs": {
       "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules, and the Next.js DevTools MCP server (Next.js versions that ship them).",
+      "group": "nextjs",
       "category": "best-practices",
-      "stacks": ["nextjs"],
       "auto": true,
       "detect": {
         "files": ["node_modules/next/dist/docs"]
@@ -764,23 +808,10 @@
         }
       }
     },
-    "resilience": {
-      "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write (on Node and Python: timeouts, retries only inside a service's client, HTTP mocked in tests).",
-      "category": "best-practices",
-      "recommended": true,
-      "by": {
-        "js": {
-          "audit": [".claude/rules/external-requests.md"]
-        },
-        "python": {
-          "audit": [".claude/rules/external-requests-python.md"]
-        }
-      }
-    },
     "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
+      "group": "web",
       "category": "performance",
-      "stacks": ["react", "nextjs"],
       "audit": [".claude/rules/data-loading.md", ".claude/rules/page-loading.md"],
       "recommended": true,
       "by": {
@@ -803,7 +834,13 @@
     }
   },
   "renamed": {
-    "knip": "unused",
-    "jscpd": "dupes"
+    "jscpd": "dupes",
+    "types": ["tsc", "basedpyright"],
+    "unused": ["knip", "vulture", "deptry"],
+    "unit": ["vitest", "pytest"],
+    "e2e": "playwright",
+    "imports": "import-linter",
+    "best-practices": ["react-practices", "node-practices", "python-practices"],
+    "resilience": ["react-practices", "node-practices", "python-practices"]
   }
 }

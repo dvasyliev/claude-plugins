@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanEnv, makeProject } from './helpers.mjs';
 
-const hooks = join(dirname(fileURLToPath(import.meta.url)), '..', 'modules/core/core/all/.claude/hooks');
+const hooks = join(dirname(fileURLToPath(import.meta.url)), '..', 'modules/shared/core/all/.claude/hooks');
 
 function project(harness, files = {}) {
   return makeProject({ '.claude/harness.json': JSON.stringify(harness), ...files });

@@ -56,28 +56,28 @@ jobs:
           - framework: nextjs
             stacks: '"nextjs"'
             package: '{"name":"smoke","private":true,"scripts":{"dev":"next dev"},"dependencies":{"next":"16.0.0","react":"19.2.0","react-dom":"19.2.0"}}'
-            modules: '"core","types","prettier","feature-workflow","eslint","unused","dupes","tailwind","unit","e2e","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","next-docs","page-speed"'
+            modules: '"core","tsc","prettier","feature-workflow","eslint","knip","dupes","tailwind","vitest","playwright","commitlint","pre-commit","sync-deps","react-practices","context7","libraries","next-docs","page-speed"'
           - framework: react
             stacks: '"react"'
             package: '{"name":"smoke","private":true,"scripts":{"dev":"vite"},"dependencies":{"react":"19.2.0","react-dom":"19.2.0"},"devDependencies":{"vite":"7.0.0"}}'
-            modules: '"core","types","prettier","feature-workflow","oxlint","unused","dupes","tailwind","unit","e2e","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","next-docs","page-speed"'
+            modules: '"core","tsc","prettier","feature-workflow","oxlint","knip","dupes","tailwind","vitest","playwright","commitlint","pre-commit","sync-deps","react-practices","context7","libraries","next-docs","page-speed"'
           - framework: python
             stacks: '"python"'
             srcDirs: '"python":["app"]'
-            modules: '"core","types","feature-workflow","context-size","ruff","unused","dupes","imports","unit","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","resilience"'
+            modules: '"core","basedpyright","feature-workflow","context-size","ruff","file-size","vulture","deptry","dupes","import-linter","pytest","commitlint","pre-commit","sync-deps","python-practices","context7","libraries"'
           - framework: node
             stacks: '"node"'
             package: '{"name":"smoke","private":true,"scripts":{"start":"node index.js"},"dependencies":{"express":"5.1.0"}}'
-            modules: '"core","types","prettier","feature-workflow","context-size","oxlint","unused","dupes","unit","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","resilience"'
+            modules: '"core","tsc","prettier","feature-workflow","context-size","oxlint","knip","dupes","vitest","commitlint","pre-commit","sync-deps","node-practices","context7","libraries"'
           - framework: python+node
             stacks: '"python","node"'
             srcDirs: '"python":["app"],"node":["scripts"]'
-            modules: '"core","types","prettier","feature-workflow","context-size","oxlint","ruff","unused","dupes","imports","unit","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","resilience"'
+            modules: '"core","tsc","basedpyright","prettier","feature-workflow","context-size","oxlint","ruff","file-size","knip","vulture","deptry","dupes","import-linter","vitest","pytest","commitlint","pre-commit","sync-deps","node-practices","python-practices","context7","libraries"'
           - framework: react+python
             stacks: '"react","python"'
             package: '{"name":"smoke","private":true,"scripts":{"dev":"vite"},"dependencies":{"react":"19.2.0","react-dom":"19.2.0"},"devDependencies":{"vite":"7.0.0"}}'
             srcDirs: '"python":["app"]'
-            modules: '"core","types","prettier","feature-workflow","context-size","oxlint","ruff","unused","dupes","imports","tailwind","unit","e2e","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","resilience","page-speed"'
+            modules: '"core","tsc","basedpyright","prettier","feature-workflow","context-size","oxlint","ruff","file-size","knip","vulture","deptry","dupes","import-linter","tailwind","vitest","pytest","playwright","commitlint","pre-commit","sync-deps","react-practices","python-practices","context7","libraries","page-speed"'
     env:
       HARNESS_NO_INSTALL: "1"
     steps:

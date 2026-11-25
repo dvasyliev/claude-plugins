@@ -6,7 +6,7 @@ import { basename, join } from 'node:path';
 import { apply, makeProject, snapshot } from './helpers.mjs';
 
 const PYPROJECT = '[project]\nname = "app"\nversion = "0.1.0"\n';
-const ANSWERS = { stacks: ['python', 'node'], modules: ['core', 'types', 'ruff', 'oxlint', 'prettier', 'unit'], srcDirs: { python: ['app'], node: ['scripts'] } };
+const ANSWERS = { stacks: ['python', 'node'], modules: ['core', 'tsc', 'basedpyright', 'ruff', 'oxlint', 'prettier', 'vitest', 'pytest'], srcDirs: { python: ['app'], node: ['scripts'] } };
 const read = (dir, path) => readFileSync(join(dir, path), 'utf8');
 const typeCheck = (dir) => JSON.parse(read(dir, '.claude/harness.json')).checks.some((c) => c.name === 'types');
 
@@ -81,9 +81,9 @@ test('libraries: node with Python loads for both, the Python sections after', ()
   assert.ok(rule.indexOf('# Python') < rule.indexOf('## Command line'));
 });
 
-test('node gets its resilience and unit test rules and the wshobson skills', () => {
+test('node-practices brings the outside-services rule and the wshobson skills; vitest its unit test rule', () => {
   const dir = makeProject({ 'package.json': EXPRESS_PKG });
-  const r = apply(dir, { stacks: ['node'], modules: ['core', 'oxlint', 'unit', 'resilience', 'best-practices'] });
+  const r = apply(dir, { stacks: ['node'], modules: ['core', 'oxlint', 'vitest', 'node-practices'] });
   assert.equal(r.status, 0, r.stderr);
   assert.match(read(dir, '.claude/rules/external-requests.md'), /^paths:\n {2}- "\*\*\/\*\.\{js,mjs,cjs,ts\}"\n---$/m);
   assert.match(read(dir, '.claude/rules/external-requests.md'), /AbortSignal\.timeout\(/);
@@ -94,17 +94,17 @@ test('node gets its resilience and unit test rules and the wshobson skills', () 
   assert.equal(paths.some((p) => p.includes('vercel') || p.includes('python-')), false);
 });
 
-test('unit brings the React test packages to React and Next.js only', async () => {
+test('vitest brings the React test packages to React and Next.js only', async () => {
   const { effective } = await import('../tasks/lib/stacks.mjs');
   const catalog = JSON.parse(readFileSync(new URL('../modules.json', import.meta.url), 'utf8'));
-  const devDeps = (stack) => effective(catalog.modules.unit, stack, catalog, {}).devDependencies;
+  const devDeps = (stack) => effective(catalog.modules.vitest, stack, catalog, {}).devDependencies;
   assert.deepEqual(devDeps('node'), ['vitest']);
   for (const stack of ['react', 'nextjs']) assert.deepEqual(devDeps(stack), ['vitest', 'jsdom', '@vitejs/plugin-react', '@testing-library/react', '@testing-library/dom']);
 });
 
 test('knip on node takes every JS file as an entry, so loose scripts are not unused files', () => {
   const dir = makeProject({ 'pyproject.toml': PYPROJECT, 'scripts/a.mjs': '' });
-  assert.equal(apply(dir, { ...ANSWERS, modules: [...ANSWERS.modules, 'unused'] }).status, 0);
+  assert.equal(apply(dir, { ...ANSWERS, modules: [...ANSWERS.modules, 'knip'] }).status, 0);
   const knip = JSON.parse(read(dir, 'knip.json'));
   assert.equal(knip.entry[0], '**/*.{js,mjs,cjs,ts,mts,cts}');
   assert.equal(knip.includeEntryExports, true);

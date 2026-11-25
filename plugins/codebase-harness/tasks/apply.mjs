@@ -7,7 +7,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSyn
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import { missingDevDeps } from "./lib/python.mjs";
-import { applies, checkStacks, combine, effective } from "./lib/stacks.mjs";
+import { applies, checkStacks, combine, effective, renameModules } from "./lib/stacks.mjs";
 
 const root = join(import.meta.dirname, "..");
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
@@ -18,9 +18,10 @@ const withStacks = ({ framework, ...a }) => (framework && !a.stacks ? { ...a, st
 const passed = withStacks(JSON.parse(process.argv[2] || "{}"));
 // srcDirs merge per stack: an update that passes one stack's folders keeps the others'.
 const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, ...withStacks(old), ...passed, srcDirs: { ...old.srcDirs, ...passed.srcDirs } };
-// Modules renamed since the project's last run (`renamed` in modules.json) go by their new names.
+// Modules renamed since the project's last run (`renamed` in modules.json) go by their new names; a new name that
+// applies to none of the chosen stacks is not installed (below), like any such module.
 const catalog = readJson(join(root, "modules.json"));
-answers.modules = [...new Set(answers.modules.map((id) => catalog.renamed?.[id] ?? id))];
+answers.modules = renameModules(answers.modules, catalog.renamed);
 const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
 const stackIds = answers.stacks ?? [];
 attempt(() => checkStacks(catalog, stackIds));
@@ -87,7 +88,9 @@ const perStack = [];
 for (const [id, m] of Object.entries(catalog.modules)) {
   if (!wanted.has(id)) continue;
   stacksOf[id] = stackIds.filter((stackId) => appliesTo(m, stackId));
-  const results = stacksOf[id].map((stackId) => effective(m, stackId, catalog, srcDirs));
+  // `{srcDirs}` in the module's own fields: the folders of the stacks it applies to.
+  const dirs = Object.fromEntries(stacksOf[id].map((stackId) => [stackId, srcDirs[stackId]]));
+  const results = stacksOf[id].map((stackId) => effective(m, stackId, catalog, dirs));
   results.forEach((result, i) => perStack.push([stacksOf[id][i], result]));
   if (stacksOf[id].length) modules.push([id, attempt(() => combine(results))]);
 }
@@ -130,7 +133,7 @@ function unmerge(target, added, keep = {}) {
   }
 }
 
-// Files: modules/<category>/<module>/all/, <language>/ and <stack>/ for each stack the module applies to, each written at
+// Files: modules/<group>/<module>/all/, <language>/ and <stack>/ for each stack the module applies to, each written at
 // the same path in the project; a later folder replaces the same path. Two stacks give one path only with the same text.
 const files = {};
 for (const [id, m] of modules) {
@@ -138,7 +141,7 @@ for (const [id, m] of modules) {
   for (const stackId of stacksOf[id]) {
     const mine = {};
     for (const dir of ["all", catalog.stacks[stackId].language, stackId]) {
-      const base = join(root, "modules", m.category, id, dir);
+      const base = join(root, "modules", m.group, id, dir);
       if (!existsSync(base)) continue;
       for (const d of readdirSync(base, { recursive: true, withFileTypes: true })) {
         if (d.isFile() && d.name !== ".DS_Store") mine[relative(base, join(d.parentPath, d.name))] = join(d.parentPath, d.name);
@@ -205,7 +208,7 @@ if (lock) writeJson("skills-lock.json", lock);
 // An answer is an option id, `none`, or a library the user named. A section with no answer yet gets its first option
 // (`none` when it has none), or the one whose `firstWhen` matches an earlier section's answer.
 function librariesRule() {
-  const dir = join(root, "modules", catalog.modules.libraries.category, "libraries");
+  const dir = join(root, "modules", catalog.modules.libraries.group, "libraries");
   const chosen = (section) => stackIds.some((id) => section.stacks.includes(id) || section.stacks.includes(catalog.stacks[id].language));
   const render = (section) => {
     if (!(section.id in answers.libraries)) {

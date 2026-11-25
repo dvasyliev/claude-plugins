@@ -52,7 +52,7 @@ test('a python-only project needs no package.json and no port', () => {
 
 test('a pnpm React and Python project runs js checks through pnpm and Python ones through uv', () => {
   const dir = makeProject({ 'package.json': REACT_PKG, 'pnpm-lock.yaml': '', 'pyproject.toml': PYPROJECT });
-  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff', 'types'], srcDirs: { python: ['app'] } });
+  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff', 'file-size', 'tsc', 'basedpyright'], srcDirs: { python: ['app'] } });
   assert.equal(r.status, 0, r.stderr);
   const { checks, fileChecks } = harnessJson(dir);
   const python = ['basedpyright', 'ruff-format', 'ruff'];
@@ -67,7 +67,7 @@ test('a pnpm React and Python project runs js checks through pnpm and Python one
   assert.equal('ruff' in pkg.scripts, false);
 });
 
-const PY_ANSWERS = { stacks: ['python'], modules: ['core', 'ruff', 'types'], srcDirs: { python: ['app'] } };
+const PY_ANSWERS = { stacks: ['python'], modules: ['core', 'ruff', 'file-size', 'basedpyright'], srcDirs: { python: ['app'] } };
 
 test('python checks: ruff and basedpyright, in catalog order, and a second run changes nothing', () => {
   const dir = makeProject({ 'pyproject.toml': PYPROJECT });
@@ -103,7 +103,7 @@ test('settings in pyproject.toml that a harness file now overrides are reported'
 
 test('coverage settings in pyproject.toml that .coveragerc now overrides are reported', () => {
   const dir = makeProject({ 'pyproject.toml': PYPROJECT + '\n[tool.coverage.report]\nfail_under = 50\n' });
-  const r = apply(dir, { ...PY_ANSWERS, modules: [...PY_ANSWERS.modules, 'unit'] });
+  const r = apply(dir, { ...PY_ANSWERS, modules: [...PY_ANSWERS.modules, 'pytest'] });
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /\[tool\.coverage\].*\.coveragerc/);
 });
@@ -163,7 +163,7 @@ test('uv adds the dev dependencies the project lacks, and nothing when it has th
   assert.equal(/\badd\b/.test(logged(second.log)), false);
 });
 
-const TEST_MODULES = ['core', 'ruff', 'types', 'unit', 'unused', 'dupes'];
+const TEST_MODULES = ['core', 'ruff', 'tsc', 'basedpyright', 'vitest', 'pytest', 'knip', 'vulture', 'deptry', 'dupes'];
 
 test('python-only: pytest, vulture, deptry, jscpd through npx, and the reports', () => {
   const dir = makeProject({ 'pyproject.toml': PYPROJECT });
@@ -184,14 +184,14 @@ test('python-only: pytest, vulture, deptry, jscpd through npx, and the reports',
   assert.equal(existsSync(join(dir, 'package.json')), false);
 });
 
-test('imports runs lint-imports on python only', () => {
+test('import-linter runs lint-imports on python only', () => {
   const dir = makeProject({ 'pyproject.toml': PYPROJECT });
-  assert.equal(apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'imports'] }).status, 0);
+  assert.equal(apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'import-linter'] }).status, 0);
   assert.equal(harnessJson(dir).checks.find((c) => c.name === 'imports').command, 'uv run lint-imports');
   const react = makeProject({ 'package.json': REACT_PKG });
-  const r = apply(react, { stacks: ['react'], modules: ['core', 'oxlint', 'imports'] });
+  const r = apply(react, { stacks: ['react'], modules: ['core', 'oxlint', 'import-linter'] });
   assert.equal(r.status, 0, r.stderr);
-  assert.equal(harnessJson(react).modules.includes('imports'), false);
+  assert.equal(harnessJson(react).modules.includes('import-linter'), false);
   assert.equal('reports' in harnessJson(react), false);
 });
 
@@ -235,7 +235,7 @@ test('libraries: python-only gets the Python sections only, React and Python get
 
 test('pytest passes with no tests collected (exit 5) and fails on a failing test', () => {
   const dir = makeProject({ 'pyproject.toml': PYPROJECT });
-  assert.equal(apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'unit'] }).status, 0);
+  assert.equal(apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'pytest'] }).status, 0);
   const { command } = harnessJson(dir).checks.find((c) => c.name === 'pytest');
   const run = (code) => {
     const bin = mkdtempSync(join(tmpdir(), 'harness-bin-'));
@@ -260,7 +260,7 @@ test('an update that passes only the python srcDirs keeps the react ones', () =>
 
 test('file-size checks the python folders only', () => {
   const dir = makeProject({ 'package.json': REACT_PKG, 'pyproject.toml': PYPROJECT });
-  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff'], srcDirs: { react: ['web'], python: ['app'] } });
+  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff', 'file-size'], srcDirs: { react: ['web'], python: ['app'] } });
   assert.equal(r.status, 0, r.stderr);
   assert.equal(harnessJson(dir).checks.find((c) => c.name === 'file-size').command, 'bash .claude/checks/file-size.sh app');
 });
