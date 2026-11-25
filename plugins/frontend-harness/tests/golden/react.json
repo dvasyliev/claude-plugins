@@ -3,7 +3,7 @@
   ".claude/hooks/check-all.sh": "b75b528aed8cbc8bbb1b686d179d4e1d4359f6f191b7e3e6c5c0710122625a72",
   ".claude/hooks/format-lint-file.sh": "aee38a39b951ae4b4fbf12c42c50858899f6a91d9414b52d7b81a4ccde1bc0bd",
   ".claude/hooks/guard-commands.sh": "572ca4e78b4e26814451a9a7c7a88e677601a673578f5299244e5bdd9d148bc5",
-  ".claude/hooks/session-start.sh": "9ca0a641f6c391b46270593c5c882f317324fe12e2fe846c4b76f4e18fd7792e",
+  ".claude/hooks/session-start.sh": "1a0bb3dee1d62d1d16d48729aa85542f3c78c77e870681b33eff57a13a50c8f0",
   ".claude/rules/commits.md": "583c56f8598612ba4cb34c7fa2b9719c0ea572066a3f6b024dfe83e5a77c856f",
   ".claude/rules/data-loading.md": "3265e3ef1c8a328b71b0f47497bef5b0866ecd526d492e16047add0e4fcb3cae",
   ".claude/rules/feature-workflow.md": "f65b45e4af5e10b439c6e1def19e19404dffac5d32e64e1472d13172c5043e02",

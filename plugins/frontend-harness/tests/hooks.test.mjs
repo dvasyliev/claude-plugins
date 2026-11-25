@@ -76,3 +76,11 @@ test('format-lint-file.sh runs a command with a backslash unchanged', () => {
   const r = run(dir, 'format-lint-file.sh', [], JSON.stringify({ tool_input: { file_path: path } }));
   assert.equal(r.status, 0, r.stderr);
 });
+
+test('session-start.sh asks for uv sync in a Python project without .venv, and names no port without one', () => {
+  const dir = project({ checks: [], fileChecks: [] }, { 'pyproject.toml': '[project]\nname = "app"\n' });
+  const r = run(dir, 'session-start.sh', []);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Python dependencies are not installed \(uv sync\)/);
+  assert.doesNotMatch(r.stdout, /port/);
+});

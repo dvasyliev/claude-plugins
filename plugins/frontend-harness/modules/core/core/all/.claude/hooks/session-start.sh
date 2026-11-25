@@ -4,21 +4,29 @@ cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 
 echo "Project state at session start:"
 
-# The dev server port: PORT if set, else the `port` in .claude/harness.json.
-port=${PORT:-$(jq -r '.port // 3000' .claude/harness.json 2>/dev/null || echo 3000)}
+# The dev server port: the `port` in .claude/harness.json (PORT if set); none without a dev server.
+port=$(jq -r '.port // empty' .claude/harness.json 2>/dev/null)
+[ -n "$port" ] && port=${PORT:-$port}
 
 # Warn if packages are not installed.
+installed=true
 if [ -f package.json ] && [ ! -d node_modules ]; then
   echo "- WARNING: dependencies are not installed. Install them first."
-else
-  echo "- Dependencies: installed."
+  installed=false
 fi
+if [ -f pyproject.toml ] && [ ! -d .venv ]; then
+  echo "- WARNING: Python dependencies are not installed (uv sync)."
+  installed=false
+fi
+$installed && echo "- Dependencies: installed."
 
 # Warn if a dev server already runs, so Claude does not start a second one.
-if nc -z localhost "$port" >/dev/null 2>&1; then
-  echo "- WARNING: a dev server is already running on port $port. Do not start another one."
-else
-  echo "- Dev server: port $port is free."
+if [ -n "$port" ]; then
+  if nc -z localhost "$port" >/dev/null 2>&1; then
+    echo "- WARNING: a dev server is already running on port $port. Do not start another one."
+  else
+    echo "- Dev server: port $port is free."
+  fi
 fi
 
 # Count uncommitted changes, so Claude does not overwrite them.

@@ -6,13 +6,12 @@ import { execSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
+import { missingDevDeps } from "./lib/python.mjs";
 import { applies, checkStacks, combine, effective } from "./lib/stacks.mjs";
 
 const root = join(import.meta.dirname, "..");
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
 const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
-if (!existsSync("package.json")) fail("no package.json here; run this in the project folder");
-const pkg = readJson("package.json");
 const old = readJson(".claude/harness.json", {});
 // Answers from before stacks name one `framework`; it becomes `stacks: [framework]`.
 const withStacks = ({ framework, ...a }) => (framework && !a.stacks ? { ...a, stacks: [framework] } : a);
@@ -23,14 +22,19 @@ answers.modules = [...new Set(answers.modules.map((id) => catalog.renamed?.[id] 
 const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
 const stackIds = answers.stacks ?? [];
 attempt(() => checkStacks(catalog, stackIds));
+// package.json is needed only on a `js` stack.
+const isJs = (stackId) => catalog.stacks[stackId].language === "js";
+const hasJs = stackIds.some(isJs);
+if (hasJs && !existsSync("package.json")) fail("no package.json here; run this in the project folder");
+const pkg = readJson("package.json", {});
 // Each chosen stack's source folders: the answer, else the stack's own.
 const srcDirs = Object.fromEntries(stackIds.map((id) => [id, answers.srcDirs[id] ?? catalog.stacks[id].srcDirs]));
 // The dev server port the hooks and the end-to-end tests use: the one the `dev` script sets, else one from the
-// folder name, so projects on one machine rarely share it (the `dev` script then gets it below).
+// folder name, so projects on one machine rarely share it (the `dev` script then gets it below). No `dev` script, no port.
 const portIn = (script) => Number(script?.match(/(?:^|\s)(?:--port|-p)[\s=]*(\d+)/)?.[1]) || undefined;
 const devPort = portIn(pkg.scripts?.dev);
 const folderPort = () => 3000 + [...basename(process.cwd())].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
-const port = devPort ?? folderPort();
+const port = pkg.scripts?.dev ? (devPort ?? folderPort()) : undefined;
 const skip = new Set(answers.skipChecks);
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
 // The project's package manager: pnpm when it has a pnpm lockfile or says so in `packageManager`, else npm.
@@ -50,7 +54,7 @@ function attempt(fn) {
 }
 
 // Selected modules plus the required ones, and the `auto` ones whose `detect` matches (package.json or files),
-// in catalog order, with exactly one linter per chosen stack.
+// in catalog order, with exactly one linter per chosen stack that some linter module applies to.
 const detected = (m) =>
   Object.entries(m.detect ?? {}).some(([field, names]) => names.some((name) => (field === "files" ? existsSync(name) : name in (pkg[field] ?? {}))));
 const wanted = new Set(answers.modules);
@@ -64,17 +68,22 @@ for (const id of wanted) {
 }
 // Each module on the chosen stacks it applies to: its own fields with `by.<language>` and `by.<stack>` merged over them,
 // for each of those stacks. A module that applies to none of them is not installed.
+// What a module brings on a `js` stack and on a `python` one is kept apart too: scripts and dev dependencies.
 const appliesTo = (m, stackId) => applies(m, stackId, catalog, existsSync, pkg);
 const stacksOf = {};
 const modules = [];
+const perStack = [];
 for (const [id, m] of Object.entries(catalog.modules)) {
   if (!wanted.has(id)) continue;
   stacksOf[id] = stackIds.filter((stackId) => appliesTo(m, stackId));
-  if (stacksOf[id].length) modules.push([id, attempt(() => combine(stacksOf[id].map((stackId) => effective(m, stackId, catalog, srcDirs))))]);
+  const results = stacksOf[id].map((stackId) => effective(m, stackId, catalog, srcDirs));
+  results.forEach((result, i) => perStack.push([stacksOf[id][i], result]));
+  if (stacksOf[id].length) modules.push([id, attempt(() => combine(results))]);
 }
+const onLanguage = (language) => perStack.filter(([stackId]) => catalog.stacks[stackId].language === language).map(([, result]) => result);
 for (const stackId of stackIds) {
   const linters = Object.entries(catalog.modules).filter(([, m]) => m.linter && appliesTo(m, stackId)).map(([id]) => id);
-  if (modules.filter(([id, m]) => m.linter && stacksOf[id].includes(stackId)).length !== 1)
+  if (linters.length && modules.filter(([id, m]) => m.linter && stacksOf[id].includes(stackId)).length !== 1)
     fail(`choose one linter for ${stackId} of ${linters.join(", ")} (default: ${catalog.stacks[stackId].linter})`);
 }
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
@@ -140,7 +149,7 @@ const previous = {
   paths: [],
   mcp: [],
   merged: {
-    "package.json": { scripts: Object.fromEntries((old.scripts ?? []).map((name) => [name, readJson("package.json").scripts?.[name]])) },
+    "package.json": { scripts: Object.fromEntries((old.scripts ?? []).map((name) => [name, pkg.scripts?.[name]])) },
     ".claude/settings.json": { enabledPlugins: Object.fromEntries((old.plugins ?? []).map((p) => [p, true])), permissions: old.permissions ?? {} },
   },
   ...old,
@@ -252,10 +261,17 @@ for (const [path, source] of Object.entries(files)) {
 }
 rmSync(tmp, { recursive: true });
 
-// package.json scripts, .claude/settings.json and .mcp.json servers: the modules' keys are set, the project's own are kept.
+// Scripts: one a module brings on a `js` stack goes into package.json and runs through the package manager;
+// the rest (on `python` only) run their `command` as written, its first word from `npx -y <npx>` when the script names one.
 const scripts = Object.assign({}, ...modules.map(([, m]) => m.scripts));
+const inPackage = new Set(onLanguage("js").flatMap((m) => Object.keys(m.scripts ?? {})));
+const direct = (name) => (scripts[name].npx ? scripts[name].command.replace(/^\S+/, `npx -y ${scripts[name].npx}`) : scripts[name].command);
+// package.json scripts, .claude/settings.json and .mcp.json servers: the modules' keys are set, the project's own are kept.
+// A project with no package.json and no `js` stack gets none.
 const merged = {
-  "package.json": { scripts: Object.fromEntries(Object.entries(scripts).map(([name, s]) => [name, s.command])) },
+  ...((hasJs || existsSync("package.json")) && {
+    "package.json": { scripts: Object.fromEntries(Object.entries(scripts).filter(([name]) => inPackage.has(name)).map(([name, s]) => [name, s.command])) },
+  }),
   ".claude/settings.json": modules.reduce((settings, [, m]) => merge(settings, m.settings ?? {}), {}),
   ".mcp.json": { mcpServers: Object.assign({}, ...modules.map(([, m]) => m.mcpServers ?? {})) },
 };
@@ -312,13 +328,14 @@ if (lines.some((line) => line.trim())) {
 } else if (gone.length) rmSync(".gitignore", { force: true });
 
 // .claude/harness.json: what the hooks read, and what this run wrote.
-// The hooks run `command` as written; on js it is the package.json script through the project's package manager.
+// The hooks run `command` as written: a package.json script through the project's package manager, else the script's own command
+// (a file check gets the file as its last argument).
 const checks = collect("checks")
   .filter((c) => !skip.has(c.name))
-  .map(({ name, script }) => ({ name, command: `${pm} run -s ${script}` }));
+  .map(({ name, script }) => ({ name, command: inPackage.has(script) ? `${pm} run -s ${script}` : direct(script) }));
 const fileChecks = collect("fileChecks")
   .filter((c) => !skip.has(c.name))
-  .map(({ name, script, extensions, blocking }) => ({ name, command: `${pm} run -s ${script} --`, extensions, blocking }));
+  .map(({ name, script, extensions, blocking }) => ({ name, command: inPackage.has(script) ? `${pm} run -s ${script} --` : direct(script), extensions, blocking }));
 writeJson(".claude/harness.json", {
   $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with /frontend-harness:setup.",
   version,
@@ -352,8 +369,8 @@ const md = [
   "## Commands",
   "",
   "```bash",
-  `${pm} run dev`.padEnd(24) + `# http://localhost:${port}`,
-  ...Object.entries(scripts).map(([name, s]) => `${pm} run ${name}`.padEnd(24) + `# ${s.description}`),
+  ...(port ? [`${pm} run dev`.padEnd(24) + `# http://localhost:${port}`] : []),
+  ...Object.entries(scripts).map(([name, s]) => (inPackage.has(name) ? `${pm} run ${name}`.padEnd(24) : `${direct(name)}  `) + `# ${s.description}`),
   "```",
   "",
   ...(pm === "pnpm" ? ["The project uses pnpm: where a harness rule or skill says `npm run <script>` or `npx <tool>`, run `pnpm run <script>` or `pnpm exec <tool>`.", ""] : []),
@@ -383,12 +400,29 @@ for (const note of notes) console.log(`harness: ${note}`);
 // Packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const missing = [...new Set(collect("devDependencies"))].filter((p) => !(p in have));
+const missing = [...new Set(onLanguage("js").flatMap((m) => m.devDependencies ?? []))].filter((p) => !(p in have));
 if (missing.length && !noInstall) {
   try {
     execSync(`${pm === "pnpm" ? "pnpm add --save-dev" : "npm install --save-dev"} ${missing.join(" ")}`, { stdio: "inherit" });
   } catch {
     fail(`${pm} install failed; install these by hand: ${missing.join(" ")}`);
+  }
+}
+// Python dev dependencies go into pyproject.toml's dev group through uv.
+if (stackIds.some((stackId) => catalog.stacks[stackId].language === "python") && !noInstall) {
+  try {
+    execSync("uv --version", { stdio: "ignore" });
+  } catch {
+    fail("uv is not installed; the python stack needs it: https://docs.astral.sh/uv/");
+  }
+  const pyproject = existsSync("pyproject.toml") ? readFileSync("pyproject.toml", "utf8") : "";
+  const pyMissing = missingDevDeps(pyproject, [...new Set(onLanguage("python").flatMap((m) => m.devDependencies ?? []))]);
+  if (pyMissing.length) {
+    try {
+      execSync(`uv add --dev ${pyMissing.join(" ")}`, { stdio: "inherit" });
+    } catch {
+      fail(`uv add failed; install these by hand: uv add --dev ${pyMissing.join(" ")}`);
+    }
   }
 }
 
