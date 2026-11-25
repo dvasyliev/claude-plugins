@@ -8,7 +8,7 @@ argument-hint: "[module ...]"
 
 The harness rules are for new code; code written before the harness stays as it was until someone asks. This skill is that ask: it checks the existing code against the modules the user picks, reports what breaks their rules, asks what to fix, and fixes it.
 
-**Template:** `$HARNESS_TEMPLATE` if set, else this plugin's folder: two folders up from this skill's base directory. `<template>/modules.json` gives each module's `audit`: the rule files and skill folders, at their paths in the project, it checks code against. Each path is one **area** (such as `structure.md`); in `.claude/rules/libraries.md` each job section is an area of its own (the `title`s in `<template>/modules/best-practices/libraries/sections.json`, such as "Forms"), and its other sections are read as context.
+**Template:** `$HARNESS_TEMPLATE` if set, else this plugin's folder: two folders up from this skill's base directory. `<template>/modules.json` gives each module's `audit`: the rule files and skill folders, at their paths in the project, it checks code against. Each path is one **area** (such as `structure.md`); in `.claude/rules/libraries.md` each job section is an area of its own (the `title`s in `<template>/modules/shared/libraries/sections.json`, such as "Forms"), and its other sections are read as context.
 
 ## Questions
 
@@ -24,7 +24,7 @@ Ask as `../../references/questions.md` (from this skill's base directory) says. 
 
 ## 2. Choose modules
 
-Modules named after the command (`$ARGUMENTS`) that are installed and have an `audit` are the ones to audit; name any other as skipped. With no names, ask which modules to audit, a multiple choice with one option per module (never two modules in one option; with more than 4, split them over more questions in the same call): the module id as label, its areas in a few words as description (such as "structure: where files go, nesting, imports"; for libraries "code that does a library's job by hand or with another library", not the list of libraries), in catalog order. With one module, do not ask; say which it is.
+Modules named after the command (`$ARGUMENTS`) that are installed and have an `audit` are the ones to audit (an old name in the catalog's `renamed` stands for its new ones, such as `best-practices` for the `*-practices` modules); name any other as skipped. With no names, ask which modules to audit, a multiple choice with one option per module (never two modules in one option; with more than 4, split them over more questions in the same call): the module id as label, its areas in a few words as description (such as "structure: where files go, nesting, imports"; for libraries "code that does a library's job by hand or with another library", not the list of libraries), in catalog order. With one module, do not ask; say which it is.
 
 ## 3. Find the problems
 
@@ -35,7 +35,7 @@ First run each command in `.claude/harness.json` `reports` (such as a strict lin
 - The whole project to check, but `node_modules`, build output and generated files. The source folders (`srcDirs` in `.claude/harness.json`, per stack) are where app code should live: components, pages or logic outside them are a structure finding (tests, configs and scripts are not). A rule's `paths:` says which kind of files it is about; files of that kind elsewhere (tests named `*.test.ts` or in `__tests__/`) are findings of that rule, not out of scope.
 - The task: read each area's rules, check the code against them, and return the findings. A finding is one kind of problem in one area: the area, where (folders, with the number of files), what is wrong (the rule it breaks, in a sentence) and the fix. Group the same problem in many files into one finding. A libraries finding is code that does a section's job other than the section says: with another library or by hand where it names a library, or with a library where it names only the platform. A library comes with conditions ("when a form has many fields"); code where they do not hold is no finding. A fix that needs a library not yet in `package.json` (or `pyproject.toml`) says so ("adds react-hook-form").
 - Another way to fix a finding only when a reasonable developer could really pick it: it costs or changes something different (a smaller change, a rule changed instead of the code). Do not make one up to fill a choice.
-- Leave out what the checks already catch (the linter, the `unused` and `dupes` checks, types), and matters of taste.
+- Leave out what the checks already catch (the linter, the unused-code checks `knip`, `vulture` and `deptry`, `dupes`, types), and matters of taste.
 
 Then merge across modules: findings about the same code with the same fix become one, under the area fixed first. Where their fixes contradict (a hand-made store from one area, the data library from another), keep the one the rules support best, under its own area, and say in the report which was dropped and why.
 
@@ -74,7 +74,7 @@ The fixes keep what the user can do in the app; how it loads and looks may chang
 2. Run the `check` script. If it fails, say in a line what broke and ask: fix it (recommended), undo the area (`git revert` its commits, newest first; never `git reset`) and go on with the next, or stop here.
 3. Tick the area in the audit spec (an undone one with "(undone)" after it) and commit that.
 
-With `e2e`: after the last area, run the `verify` script once; moved pages can break in ways the types do not catch.
+With `playwright`: after the last area, run the `verify` script once; moved pages can break in ways the types do not catch.
 
 Going on later: start at the first unticked area of the audit spec; a plan already written there goes on from where its execution stopped.
 

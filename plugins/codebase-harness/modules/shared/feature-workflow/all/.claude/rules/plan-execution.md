@@ -1,6 +1,6 @@
 # Plan execution
 
-How to carry out a plan from `superpowers:writing-plans`, whatever it is for: a feature, the fixes of an audit. A sentence marked with a module (such as "With `unit`") applies only when that module is in the harness modules listed in `.claude/rules/harness.md`.
+How to carry out a plan from `superpowers:writing-plans`, whatever it is for: a feature, the fixes of an audit. A sentence marked with a module (such as "With `vitest`") applies only when that module is in the harness modules listed in `.claude/rules/harness.md`.
 
 Do not ask how to carry out the plan; choose:
 
@@ -9,4 +9,4 @@ Do not ask how to carry out the plan; choose:
 
 ## Subagents
 
-Subagents that implement a task do not run `npm run check`; the Stop hook does. With `unit`, they run only the unit tests of the files they touch (`npx vitest run <files>` or `uv run pytest <files>`). With `e2e`, the subagent on the end-to-end task runs only its spec files, never `npm run verify`, which runs once after the last task.
+Subagents that implement a task do not run `npm run check`; the Stop hook does. With `vitest` or `pytest`, they run only the unit tests of the files they touch (`npx vitest run <files>` or `uv run pytest <files>`). With `playwright`, the subagent on the end-to-end task runs only its spec files, never `npm run verify`, which runs once after the last task.

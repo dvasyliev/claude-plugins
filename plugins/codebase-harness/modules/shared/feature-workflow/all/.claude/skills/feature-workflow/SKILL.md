@@ -7,7 +7,7 @@ description: Use when building any user-facing feature, from the request to the 
 
 Go through the steps below in order.
 
-A step or sentence marked with a module (such as "With `e2e`") applies only when that module is in the harness modules listed in `.claude/rules/harness.md`; skip it otherwise.
+A step or sentence marked with a module (such as "With `playwright`") applies only when that module is in the harness modules listed in `.claude/rules/harness.md`; skip it otherwise.
 
 ## Spec
 
@@ -27,17 +27,17 @@ Use `superpowers:writing-plans`. List each scenario's user steps with the expect
 
 If `superpowers:brainstorming` produced a written spec, show the plan and wait for the user's approval. Otherwise start at once. Either way, carry it out as `.claude/rules/plan-execution.md` says.
 
-With `e2e`: make the end-to-end tests the plan's last task, so the final review that both ways of carrying it out end with covers them; that review is the feature's review. The browser check stays with you, not the subagents.
+With `playwright`: make the end-to-end tests the plan's last task, so the final review that both ways of carrying it out end with covers them; that review is the feature's review. The browser check stays with you, not the subagents.
 
 Ask the user only about what the spec leaves open, not about how to execute.
 
-## Unit tests first (with `unit`)
+## Unit tests first (with `vitest` or `pytest`)
 
 Use `superpowers:test-driven-development`: write the tests, watch them fail in the unit tests (`npm test` or `uv run pytest`), then implement.
 
-## Browser check (with `e2e`)
+## Browser check (with `playwright`)
 
-With `e2e`: drive the feature on the running dev server with the `playwright-cli` skill and confirm the `- expect:` outcomes.
+With `playwright`: drive the feature on the running dev server with the `playwright-cli` skill and confirm the `- expect:` outcomes.
 
 `@playwright/cli` is a devDependency of the project: run every command as `npx playwright-cli <command>`, where the skill writes `playwright-cli <command>`. Never install it globally, even when the skill says to.
 
@@ -53,9 +53,9 @@ Every screenshot stays in the conversation and is re-read on every later turn, s
 - Fix the window size before screenshots: `npx playwright-cli resize 1280 800` for desktop, `npx playwright-cli open --mobile` for phone.
 - One screenshot per state you need to judge. Do not re-take one to confirm a change a snapshot already shows.
 
-## End-to-end tests (with `e2e`)
+## End-to-end tests (with `playwright`)
 
-With `e2e`: write them for the feature's happy paths only, one per main scenario.
+With `playwright`: write them for the feature's happy paths only, one per main scenario.
 
 While working, run only the feature's own spec files (`npx playwright test tests/x/y.spec.ts`). Commits after each task are fine; run the whole suite with `npm run verify` once, before the last commit. After every run, read its log for errors as `tests-e2e.md` says; a run that passes but logs an error the feature caused is not done.
 

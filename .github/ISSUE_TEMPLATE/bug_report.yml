@@ -15,7 +15,7 @@ body:
       label: Steps to reproduce
       placeholder: |
         1. Run /codebase-harness:setup in a new Next.js project
-        2. Pick the e2e module
+        2. Pick the playwright module
         3. ...
     validations:
       required: true

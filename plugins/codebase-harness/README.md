@@ -106,7 +106,7 @@ Use the scope you installed with, then run `/reload-plugins`.
 
 | Command | What it does |
 |---|---|
-| `/codebase-harness:setup` | Sets up the harness. Run it again to add or remove modules, or just ask: "add e2e tests". |
+| `/codebase-harness:setup` | Sets up the harness. Run it again to add or remove modules, or just ask: "add end-to-end tests". |
 | `/codebase-harness:update` | Brings the harness to the newest version of the plugin and keeps your own edits. |
 | `/codebase-harness:libraries` | Picks one library for each job: forms, data, dates and so on. |
 | `/codebase-harness:audit` | Checks code written before the harness against its rules, shows what breaks them, and fixes what you pick. To check only some modules: `/codebase-harness:audit core libraries`. |
@@ -122,7 +122,7 @@ To turn off one check, ask Claude: "turn off the dupes check". To remove the plu
 
 ## Stacks
 
-A project can have several stacks. Setup offers the ones it detects, and each module gets the tools of every stack you pick.
+A project can have several stacks. Setup offers the ones it detects, and you get the modules of every stack you pick.
 
 | Stack | For | Linter | Tools |
 |---|---|---|---|
@@ -133,32 +133,72 @@ A project can have several stacks. Setup offers the ones it detects, and each mo
 
 ## Modules
 
-Pick only what you need. `core`, `types` and `prettier` are always on (`prettier` for the JavaScript stacks), you pick one linter for each stack, and `tailwind` and `next-docs` turn on by themselves when the project uses Tailwind or Next.js. A module is offered only when one of your stacks uses it. Setup marks the ones it recommends.
+Each module is one tool or one set of rules. Modules are grouped by the stacks they are for, and setup asks about one group at a time, only for the groups your stacks use. In the tables:
 
-| Module | What it does for you |
-|---|---|
-| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Keeps `CLAUDE.md` and the rules under 200 lines. |
-| `types` | Checks types: TypeScript (`tsc`) and, on Python, basedpyright. Always on. |
-| `prettier` | Formats each file Claude edits and checks formatting before Claude finishes. JavaScript stacks only. Always on. |
-| `feature-workflow` | Claude works in steps: describe the feature, plan it, write tests first, check it in the browser. |
-| `context-size` | Warns before every message once the chat is over 200K tokens, so you `/compact` it or start over with `/clear`. |
-| `eslint` or `oxlint` | Finds code mistakes, bad patterns and accessibility problems in JavaScript. Also stops files from getting too long. |
-| `ruff` | Python: formats and lints, and stops files over 500 lines. |
-| `unused` | Finds code and packages nobody uses (knip; on Python, vulture and deptry). |
-| `dupes` | Finds copied code in JavaScript, TypeScript and Python files (jscpd). |
-| `imports` | Python: import contracts (which package must never import which), in `.importlinter` or `[tool.importlinter]` in `pyproject.toml`, checked with import-linter. |
-| `tailwind` | Keeps Tailwind classes in the same order everywhere. |
-| `unit` | Runs unit tests (Vitest, or pytest on Python). |
-| `e2e` | React and Next.js: runs browser tests (Playwright) and checks pages for accessibility problems before you push. |
-| `commitlint` | Checks that commit messages follow one format. |
-| `pre-commit` | Before each commit, looks for passwords and keys and checks the changed files. |
-| `sync-deps` | Runs the package install (`npm install` or `pnpm install`, and `uv sync` on Python) for you after a pull or branch switch that changed the lockfile. |
-| `best-practices` | Gives Claude best-practice guides: Vercel's for React and Next.js, others for Node and Python. |
-| `context7` | Lets Claude read the current docs of your libraries, not old ones from memory. |
-| `libraries` | One chosen library for each job, so Claude does not add new ones. |
-| `next-docs` | Gives Claude the docs of your exact Next.js version. |
-| `resilience` | Calls to other services get time limits and safe retries, failures show an error you can act on, and a change clears old cached data. |
-| `page-speed` | React and Next.js: rules for fast pages, a browser tool to measure them, and a size limit for your code bundle (React). |
+- **Required:** always on.
+- **Recommended:** setup marks it for you.
+- **Linter:** you get one linter for each stack.
+- **Auto:** turns on by itself when the project uses that tool.
+- **Optional:** off unless you pick it.
+
+### Shared: every stack
+
+| Module | What it does for you | Status |
+|---|---|---|
+| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Keeps `CLAUDE.md` and the rules under 200 lines. | Required |
+| `feature-workflow` | Claude works in steps: describe the feature, plan it, write tests first, check it in the browser. | Recommended |
+| `context-size` | Warns before every message once the chat is over 200K tokens, so you `/compact` it or start over with `/clear`. | Recommended |
+| `dupes` | Finds copied code in JavaScript, TypeScript and Python files (jscpd). | Recommended |
+| `commitlint` | Checks that commit messages follow one format. | Recommended |
+| `pre-commit` | Before each commit, looks for passwords and keys and checks the changed files. | Recommended |
+| `sync-deps` | Runs the package install (`npm install` or `pnpm install`, and `uv sync` on Python) for you after a pull or branch switch that changed the lockfile. | Optional |
+| `context7` | Lets Claude read the current docs of your libraries, not old ones from memory. | Recommended |
+| `libraries` | One chosen library for each job, so Claude does not add new ones. | Recommended |
+
+### JavaScript: React, Next.js and Node
+
+| Module | What it does for you | Status |
+|---|---|---|
+| `tsc` | Checks TypeScript types. On Node, only when the project has `tsconfig.json`. | Required |
+| `prettier` | Formats each file Claude edits and checks formatting before Claude finishes. | Required |
+| `oxlint` | Finds code mistakes, bad patterns and accessibility problems. Also stops files from getting too long. Works with TypeScript 7. | Linter (React, Node) |
+| `knip` | Finds files, exports and packages nobody uses. | Recommended |
+| `vitest` | Runs unit tests (Vitest). | Recommended |
+
+### Web: React and Next.js
+
+| Module | What it does for you | Status |
+|---|---|---|
+| `eslint` | Like `oxlint`, with type-aware rules and, on Next.js, the folder rules. Needs TypeScript below 6.1. | Linter (Next.js) |
+| `tailwind` | Keeps Tailwind classes in the same order everywhere. | Auto |
+| `playwright` | Runs browser tests (Playwright) and checks pages for accessibility problems before you push. | Recommended |
+| `react-practices` | Gives Claude Vercel's guides for React and Next.js. Calls to other services get time limits and safe retries, failures show an error you can act on, and a change clears old cached data. | Recommended |
+| `page-speed` | Rules for fast pages, a browser tool to measure them, and a size limit for your code bundle (React). | Recommended |
+
+### Next.js
+
+| Module | What it does for you | Status |
+|---|---|---|
+| `next-docs` | Gives Claude the docs of your exact Next.js version. | Auto |
+
+### Node
+
+| Module | What it does for you | Status |
+|---|---|---|
+| `node-practices` | Gives Claude guides for backend code, modern JavaScript and tests. Calls to other services get time limits, and retries only inside a service's client. | Recommended |
+
+### Python
+
+| Module | What it does for you | Status |
+|---|---|---|
+| `basedpyright` | Checks Python types. | Required |
+| `ruff` | Formats and lints Python. | Linter |
+| `file-size` | Stops Python files over 500 lines. | Required |
+| `vulture` | Finds Python code nobody uses. | Recommended |
+| `deptry` | Finds Python packages that are unused, missing, or used but not listed. | Recommended |
+| `import-linter` | Checks which package must never import which, as written in `.importlinter` or `[tool.importlinter]` in `pyproject.toml`. Offered when the code has two or more packages. | Optional |
+| `pytest` | Runs unit tests (pytest), with coverage and mocked HTTP. | Recommended |
+| `python-practices` | Gives Claude guides for Python: patterns to avoid, code style, errors, project structure, retries and tests. Calls to other services get time limits, and retries only inside a service's client. | Recommended |
 
 <!-- COURSES:START -->
 ## My Educational Courses

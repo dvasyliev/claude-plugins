@@ -11,12 +11,12 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 
 **Questions:** ask as `../../references/questions.md` (from this skill's base directory) says.
 
-**Catalog:** `<template>/modules.json` lists every stack and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/modules/<category>/<module>/`: `all/` for every stack it applies to, then `<language>/` and `<stack>/` for those only, laid out as in the project. Read them; do not guess.
+**Catalog:** `<template>/modules.json` lists every stack and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). Each module is in a `group` (`groups`: the stacks its modules apply to), and its files are in `<template>/modules/<group>/<module>/`: `all/` for every stack it applies to, then `<language>/` and `<stack>/` for those only, laid out as in the project. Read them; do not guess.
 
 ## 1. Look at the project
 
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: the harness merges into the project's files, and the changes may be another agent's.
-2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `stacks`, `srcDirs`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit. A project from before 0.19 may list `next-rules`: replace it with `page-speed`. A project from before 0.24 with `best-practices` had the performance rules in it: add `page-speed` too. A project with `performance` (0.24): replace it with `page-speed`. A project from before 0.25 with `quality`: replace it with `unused` and `dupes`. A project from before 0.28 has its merge base in `.claude/harness-base/`: `apply.mjs` moves it into `.claude/harness.json` and deletes the folder. A project that lists `knip` or `jscpd` (before the modules were grouped by kind of check): `apply.mjs` renames them to `unused` and `dupes` (the checks keep their names `knip` and `dupes`) and adds the required `types` and `prettier`, which came out of `core`; nothing to ask. A project from before 0.29 has `.claude/harness.md`: `apply.mjs` writes `.claude/rules/harness.md` instead; remove the `@.claude/harness.md` line from `CLAUDE.md` if the merge left it.
+2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `stacks`, `srcDirs`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit. A project from before 0.19 may list `next-rules`: replace it with `page-speed`. A project from before 0.24 with `best-practices` had the performance rules in it: add `page-speed` too. A project with `performance` (0.24): replace it with `page-speed`. A project from before 0.25 with `quality`: replace it with `unused` and `dupes`, which `apply.mjs` then renames as below. A project from before 0.28 has its merge base in `.claude/harness-base/`: `apply.mjs` moves it into `.claude/harness.json` and deletes the folder. A project that lists `jscpd`: `apply.mjs` renames it to `dupes`. A project from before 1.1 lists modules by kind of check (`types`, `unused`, `unit`, `e2e`, `imports`, `best-practices`, `resilience`): `apply.mjs` renames each to its tools (`renamed` in the catalog, such as `unused` to `knip`, `vulture` and `deptry`), keeps those that apply to the project's stacks, and adds the required modules it lacks (such as `prettier`, `tsc` and `file-size`); the check names stay the same; nothing to ask. A project from before 0.29 has `.claude/harness.md`: `apply.mjs` writes `.claude/rules/harness.md` instead; remove the `@.claude/harness.md` line from `CLAUDE.md` if the merge left it.
 3. Ask which stacks the project uses (`AskUserQuestion`, `multiSelect: true`, one option per entry in `stacks`, its `description` as the label, such as "React (Vite)"). A stack is detected when its `detect` matches: a `package.json` dependency, or a file that exists (`pyproject.toml` for Python). List the detected ones first, marked "(detected)"; of `nextjs` and `react`, only `nextjs` is detected, since a Next.js project has both. `node` is also detected when `package.json` has neither `react` nor `next` in its dependencies, or when there is no `package.json` and git tracks `.js`, `.mjs`, `.cjs` or `.ts` files outside `node_modules` and outside hidden folders (`git ls-files`; a path with a segment starting with `.`, such as `.claude/` or `.github/`, does not count: those are tool scripts, not the project's code); never when `react` or `nextjs` is detected, as it excludes both. On an update, the `stacks` in `.claude/harness.json` are the detected ones. A stack cannot be chosen with one it `excludes`: when the user picks both, keep the one that excludes the other (`nextjs` over `react`) and say so. The stacks decide which modules apply and which version of each module's files is installed.
 4. For each stack, check that the code sits where the harness configs look (Prettier, tests, the linter, the rules): its `srcDirs` in the catalog (`app/` and `lib/` for Next.js, `src/` for React). Ask the user for the folders when the code sits elsewhere, and send them as `srcDirs` (stack: folders) in the run command (section 3); on an update, the ones in `.claude/harness.json` stay. A Next.js project with its code in `src/` or a `components/` folder at the root is not covered by the defaults; tell the user before installing, since those folders would go unformatted and untested.
 5. **Python** (the `python` stack):
@@ -28,22 +28,30 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 
 ## 2. Choose modules
 
-Mark each module:
+A module **applies** when its `stacks`, or else its group's `stacks` (every stack when `null`), include a chosen stack or its language. Install and ask about only the modules that apply. Mark each:
 
 - **required:** always installed; do not ask.
-- **auto** (such as `tailwind`, or `next-docs` when `node_modules/next/dist/docs` exists): installed exactly when its `detect` matches, checked again on every update; do not ask, only say whether it is in.
+- **auto** (such as `tailwind`, or `next-docs` when `node_modules/next/dist/docs` exists): installed exactly when its `detect` matches, checked again on every update; do not ask.
+- **linter:** chosen as below; not a checkbox.
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
 - **offered:** the rest, unselected.
 
-Offer only modules whose `stacks` include a chosen stack or its language (a module with no `stacks` applies to every stack); the others are not asked about.
+Say in one line which required, auto and linter modules go in. Ask about the suggested and offered ones with `AskUserQuestion`, `multiSelect: true`, one question per group the chosen stacks touch, in the order of `groups`:
 
-Ask with `AskUserQuestion`, `multiSelect: true`, one question per `category` (but `core`) with the category in words as its header (such as "Code quality"), up to 4 questions per call (a second call for the rest). Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies. On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
+- Header: the group in a word or two (Shared, JavaScript, Web, Next.js, Node, Python), within the header limit; the question names the group's stacks (its `description`).
+- Options: the group's modules to ask about, in catalog order. Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies.
+- More than 4: split the group over the fewest questions that hold them (5: 3 and 2; 8: 4 and 4), in catalog order, cutting between two categories where the counts allow; each question names the kinds of check in it.
+- Exactly 1: no question of its own. Add it to the question of the nearest group in `groups` order that has fewer than 4 options, and name both groups in that question. With no such question, say whether it goes in (in when suggested) and let the user change that.
+- None: no question.
+- Up to 4 questions per call; a second call for the rest.
 
-Exactly one `linter` module is installed per stack: choose the one the project already uses (its `detect`), else the stack's `linter`. Ask only when the project has both or the user wants the other. `apply.mjs` fails with `choose one linter for <stack> of <...>` when a stack has none or several; ask then and run it again.
+On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
+
+Exactly one `linter` module is installed per stack: choose the one the project already uses (its `detect`), else the stack's `linter`. Only a stack where two linter modules apply has a choice (React and Next.js: `eslint` from the web group, `oxlint` from the JavaScript group); ask it, as its own question, only when the project has both or the user wants the other. `apply.mjs` fails with `choose one linter for <stack> of <...>` when a stack has none or several; ask then and run it again.
 
 Skills come with their modules; there is no separate skill question.
 
-**`imports`** (Python): offer it only when the Python folders hold two or more packages (a folder with `__init__.py`, or the packages inside a `src/` folder). List them and ask which must never import which (such as "`tools` never imports `pipelines`"). Write the answers to `.importlinter` at the root, which the project owns:
+**`import-linter`** (Python): offer it only when the Python folders hold two or more packages (a folder with `__init__.py`, or the packages inside a `src/` folder). List them and ask which must never import which (such as "`tools` never imports `pipelines`"). Write the answers to `.importlinter` at the root, which the project owns:
 
 ```ini
 [importlinter]
@@ -60,13 +68,13 @@ forbidden_modules =
     <target>
 ```
 
-One contract per answer. With no answer, leave `imports` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `imports` without asking, and write no `.importlinter`, which import-linter would read instead.
+One contract per answer. With no answer, leave `import-linter` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `import-linter` without asking, and write no `.importlinter`, which import-linter would read instead.
 
 Ask about `skipChecks` only when the user asks to turn a check off, or in step 4.
 
 ### Libraries
 
-With the `libraries` module, settle which library each job uses. The jobs are the `sections` in `<template>/modules/best-practices/libraries/sections.json` whose `stacks` include a chosen stack or its language; ask nothing about the others. On an update, handle only sections with no answer in `.claude/harness.json` `libraries`; a section that has one keeps it. Do not look for use cases in the code: the rule is about code to come, and a chosen library is not installed, as a project adds it when its first code needs it.
+With the `libraries` module, settle which library each job uses. The jobs are the `sections` in `<template>/modules/shared/libraries/sections.json` whose `stacks` include a chosen stack or its language; ask nothing about the others. On an update, handle only sections with no answer in `.claude/harness.json` `libraries`; a section that has one keeps it. Do not look for use cases in the code: the rule is about code to come, and a chosen library is not installed, as a project adds it when its first code needs it.
 
 1. Give each section a recommended library, taking the first of these that applies:
    - The section's current answer in `.claude/harness.json` `libraries`.

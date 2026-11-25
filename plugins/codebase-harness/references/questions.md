@@ -1,6 +1,6 @@
 # Asking the user
 
-How the plugin's skills ask questions. A skill says which questions to ask; this file says how. The "Questions" section of `modules/workflow/feature-workflow/all/.claude/rules/feature-workflow.md` says the same for projects: change both together.
+How the plugin's skills ask questions. A skill says which questions to ask; this file says how. The "Questions" section of `modules/shared/feature-workflow/all/.claude/rules/feature-workflow.md` says the same for projects: change both together.
 
 - Every question that has answer options goes through `AskUserQuestion`, in the user's language, never as plain text at the end of a reply. That includes offers ("run setup now?") and what to do when something fails. Only a question with no sensible options stays in text.
 - The tool takes 2–4 options per question, up to 4 questions per call, a header of at most 12 characters and a label of 1–5 words; headers are plain words in the user's language, not abbreviations ("Швидкодія", not "React perf"). It adds "Other" itself; do not add one.
