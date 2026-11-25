@@ -88,6 +88,41 @@ test('format-lint-file.sh runs a command with a backslash unchanged', () => {
   assert.equal(r.status, 0, r.stderr);
 });
 
+// A Claude worktree of the project at .claude/worktrees/wt, with one changed file in it.
+function worktree(harness) {
+  const dir = project(harness, { '.gitignore': '/.claude/worktrees/\n' });
+  const wt = join(dir, '.claude/worktrees/wt');
+  const r = spawnSync('git', ['worktree', 'add', '-q', '-b', 'worktree-wt', wt], { cwd: dir, encoding: 'utf8', env: cleanEnv() });
+  assert.equal(r.status, 0, r.stderr);
+  writeFileSync(join(wt, 'a.ts'), 'x\n');
+  return { dir, wt };
+}
+
+test('check-all.sh runs the checks in the worktree Claude works in, not in the main checkout', () => {
+  const { dir, wt } = worktree({ checks: [{ name: 'where', command: 'pwd; false' }], fileChecks: [] });
+  const r = run(dir, 'check-all.sh', [], JSON.stringify({ cwd: join(wt, '.claude') }));
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /\.claude\/worktrees\/wt/);
+});
+
+test('check-all.sh stays in the project when Claude is in a folder outside it', () => {
+  const { dir } = worktree({ checks: [{ name: 'where', command: 'pwd; false' }], fileChecks: [] });
+  writeFileSync(join(dir, 'b.ts'), 'x\n');
+  const other = project({ checks: [], fileChecks: [] });
+  const r = run(dir, 'check-all.sh', [], JSON.stringify({ cwd: other }));
+  assert.equal(r.status, 2);
+  assert.doesNotMatch(r.stderr, /worktrees/);
+  assert.match(r.stderr, new RegExp(dir));
+});
+
+test('format-lint-file.sh runs the file checks from the worktree the edited file is in', () => {
+  const { dir, wt } = worktree({ checks: [], fileChecks: [{ name: 'lint', command: 'pwd >&2; false', extensions: ['ts'], blocking: true }] });
+  const input = { cwd: wt, tool_input: { file_path: join(wt, 'a.ts') } };
+  const r = run(dir, 'format-lint-file.sh', [], JSON.stringify(input));
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /\.claude\/worktrees\/wt\n/);
+});
+
 test('session-start.sh asks for uv sync in a Python project without .venv, and names no port without one', () => {
   const dir = project({ checks: [], fileChecks: [] }, { 'pyproject.toml': '[project]\nname = "app"\n' });
   const r = run(dir, 'session-start.sh', []);

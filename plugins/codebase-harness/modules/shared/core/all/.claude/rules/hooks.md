@@ -6,5 +6,6 @@ Claude Code hooks in `.claude/hooks/`, set in `.claude/settings.json`. A red res
 - `guard.sh` (before reading, editing, searching or running a command): blocks force push, skipping git hooks (`--no-verify`, `SKIP_VERIFY`) and every secret env file (`.env`, `.env.local`, `.env.production`, ...); only `.env.example` stays open. It sees only a command's text, so a Bash script whose text names such a file (a heredoc that edits docs mentioning it) is blocked too: edit those files with Edit.
 - `format-lint-file.sh` (after every edit): the `fileChecks` in `.claude/harness.json` (format, lint) on the edited file; a `CLAUDE.md` or rule over 200 lines is to be split.
 - `check-all.sh` (end of every turn): the `checks` in `.claude/harness.json`; skipped when only `.md` files changed or the same code already passed. The `check` script, or `.claude/hooks/check-all.sh --force`, runs them all.
+- In a Claude worktree (`.claude/worktrees/<name>/`), both of the last two run in that worktree, not in the main checkout.
 
 Git hooks in `.githooks/`, from the installed modules: secrets and staged code before a commit, the commit message, the end-to-end tests before a push, the package install after a pull. The harness and `npm install` turn them on, unless the project runs its git hooks from elsewhere (husky).

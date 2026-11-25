@@ -228,15 +228,19 @@
       "devDependencies": ["prettier"]
     },
     "feature-workflow": {
-      "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, several at once), the rule for carrying out a plan (yourself or with subagents), the superpowers plugin and the improve-harness skill.",
+      "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, or in a worktree offered when the work calls for one), the rule for carrying out a plan (yourself or with subagents), the superpowers plugin, the improve-harness skill, and .worktreeinclude so a worktree gets the env files.",
       "group": "shared",
       "category": "workflow",
       "recommended": true,
       "settings": {
         "enabledPlugins": {
           "superpowers@claude-plugins-official": true
+        },
+        "worktree": {
+          "baseRef": "head"
         }
       },
+      "gitignore": ["/.claude/worktrees/"],
       "install": [
         {
           "command": "claude plugin install superpowers@claude-plugins-official --scope user"

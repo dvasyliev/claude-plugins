@@ -146,7 +146,7 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 | Module | What it does for you | Status |
 |---|---|---|
 | `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Keeps `CLAUDE.md` and the rules under 200 lines. | Required |
-| `feature-workflow` | Claude works in steps: describe the feature, plan it, write tests first, check it in the browser. | Recommended |
+| `feature-workflow` | Claude works in steps: describe the feature, plan it, write tests first, check it in the browser. Offers a separate worktree when another agent or session works in the repo at the same time, or for an experiment. | Recommended |
 | `context-size` | Warns before every message once the chat is over 200K tokens, so you `/compact` it or start over with `/clear`. | Recommended |
 | `dupes` | Finds copied code in JavaScript, TypeScript and Python files (jscpd). | Recommended |
 | `commitlint` | Checks that commit messages follow one format. | Recommended |
