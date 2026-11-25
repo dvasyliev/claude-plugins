@@ -40,11 +40,12 @@ const pkg = readJson("package.json", {});
 // Each chosen stack's source folders: the answer, else the stack's own.
 const srcDirs = Object.fromEntries(stackIds.map((id) => [id, answers.srcDirs[id] ?? catalog.stacks[id].srcDirs]));
 // The dev server port the hooks and the end-to-end tests use: the one the `dev` script sets, else one from the
-// folder name, so projects on one machine rarely share it (the `dev` script then gets it below). No `dev` script, no port.
+// folder name, so projects on one machine rarely share it (the `dev` script then gets it below). No `dev` script, or no
+// `js` stack, no port.
 const portIn = (script) => Number(script?.match(/(?:^|\s)(?:--port|-p)[\s=]*(\d+)/)?.[1]) || undefined;
 const devPort = portIn(pkg.scripts?.dev);
 const folderPort = () => 3000 + [...basename(process.cwd())].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
-const port = pkg.scripts?.dev ? (devPort ?? folderPort()) : undefined;
+const port = hasJs && pkg.scripts?.dev ? (devPort ?? folderPort()) : undefined;
 const skip = new Set(answers.skipChecks);
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
 // The project's package manager: pnpm when it has a pnpm lockfile or says so in `packageManager`, else npm.
@@ -307,7 +308,7 @@ for (const [path, add] of Object.entries(merged)) {
 }
 
 // The `dev` script serves on the port when it names none.
-if (pkg.scripts?.dev && !devPort) {
+if (port && !devPort) {
   const json = readJson("package.json");
   json.scripts.dev += ` --port ${port}`;
   writeJson("package.json", json);

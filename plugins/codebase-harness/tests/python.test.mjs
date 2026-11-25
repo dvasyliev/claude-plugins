@@ -264,3 +264,11 @@ test('file-size checks the python folders only', () => {
   assert.equal(r.status, 0, r.stderr);
   assert.equal(harnessJson(dir).checks.find((c) => c.name === 'file-size').command, 'bash .claude/checks/file-size.sh app');
 });
+
+test('a python-only project with a dev script in package.json gets no port', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT, 'package.json': '{"name":"docs","private":true,"scripts":{"dev":"vite"}}' });
+  const r = apply(dir, { stacks: ['python'], modules: ['core', 'ruff'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).scripts.dev, 'vite');
+  assert.equal('port' in harnessJson(dir), false);
+});
