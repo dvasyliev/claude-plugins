@@ -1,7 +1,8 @@
 # Runs on GitHub what the local git hooks run: commitlint on the commit messages of a pull
 # request, and `claude plugin validate` on the marketplace and the plugin. The smoke job installs
-# the harness with every module into a new Next.js, React, Python and React + Python project, then
-# runs it again and expects no change, so a broken apply.mjs or module never reaches a release.
+# the harness with every module into a new Next.js, React, Python, React + Python, Node and
+# Python + Node project, then runs it again and expects no change, so a broken apply.mjs or module
+# never reaches a release.
 name: CI
 
 on:
@@ -64,6 +65,14 @@ jobs:
             stacks: '"python"'
             srcDirs: '"python":["app"]'
             modules: '"core","types","feature-workflow","context-size","ruff","unused","dupes","imports","unit","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","resilience"'
+          - framework: node
+            stacks: '"node"'
+            package: '{"name":"smoke","private":true,"scripts":{"start":"node index.js"},"dependencies":{"express":"5.1.0"}}'
+            modules: '"core","types","prettier","feature-workflow","context-size","oxlint","unused","dupes","unit","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","resilience"'
+          - framework: python+node
+            stacks: '"python","node"'
+            srcDirs: '"python":["app"],"node":["scripts"]'
+            modules: '"core","types","prettier","feature-workflow","context-size","oxlint","ruff","unused","dupes","imports","unit","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","resilience"'
           - framework: react+python
             stacks: '"react","python"'
             package: '{"name":"smoke","private":true,"scripts":{"dev":"vite"},"dependencies":{"react":"19.2.0","react-dom":"19.2.0"},"devDependencies":{"vite":"7.0.0"}}'
@@ -83,6 +92,7 @@ jobs:
           if [ -n '${{ matrix.package }}' ]; then echo '${{ matrix.package }}' > package.json; fi
           case '${{ matrix.stacks }}' in *python*) printf '[project]\nname = "smoke"\nversion = "0.1.0"\n' > pyproject.toml ;; esac
           node "$GITHUB_WORKSPACE/plugins/frontend-harness/tasks/apply.mjs" '{"stacks":[${{ matrix.stacks }}],"srcDirs":{${{ matrix.srcDirs }}},"modules":[${{ matrix.modules }}]}'
+          case '${{ matrix.stacks }}' in *node*) test -f package.json || { echo "missing package.json"; exit 1; } ;; esac
           for f in CLAUDE.md .claude/harness.json .claude/settings.json .claude/hooks/check-all.sh .githooks/pre-commit; do
             test -f "$f" || { echo "missing $f"; exit 1; }
           done

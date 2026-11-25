@@ -617,7 +617,7 @@
       }
     },
     "best-practices": {
-      "description": "Best-practice skills: on React and Next.js, Vercel's performance rules, composition patterns and the Web Interface Guidelines review; on Python, wshobson's anti-patterns, code style, error handling, project structure, resilience and testing patterns.",
+      "description": "Best-practice skills: on React and Next.js, Vercel's performance rules, composition patterns and the Web Interface Guidelines review; on Node, wshobson's backend, modern JavaScript and testing patterns; on Python, wshobson's anti-patterns, code style, error handling, project structure, resilience and testing patterns.",
       "category": "best-practices",
       "recommended": true,
       "by": {
@@ -660,6 +660,27 @@
             {
               "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
               "creates": [".claude/skills/web-design-guidelines"]
+            }
+          ]
+        },
+        "node": {
+          "audit": [
+            ".claude/skills/nodejs-backend-patterns",
+            ".claude/skills/modern-javascript-patterns",
+            ".claude/skills/javascript-testing-patterns"
+          ],
+          "install": [
+            {
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill nodejs-backend-patterns -a claude-code --copy -y",
+              "creates": [".claude/skills/nodejs-backend-patterns"]
+            },
+            {
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill modern-javascript-patterns -a claude-code --copy -y",
+              "creates": [".claude/skills/modern-javascript-patterns"]
+            },
+            {
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill javascript-testing-patterns -a claude-code --copy -y",
+              "creates": [".claude/skills/javascript-testing-patterns"]
             }
           ]
         },
@@ -714,7 +735,7 @@
       ]
     },
     "libraries": {
-      "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more; on Python: HTTP, retries, HTTP mocks, command line, validation).",
+      "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more; on Node: validation, dates, HTTP, retries, HTTP mocks; on Python: HTTP, retries, HTTP mocks, command line, validation).",
       "category": "best-practices",
       "audit": [".claude/rules/libraries.md"],
       "recommended": true
@@ -735,7 +756,7 @@
       }
     },
     "resilience": {
-      "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write (on Python: timeouts, retries only inside a service's client, HTTP mocked in tests).",
+      "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write (on Node and Python: timeouts, retries only inside a service's client, HTTP mocked in tests).",
       "category": "best-practices",
       "recommended": true,
       "by": {

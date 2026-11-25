@@ -194,17 +194,17 @@ for (const path of previous.paths) {
 if (lock) writeJson("skills-lock.json", lock);
 
 // The libraries rule: its fixed text with one section per sections.json entry of the chosen stacks, from the `libraries` answers.
-// The fixed text is libraries.md, or libraries-python.md when no `js` stack is chosen. With both, the Python sections
-// follow the JS rule under libraries-python-after-js.md, and the rule's paths take Python files too.
-// An answer is an option id, `none`, or a library the user named. A section with no answer yet gets its first option,
-// or the one whose `firstWhen` matches an earlier section's answer.
+// The fixed text is libraries.md (libraries-node.md on node), or libraries-python.md when no `js` stack is chosen. With both,
+// the Python sections follow the JS rule under libraries-python-after-js.md, and the rule's paths take Python files too.
+// An answer is an option id, `none`, or a library the user named. A section with no answer yet gets its first option
+// (`none` when it has none), or the one whose `firstWhen` matches an earlier section's answer.
 function librariesRule() {
   const dir = join(root, "modules", catalog.modules.libraries.category, "libraries");
   const chosen = (section) => stackIds.some((id) => section.stacks.includes(id) || section.stacks.includes(catalog.stacks[id].language));
   const render = (section) => {
     if (!(section.id in answers.libraries)) {
       const matches = (o) => Object.entries(o.firstWhen ?? {}).some(([id, answer]) => answers.libraries[id] === answer);
-      answers.libraries[section.id] = (section.options.find(matches) ?? section.options[0]).id;
+      answers.libraries[section.id] = (section.options.find(matches) ?? section.options[0])?.id ?? "none";
       notes.push(`libraries: no answer for ${section.id}, so it uses ${answers.libraries[section.id]}`);
     }
     const answer = answers.libraries[section.id];
@@ -216,7 +216,7 @@ function librariesRule() {
   const sections = readJson(join(dir, "sections.json")).sections.filter(chosen);
   if (!hasJs) return fill("libraries-python.md", sections);
   const python = sections.filter((section) => section.stacks.includes("python"));
-  const js = fill("libraries.md", sections.filter((section) => !python.includes(section)));
+  const js = fill(stackIds.includes("node") ? "libraries-node.md" : "libraries.md", sections.filter((section) => !python.includes(section)));
   if (!python.length) return js;
   return js.replace(/^(paths:\n(?: {2}- .*\n)*)/m, '$1  - "**/*.py"\n') + "\n" + fill("libraries-python-after-js.md", python);
 }

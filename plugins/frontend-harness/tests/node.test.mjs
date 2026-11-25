@@ -51,3 +51,45 @@ test('node is detected by its server framework, not by files a React project als
   const { detect } = JSON.parse(readFileSync(new URL('../modules.json', import.meta.url), 'utf8')).stacks.node;
   assert.deepEqual(detect, { dependencies: ['express', 'fastify'] });
 });
+
+const EXPRESS_PKG = '{"name":"app","private":true,"dependencies":{"express":"5.1.0"}}';
+const NODE_GLOB = '  - "**/*.{js,mjs,cjs,ts,mts,cts}"';
+
+test('libraries: node gets the Node sections, for every JS file', () => {
+  const dir = makeProject({ 'package.json': EXPRESS_PKG });
+  const r = apply(dir, { stacks: ['node'], modules: ['core', 'oxlint', 'libraries'] });
+  assert.equal(r.status, 0, r.stderr);
+  const rule = read(dir, '.claude/rules/libraries.md');
+  assert.equal(rule.startsWith(`---\npaths:\n${NODE_GLOB}\n---\n`), true);
+  for (const heading of ['Validation', 'Dates and numbers', 'HTTP', 'Retries', 'HTTP mocks in tests']) assert.match(rule, new RegExp(`^## ${heading}$`, 'm'));
+  assert.doesNotMatch(rule, /^## Forms$/m);
+  assert.doesNotMatch(rule, /React/);
+  assert.deepEqual(JSON.parse(read(dir, '.claude/harness.json')).libraries, { validation: 'zod', dates: 'date-fns', 'http-node': 'none', 'retry-node': 'p-retry', 'http-mocks-node': 'msw' });
+  // The HTTP section has no library: the platform's fetch is the answer.
+  assert.match(rule, /^## HTTP\n\n\*\*Platform:\*\* `fetch`.*\n\n## Retries$/m);
+  assert.match(rule, /^\*\*Library:\*\* p-retry/m);
+  assert.match(rule, /^\*\*Library:\*\* MSW/m);
+});
+
+test('libraries: node with Python loads for both, the Python sections after', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT, 'scripts/a.mjs': '' });
+  const r = apply(dir, { ...ANSWERS, modules: [...ANSWERS.modules, 'libraries'] });
+  assert.equal(r.status, 0, r.stderr);
+  const rule = read(dir, '.claude/rules/libraries.md');
+  assert.equal(rule.startsWith(`---\npaths:\n${NODE_GLOB}\n  - "**/*.py"\n---\n`), true);
+  assert.ok(rule.indexOf('## Retries') < rule.indexOf('# Python'));
+  assert.ok(rule.indexOf('# Python') < rule.indexOf('## Command line'));
+});
+
+test('node gets its resilience and unit test rules and the wshobson skills', () => {
+  const dir = makeProject({ 'package.json': EXPRESS_PKG });
+  const r = apply(dir, { stacks: ['node'], modules: ['core', 'oxlint', 'unit', 'resilience', 'best-practices'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(read(dir, '.claude/rules/external-requests.md'), /^paths:\n {2}- "\*\*\/\*\.\{js,mjs,cjs,ts\}"\n---$/m);
+  assert.match(read(dir, '.claude/rules/external-requests.md'), /AbortSignal\.timeout\(/);
+  assert.match(read(dir, '.claude/rules/external-requests.md'), /msw/);
+  assert.doesNotMatch(read(dir, '.claude/rules/tests-unit.md'), /jsdom|Testing Library|src\/\*\*/);
+  const { paths } = JSON.parse(read(dir, '.claude/harness.json'));
+  for (const skill of ['nodejs-backend-patterns', 'modern-javascript-patterns', 'javascript-testing-patterns']) assert.ok(paths.includes(`.claude/skills/${skill}`), skill);
+  assert.equal(paths.some((p) => p.includes('vercel') || p.includes('python-')), false);
+});

@@ -1,5 +1,5 @@
 {
-  "$comment": "The sections of the libraries rule. stacks: the stacks a section is for; only the sections of the chosen stacks are asked about and written. The setup skill asks one question per section; apply.mjs writes the rule from the answers. platform: what to use without a library, always in the rule. use: follows the library's name on its line. notes: rules that hold while a library is chosen. Options are in the order they are offered: the first is the recommended one, the rest by popularity. firstWhen moves an option to the front when another section chose the named option. An option's packages find it in package.json (a name ending in / matches a whole scope), or in pyproject.toml for a Python section; when says when to pick it. Keep at most three options per section: a question has room for three and No library. The answer is an option id, none, or any other name the user gave.",
+  "$comment": "The sections of the libraries rule. stacks: the stacks a section is for; only the sections of the chosen stacks are asked about and written. The setup skill asks one question per section; apply.mjs writes the rule from the answers. platform: what to use without a library, always in the rule. use: follows the library's name on its line. notes: rules that hold while a library is chosen. Options are in the order they are offered: the first is the recommended one, the rest by popularity. firstWhen moves an option to the front when another section chose the named option. An option's packages find it in package.json (a name ending in / matches a whole scope), or in pyproject.toml for a Python section; when says when to pick it. Keep at most three options per section: a question has room for three and No library. A section with no options is one the platform covers: its answer is none unless the user names a library. The answer is an option id, none, or any other name the user gave.",
   "sections": [
     {
       "id": "components",
@@ -52,7 +52,7 @@
     {
       "id": "validation",
       "title": "Validation",
-      "stacks": ["react", "nextjs"],
+      "stacks": ["react", "nextjs", "node"],
       "platform": "field attributes help the user; they protect nothing, as the server can get any request.",
       "use": " for data from outside the code: request bodies, server action arguments, query values. Do not check these by hand or cast them.",
       "notes": [
@@ -183,7 +183,7 @@
     {
       "id": "dates",
       "title": "Dates and numbers",
-      "stacks": ["react", "nextjs"],
+      "stacks": ["react", "nextjs", "node"],
       "platform": "`Intl` and `Date`.",
       "use": ", only for calculations these cannot do, such as time zone arithmetic.",
       "options": [
@@ -198,6 +198,45 @@
           "name": "Day.js",
           "packages": ["dayjs"],
           "when": "Moving from Moment: nearly the same API."
+        }
+      ]
+    },
+    {
+      "id": "http-node",
+      "title": "HTTP",
+      "stacks": ["node"],
+      "platform": "`fetch` for every HTTP call, each with a time limit (`signal: AbortSignal.timeout(ms)`).",
+      "use": " for every HTTP call, still with a time limit on each request.",
+      "options": []
+    },
+    {
+      "id": "retry-node",
+      "title": "Retries",
+      "stacks": ["node"],
+      "platform": "one try; a failure goes back to the caller. No hand-written retry loop around `setTimeout`.",
+      "use": " for a call that can pass on its own (a timeout, 429, 502, 503, 504), only inside the service's client.",
+      "notes": ["Never wrap a client call in a second retry: the tries multiply."],
+      "options": [
+        {
+          "id": "p-retry",
+          "name": "p-retry",
+          "packages": ["p-retry"],
+          "when": "The common default: retries a promise with backoff and jitter, and stops on errors marked as final."
+        }
+      ]
+    },
+    {
+      "id": "http-mocks-node",
+      "title": "HTTP mocks in tests",
+      "stacks": ["node"],
+      "platform": "`vi.mock` on the client's function, when the request itself does not matter.",
+      "use": " in every test whose code sends an HTTP request. Tests never call a live service.",
+      "options": [
+        {
+          "id": "msw",
+          "name": "MSW",
+          "packages": ["msw"],
+          "when": "Mocks `fetch` and every other client at the network level (`msw/node`)."
         }
       ]
     },

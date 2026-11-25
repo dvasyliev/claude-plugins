@@ -37,7 +37,7 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 | `.gitignore` | The modules' `gitignore` lines, in one block under a harness comment (the file is created if missing). A line the project already has is not added again; only the lines the harness added go when their module goes. |
 | `.claude/harness.json` | Answers, version, the checks the hooks run, what this run wrote, and `base`: the text of each file the harness wrote last, the base for the next merge. |
 | `.claude/rules/harness.md` | Installed modules and commands; always loaded, as a rule with no `paths`. |
-| `.claude/rules/libraries.md` | With the `libraries` module: `modules/best-practices/libraries/libraries.md` (`libraries-python.md` when no `js` stack is chosen; with both, the Python sections follow under `libraries-python-after-js.md` and `paths` adds `**/*.py`) with one section per `sections.json` entry of the chosen stacks, written from the `libraries` answers, and merged with the project's edits like a module file. |
+| `.claude/rules/libraries.md` | With the `libraries` module: `modules/best-practices/libraries/libraries.md` (`libraries-node.md` on `node`, `libraries-python.md` when no `js` stack is chosen; with both, the Python sections follow under `libraries-python-after-js.md` and `paths` adds `**/*.py`) with one section per `sections.json` entry of the chosen stacks, written from the `libraries` answers, and merged with the project's edits like a module file. |
 | `core.hooksPath` | `.githooks` when a module brings git hooks, unless the project runs its hooks from elsewhere (husky). |
 
 A module that goes takes its files (unless the project edited them), scripts, settings, MCP servers and `.gitignore` lines with it; npm packages stay.
