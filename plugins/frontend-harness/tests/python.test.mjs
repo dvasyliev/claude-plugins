@@ -215,4 +215,11 @@ test('libraries: python-only gets the Python sections only, React and Python get
   assert.match(rule(both), /^## Forms$/m);
   assert.match(rule(both), /^\*\*Library:\*\* HTTPX/m);
   assert.match(rule(both), /^\*\*Library:\*\* RESPX/m);
+  // The rule loads for Python files too, and the Python sections come after the JS ones, under their own heading.
+  assert.match(rule(both), /^paths:\n {2}- "src\/\*\*"\n {2}- "app\/\*\*"\n {2}- "lib\/\*\*"\n {2}- "\*\*\/\*\.py"\n---$/m);
+  const at = (heading) => rule(both).search(new RegExp(`^${heading}$`, 'm'));
+  assert.ok(at('## Forms') < at('## Working on the platform alone'));
+  assert.ok(at('## Working on the platform alone') < at('# Python'));
+  assert.ok(at('# Python') < at('## HTTP'));
+  assert.ok(at('## Forms') >= 0 && at('# Python') >= 0);
 });
