@@ -1,0 +1,63 @@
+// The hooks run the commands that .claude/harness.json lists.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { cleanEnv, makeProject } from './helpers.mjs';
+
+const hooks = join(dirname(fileURLToPath(import.meta.url)), '..', 'modules/core/core/all/.claude/hooks');
+
+function project(harness, files = {}) {
+  return makeProject({ '.claude/harness.json': JSON.stringify(harness), ...files });
+}
+
+function run(dir, hook, args, input = '') {
+  const r = spawnSync('bash', [join(hooks, hook), ...args], {
+    cwd: dir,
+    input,
+    encoding: 'utf8',
+    env: cleanEnv({ CLAUDE_PROJECT_DIR: dir }),
+  });
+  return { status: r.status, stdout: r.stdout, stderr: r.stderr };
+}
+
+test('check-all.sh --force reports a failing command with its output', () => {
+  const dir = project({ checks: [{ name: 'ok', command: 'true' }, { name: 'bad', command: 'echo boom; false' }], fileChecks: [] });
+  const r = run(dir, 'check-all.sh', ['--force']);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /== bad failed ==/);
+  assert.match(r.stderr, /boom/);
+});
+
+test('check-all.sh --force is green when every command passes', () => {
+  const dir = project({ checks: [{ name: 'ok', command: 'true' }], fileChecks: [] });
+  const r = run(dir, 'check-all.sh', ['--force']);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /All checks green\./);
+});
+
+function fileCheck(blocking, content) {
+  const dir = project(
+    { checks: [], fileChecks: [{ name: 'lint', command: 'grep -q ok', extensions: ['ts'], blocking }] },
+    {},
+  );
+  const path = join(dir, 'a b.ts');
+  writeFileSync(path, content);
+  return run(dir, 'format-lint-file.sh', [], JSON.stringify({ tool_input: { file_path: path } }));
+}
+
+test('format-lint-file.sh passes a file the command accepts, a path with a space included', () => {
+  assert.equal(fileCheck(true, 'ok').status, 0);
+});
+
+test('format-lint-file.sh blocks on a failing blocking check', () => {
+  const r = fileCheck(true, 'bad');
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /lint failed on/);
+});
+
+test('format-lint-file.sh ignores a failing non-blocking check', () => {
+  assert.equal(fileCheck(false, 'bad').status, 0);
+});

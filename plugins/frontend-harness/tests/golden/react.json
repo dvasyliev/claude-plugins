@@ -1,7 +1,7 @@
 {
-  ".claude/harness.json": "945cd6f000c2d631d117b75304ead10665741a3f503b99cb8ea1dce398924acd",
-  ".claude/hooks/check-all.sh": "57e686c2bc9b8e3580114c48e8a10a46cf88742b48bb015fc895923904a45b54",
-  ".claude/hooks/format-lint-file.sh": "3b377c114f14e2fba90847df20a5c1d5e5b483a4aa9f3c992c280f276014483a",
+  ".claude/harness.json": "6f0b05c950f6a249d7457e1fd0aff27065e54cd4279d8cddfaf4592747e2edca",
+  ".claude/hooks/check-all.sh": "2182a161f3711e774db4f2df33cfe44dd6ae6fe6cb371955a814ef36a6f1a6be",
+  ".claude/hooks/format-lint-file.sh": "ab88ed13ec48c9f9c21b249e8eac4de1d22eb67317b6ce2db3cf2141e8fc1221",
   ".claude/hooks/guard-commands.sh": "572ca4e78b4e26814451a9a7c7a88e677601a673578f5299244e5bdd9d148bc5",
   ".claude/hooks/session-start.sh": "9ca0a641f6c391b46270593c5c882f317324fe12e2fe846c4b76f4e18fd7792e",
   ".claude/rules/commits.md": "583c56f8598612ba4cb34c7fa2b9719c0ea572066a3f6b024dfe83e5a77c856f",

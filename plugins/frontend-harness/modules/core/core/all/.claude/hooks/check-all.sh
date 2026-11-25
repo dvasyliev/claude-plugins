@@ -4,8 +4,6 @@
 # Go to the project folder; stop if it is not a git repo.
 cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/../..}" || exit 0
 git rev-parse --git-dir >/dev/null 2>&1 || exit 0
-# The project's package manager.
-if [ -f pnpm-lock.yaml ]; then pm=pnpm; else pm=npm; fi
 force=false
 [ "${1:-}" = "--force" ] && force=true
 
@@ -50,9 +48,9 @@ $(tail -15 <<<"$out")
 }
 
 # The checks the installed harness modules list in .claude/harness.json, in order.
-while IFS=$'\t' read -r name script; do
-  run "$name" "$pm" run -s "$script" </dev/null
-done < <(jq -r '.checks[] | [.name, .script] | @tsv' .claude/harness.json)
+while IFS=$'\t' read -r name command; do
+  run "$name" bash -c "$command" </dev/null
+done < <(jq -r '.checks[] | [.name, .command] | @tsv' .claude/harness.json)
 
 # Red: send Claude back to fix. Green: remember it, so the same code is not checked again.
 if [ -n "$failed" ]; then

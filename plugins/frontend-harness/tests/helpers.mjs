@@ -20,7 +20,7 @@ export const ALL_NEXT = COMMON.map((m) => (m === 'LINTER' ? 'eslint' : m));
 
 // The environment for child processes: without GIT_* variables (GIT_INDEX_FILE, GIT_DIR ...) that a
 // running git hook sets, so the commands here never touch the repository that runs the tests.
-function cleanEnv(extra = {}) {
+export function cleanEnv(extra = {}) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
   return { ...env, ...extra };
 }

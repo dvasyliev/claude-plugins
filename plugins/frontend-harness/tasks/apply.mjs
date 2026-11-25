@@ -276,8 +276,13 @@ if (lines.some((line) => line.trim())) {
 } else if (gone.length) rmSync(".gitignore", { force: true });
 
 // .claude/harness.json: what the hooks read, and what this run wrote.
-const checks = collect("checks").filter((c) => !skip.has(c.name));
-const fileChecks = collect("fileChecks").filter((c) => !skip.has(c.name));
+// The hooks run `command` as written; on js it is the package.json script through the project's package manager.
+const checks = collect("checks")
+  .filter((c) => !skip.has(c.name))
+  .map(({ name, script }) => ({ name, command: `${pm} run -s ${script}` }));
+const fileChecks = collect("fileChecks")
+  .filter((c) => !skip.has(c.name))
+  .map(({ name, script, extensions, blocking }) => ({ name, command: `${pm} run -s ${script} --`, extensions, blocking }));
 writeJson(".claude/harness.json", {
   $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with /frontend-harness:setup.",
   version,
