@@ -188,12 +188,14 @@ for (const path of previous.paths) {
 }
 if (lock) writeJson("skills-lock.json", lock);
 
-// The libraries rule: its fixed text with one section per sections.json entry, from the `libraries` answers.
+// The libraries rule: its fixed text with one section per sections.json entry of the chosen stacks, from the `libraries` answers.
+// The fixed text is libraries.md, or libraries-python.md when no `js` stack is chosen.
 // An answer is an option id, `none`, or a library the user named. A section with no answer yet gets its first option,
 // or the one whose `firstWhen` matches an earlier section's answer.
 function librariesRule() {
   const dir = join(root, "modules", catalog.modules.libraries.category, "libraries");
-  const sections = readJson(join(dir, "sections.json")).sections.map((section) => {
+  const chosen = (section) => stackIds.some((id) => section.stacks.includes(id) || section.stacks.includes(catalog.stacks[id].language));
+  const sections = readJson(join(dir, "sections.json")).sections.filter(chosen).map((section) => {
     if (!(section.id in answers.libraries)) {
       const matches = (o) => Object.entries(o.firstWhen ?? {}).some(([id, answer]) => answers.libraries[id] === answer);
       answers.libraries[section.id] = (section.options.find(matches) ?? section.options[0]).id;
@@ -204,7 +206,7 @@ function librariesRule() {
     const library = answer === "none" ? [] : ["", `**Library:** ${name}${section.use}`, ...(section.notes ? ["", ...section.notes.map((note) => `- ${note}`)] : [])];
     return [`## ${section.title}`, "", `**Platform:** ${section.platform}`, ...library, ""].join("\n");
   });
-  return readFileSync(join(dir, "libraries.md"), "utf8").replace("<!-- sections -->\n", () => sections.join("\n") + "\n");
+  return readFileSync(join(dir, hasJs ? "libraries.md" : "libraries-python.md"), "utf8").replace("<!-- sections -->\n", () => sections.join("\n") + "\n");
 }
 
 // Each file keeps the project's edits: `base` holds what the harness wrote last,

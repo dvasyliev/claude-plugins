@@ -9,4 +9,4 @@ Do not ask how to carry out the plan; choose:
 
 ## Subagents
 
-Subagents that implement a task do not run `npm run check`; the Stop hook does. With `unit`, they run only the unit tests of the files they touch (`npx vitest run <files>`). With `e2e`, the subagent on the end-to-end task runs only its spec files, never `npm run verify`, which runs once after the last task.
+Subagents that implement a task do not run `npm run check`; the Stop hook does. With `unit`, they run only the unit tests of the files they touch (`npx vitest run <files>` or `uv run pytest <files>`). With `e2e`, the subagent on the end-to-end task runs only its spec files, never `npm run verify`, which runs once after the last task.

@@ -33,11 +33,11 @@ Ask the user only about what the spec leaves open, not about how to execute.
 
 ## Unit tests first (with `unit`)
 
-Use `superpowers:test-driven-development`: write the tests, watch them fail with `npm test`, then implement.
+Use `superpowers:test-driven-development`: write the tests, watch them fail in the unit tests (`npm test` or `uv run pytest`), then implement.
 
 ## Browser check (with `e2e`)
 
-With the `playwright-cli` skill, drive the feature on the running dev server and confirm the `- expect:` outcomes.
+With `e2e`: drive the feature on the running dev server with the `playwright-cli` skill and confirm the `- expect:` outcomes.
 
 `@playwright/cli` is a devDependency of the project: run every command as `npx playwright-cli <command>`, where the skill writes `playwright-cli <command>`. Never install it globally, even when the skill says to.
 
@@ -55,7 +55,7 @@ Every screenshot stays in the conversation and is re-read on every later turn, s
 
 ## End-to-end tests (with `e2e`)
 
-Write them for the feature's happy paths only, one per main scenario.
+With `e2e`: write them for the feature's happy paths only, one per main scenario.
 
 While working, run only the feature's own spec files (`npx playwright test tests/x/y.spec.ts`). Commits after each task are fine; run the whole suite with `npm run verify` once, before the last commit. After every run, read its log for errors as `tests-e2e.md` says; a run that passes but logs an error the feature caused is not done.
 

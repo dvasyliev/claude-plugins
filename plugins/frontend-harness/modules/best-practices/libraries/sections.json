@@ -1,9 +1,10 @@
 {
-  "$comment": "The sections of the libraries rule. The setup skill asks one question per section; apply.mjs writes the rule from the answers. platform: what to use without a library, always in the rule. use: follows the library's name on its line. notes: rules that hold while a library is chosen. Options are in the order they are offered: the first is the recommended one, the rest by popularity. firstWhen moves an option to the front when another section chose the named option. An option's packages find it in package.json (a name ending in / matches a whole scope); when says when to pick it. Keep at most three options per section: a question has room for three and No library. The answer is an option id, none, or any other name the user gave.",
+  "$comment": "The sections of the libraries rule. stacks: the stacks a section is for; only the sections of the chosen stacks are asked about and written. The setup skill asks one question per section; apply.mjs writes the rule from the answers. platform: what to use without a library, always in the rule. use: follows the library's name on its line. notes: rules that hold while a library is chosen. Options are in the order they are offered: the first is the recommended one, the rest by popularity. firstWhen moves an option to the front when another section chose the named option. An option's packages find it in package.json (a name ending in / matches a whole scope), or in pyproject.toml for a Python section; when says when to pick it. Keep at most three options per section: a question has room for three and No library. The answer is an option id, none, or any other name the user gave.",
   "sections": [
     {
       "id": "components",
       "title": "Components",
+      "stacks": ["react", "nextjs"],
       "platform": "a plain `<button>` for toggles, a native `<select>` for a short list of options.",
       "use": " for menus, popovers, windows, confirmations, radio groups, bottom panels and search suggestions. The platform covers only part of these: focus, keyboard navigation and positioning stay on you.",
       "options": [
@@ -30,6 +31,7 @@
     {
       "id": "forms",
       "title": "Forms",
+      "stacks": ["react", "nextjs"],
       "platform": "a native `<form>`, enough for a few independent fields.",
       "use": ", when a form has many fields, fields that depend on each other, fields added at runtime, or errors per field as the user types. It uses the same schema as the server.",
       "options": [
@@ -50,6 +52,7 @@
     {
       "id": "validation",
       "title": "Validation",
+      "stacks": ["react", "nextjs"],
       "platform": "field attributes help the user; they protect nothing, as the server can get any request.",
       "use": " for data from outside the code: request bodies, server action arguments, query values. Do not check these by hand or cast them.",
       "notes": [
@@ -75,6 +78,7 @@
     {
       "id": "url",
       "title": "URL state",
+      "stacks": ["react", "nextjs"],
       "platform": "`URLSearchParams` for building a one-off link or an address for a request.",
       "use": " for filters and anything else that reads and changes the page's query parameters. Check that it works with the framework's caching before relying on it.",
       "notes": [
@@ -92,6 +96,7 @@
     {
       "id": "data",
       "title": "Data",
+      "stacks": ["react", "nextjs"],
       "platform": "a single request from the browser with nothing shared or saved around it is a plain `fetch`.",
       "use": " for data in the browser: next pages of a list, search suggestions, data shared by many components, and every write that shows at once. In an app without server rendering, for all server data.",
       "notes": [
@@ -123,6 +128,7 @@
     {
       "id": "client-state",
       "title": "Client state",
+      "stacks": ["react", "nextjs"],
       "platform": "the URL for what a link should keep, `useState` for one component, Context for a few components under one provider. Data from the server does not go in a hand-written store.",
       "use": ", when state is shared by distant components and Context re-renders are measured as a real slowdown.",
       "options": [
@@ -149,6 +155,7 @@
     {
       "id": "notifications",
       "title": "Notifications",
+      "stacks": ["react", "nextjs"],
       "platform": "an error shows in place as `role=\"alert\"`, through one shared component.",
       "use": ", when a message must outlive the place it came from. Do not add a second toast library.",
       "options": [
@@ -176,6 +183,7 @@
     {
       "id": "dates",
       "title": "Dates and numbers",
+      "stacks": ["react", "nextjs"],
       "platform": "`Intl` and `Date`.",
       "use": ", only for calculations these cannot do, such as time zone arithmetic.",
       "options": [
@@ -190,6 +198,99 @@
           "name": "Day.js",
           "packages": ["dayjs"],
           "when": "Moving from Moment: nearly the same API."
+        }
+      ]
+    },
+    {
+      "id": "http",
+      "title": "HTTP",
+      "stacks": ["python"],
+      "platform": "`urllib.request` only for a one-off call in a script: no sessions, no connection reuse.",
+      "use": " for every HTTP call. Every request passes a `timeout` (ruff `S113` fails without it).",
+      "options": [
+        {
+          "id": "requests",
+          "name": "Requests",
+          "packages": ["requests"],
+          "when": "The common default for synchronous code, with the widest use."
+        },
+        {
+          "id": "httpx",
+          "name": "HTTPX",
+          "packages": ["httpx"],
+          "when": "Async code, or HTTP/2; nearly the same API as Requests."
+        }
+      ]
+    },
+    {
+      "id": "retry",
+      "title": "Retries",
+      "stacks": ["python"],
+      "platform": "one try; a failure goes back to the caller. No hand-written retry loop with `time.sleep`.",
+      "use": " for a call that can pass on its own (a timeout, 429, 502, 503, 504), only inside the service's client.",
+      "notes": ["Never wrap a client call in a second retry: the tries multiply."],
+      "options": [
+        {
+          "id": "tenacity",
+          "name": "Tenacity",
+          "packages": ["tenacity"],
+          "when": "The common default: backoff, jitter and when to stop, as a decorator."
+        }
+      ]
+    },
+    {
+      "id": "http-mocks",
+      "title": "HTTP mocks in tests",
+      "stacks": ["python"],
+      "platform": "`unittest.mock` on the client's function, when the request itself does not matter.",
+      "use": " in every test whose code sends an HTTP request. Tests never call a live service.",
+      "options": [
+        {
+          "id": "responses",
+          "name": "Responses",
+          "packages": ["responses"],
+          "when": "Mocks Requests."
+        },
+        {
+          "id": "respx",
+          "name": "RESPX",
+          "packages": ["respx"],
+          "firstWhen": { "http": "httpx" },
+          "when": "Mocks HTTPX."
+        }
+      ]
+    },
+    {
+      "id": "cli",
+      "title": "Command line",
+      "stacks": ["python"],
+      "platform": "`argparse` for a script with a few arguments. Never read `sys.argv` by hand.",
+      "use": " for a tool with subcommands or many options: the arguments and the help come from the function's type hints.",
+      "options": [
+        {
+          "id": "typer",
+          "name": "Typer",
+          "packages": ["typer"],
+          "when": "Typed arguments from type hints, built on Click."
+        }
+      ]
+    },
+    {
+      "id": "validation-python",
+      "title": "Data validation",
+      "stacks": ["python"],
+      "platform": "`dataclasses` for data the code builds itself; they check nothing at run time.",
+      "use": " for data from outside the code: request bodies, files, settings from the environment. Do not check these by hand or cast them.",
+      "notes": [
+        "Validate where the data comes in; code behind it gets typed models and does not check again.",
+        "Validate a third-party API's response only where a wrong answer would do real harm."
+      ],
+      "options": [
+        {
+          "id": "pydantic",
+          "name": "Pydantic",
+          "packages": ["pydantic"],
+          "when": "The common default, and most libraries connect to it."
         }
       ]
     }

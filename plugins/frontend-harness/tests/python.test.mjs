@@ -196,3 +196,21 @@ test('React and Python: dupes is a package.json script covering both stacks, tes
   assert.match(pkg.scripts.dupes, /src app tools/);
   assert.equal('pytest' in pkg.scripts, false);
 });
+
+test('libraries: python-only gets the Python sections only, React and Python get both', () => {
+  const rule = (dir) => readFileSync(join(dir, '.claude/rules/libraries.md'), 'utf8');
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  const r = apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'libraries'], srcDirs: { python: ['app'] } });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(rule(dir), /^## HTTP$/m);
+  assert.doesNotMatch(rule(dir), /^## Forms$/m);
+  assert.match(rule(dir), /^  - "\*\*\/\*\.py"$/m);
+  assert.doesNotMatch(rule(dir), /React/);
+  assert.deepEqual(Object.keys(harnessJson(dir).libraries), ['http', 'retry', 'http-mocks', 'cli', 'validation-python']);
+  const both = makeProject({ 'package.json': REACT_PKG, 'pyproject.toml': PYPROJECT });
+  const r2 = apply(both, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff', 'libraries'], srcDirs: { python: ['app'] }, libraries: { http: 'httpx' } });
+  assert.equal(r2.status, 0, r2.stderr);
+  assert.match(rule(both), /^## Forms$/m);
+  assert.match(rule(both), /^\*\*Library:\*\* HTTPX/m);
+  assert.match(rule(both), /^\*\*Library:\*\* RESPX/m);
+});

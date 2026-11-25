@@ -601,28 +601,89 @@
       }
     },
     "best-practices": {
-      "description": "Vercel's skills: React and Next.js performance rules, composition patterns, and the Web Interface Guidelines review.",
+      "description": "Best-practice skills: on React and Next.js, Vercel's performance rules, composition patterns and the Web Interface Guidelines review; on Python, wshobson's anti-patterns, code style, error handling, project structure, resilience and testing patterns.",
       "category": "best-practices",
-      "audit": [
-        ".claude/skills/vercel-react-best-practices",
-        ".claude/skills/vercel-composition-patterns",
-        ".claude/skills/web-design-guidelines"
-      ],
       "recommended": true,
-      "install": [
-        {
-          "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
-          "creates": [".claude/skills/vercel-react-best-practices"]
+      "by": {
+        "react": {
+          "audit": [
+            ".claude/skills/vercel-react-best-practices",
+            ".claude/skills/vercel-composition-patterns",
+            ".claude/skills/web-design-guidelines"
+          ],
+          "install": [
+            {
+              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
+              "creates": [".claude/skills/vercel-react-best-practices"]
+            },
+            {
+              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
+              "creates": [".claude/skills/vercel-composition-patterns"]
+            },
+            {
+              "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
+              "creates": [".claude/skills/web-design-guidelines"]
+            }
+          ]
         },
-        {
-          "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
-          "creates": [".claude/skills/vercel-composition-patterns"]
+        "nextjs": {
+          "audit": [
+            ".claude/skills/vercel-react-best-practices",
+            ".claude/skills/vercel-composition-patterns",
+            ".claude/skills/web-design-guidelines"
+          ],
+          "install": [
+            {
+              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
+              "creates": [".claude/skills/vercel-react-best-practices"]
+            },
+            {
+              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
+              "creates": [".claude/skills/vercel-composition-patterns"]
+            },
+            {
+              "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
+              "creates": [".claude/skills/web-design-guidelines"]
+            }
+          ]
         },
-        {
-          "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
-          "creates": [".claude/skills/web-design-guidelines"]
+        "python": {
+          "audit": [
+            ".claude/skills/python-anti-patterns",
+            ".claude/skills/python-code-style",
+            ".claude/skills/python-error-handling",
+            ".claude/skills/python-project-structure",
+            ".claude/skills/python-resilience",
+            ".claude/skills/python-testing-patterns"
+          ],
+          "install": [
+            {
+              "command": "npx -y skills add wshobson/agents --skill python-anti-patterns -a claude-code --copy -y",
+              "creates": [".claude/skills/python-anti-patterns"]
+            },
+            {
+              "command": "npx -y skills add wshobson/agents --skill python-code-style -a claude-code --copy -y",
+              "creates": [".claude/skills/python-code-style"]
+            },
+            {
+              "command": "npx -y skills add wshobson/agents --skill python-error-handling -a claude-code --copy -y",
+              "creates": [".claude/skills/python-error-handling"]
+            },
+            {
+              "command": "npx -y skills add wshobson/agents --skill python-project-structure -a claude-code --copy -y",
+              "creates": [".claude/skills/python-project-structure"]
+            },
+            {
+              "command": "npx -y skills add wshobson/agents --skill python-resilience -a claude-code --copy -y",
+              "creates": [".claude/skills/python-resilience"]
+            },
+            {
+              "command": "npx -y skills add wshobson/agents --skill python-testing-patterns -a claude-code --copy -y",
+              "creates": [".claude/skills/python-testing-patterns"]
+            }
+          ]
         }
-      ]
+      }
     },
     "context7": {
       "description": "Context7 MCP server, rule and skill for current library docs.",
@@ -637,7 +698,7 @@
       ]
     },
     "libraries": {
-      "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more).",
+      "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more; on Python: HTTP, retries, HTTP mocks, command line, validation).",
       "category": "best-practices",
       "audit": [".claude/rules/libraries.md"],
       "recommended": true
@@ -658,10 +719,17 @@
       }
     },
     "resilience": {
-      "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write.",
+      "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write (on Python: timeouts, retries only inside a service's client, HTTP mocked in tests).",
       "category": "best-practices",
-      "audit": [".claude/rules/external-requests.md"],
-      "recommended": true
+      "recommended": true,
+      "by": {
+        "js": {
+          "audit": [".claude/rules/external-requests.md"]
+        },
+        "python": {
+          "audit": [".claude/rules/external-requests-python.md"]
+        }
+      }
     },
     "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
