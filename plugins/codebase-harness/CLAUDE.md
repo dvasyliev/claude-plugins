@@ -1,6 +1,6 @@
 # codebase-harness
 
-How the plugin is built and how to change it. How to use it is in the repository's `README.md`.
+How the plugin is built and how to change it. How to use it is in the plugin's `README.md`.
 
 ## Layout
 
