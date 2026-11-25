@@ -52,7 +52,7 @@
     {
       "id": "validation",
       "title": "Validation",
-      "stacks": ["react", "nextjs", "node"],
+      "stacks": ["react", "nextjs"],
       "platform": "field attributes help the user; they protect nothing, as the server can get any request.",
       "use": " for data from outside the code: request bodies, server action arguments, query values. Do not check these by hand or cast them.",
       "notes": [
@@ -198,6 +198,25 @@
           "name": "Day.js",
           "packages": ["dayjs"],
           "when": "Moving from Moment: nearly the same API."
+        }
+      ]
+    },
+    {
+      "id": "validation-node",
+      "title": "Validation",
+      "stacks": ["node"],
+      "platform": "TypeScript types and JSDoc check nothing at run time; data from outside the code can be anything.",
+      "use": " for data from outside the code: request bodies, query values, files, settings from the environment. Do not check these by hand or cast them.",
+      "notes": [
+        "Validate where the data comes in (a route, a script's input); code behind it gets typed data and does not check again.",
+        "Validate a third-party API's response only where a wrong answer would do real harm."
+      ],
+      "options": [
+        {
+          "id": "zod",
+          "name": "Zod",
+          "packages": ["zod"],
+          "when": "The common default, and most libraries connect to it."
         }
       ]
     },

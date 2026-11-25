@@ -63,8 +63,8 @@ test('libraries: node gets the Node sections, for every JS file', () => {
   assert.equal(rule.startsWith(`---\npaths:\n${NODE_GLOB}\n---\n`), true);
   for (const heading of ['Validation', 'Dates and numbers', 'HTTP', 'Retries', 'HTTP mocks in tests']) assert.match(rule, new RegExp(`^## ${heading}$`, 'm'));
   assert.doesNotMatch(rule, /^## Forms$/m);
-  assert.doesNotMatch(rule, /React/);
-  assert.deepEqual(JSON.parse(read(dir, '.claude/harness.json')).libraries, { validation: 'zod', dates: 'date-fns', 'http-node': 'none', 'retry-node': 'p-retry', 'http-mocks-node': 'msw' });
+  assert.doesNotMatch(rule, /React|browser|server action/);
+  assert.deepEqual(JSON.parse(read(dir, '.claude/harness.json')).libraries, { 'validation-node': 'zod', dates: 'date-fns', 'http-node': 'none', 'retry-node': 'p-retry', 'http-mocks-node': 'msw' });
   // The HTTP section has no library: the platform's fetch is the answer.
   assert.match(rule, /^## HTTP\n\n\*\*Platform:\*\* `fetch`.*\n\n## Retries$/m);
   assert.match(rule, /^\*\*Library:\*\* p-retry/m);
