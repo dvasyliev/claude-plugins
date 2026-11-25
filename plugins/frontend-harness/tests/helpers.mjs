@@ -14,7 +14,7 @@ const APPLY = join(here, '..', 'tasks', 'apply.mjs');
 // The two package.json texts and the module lists of the smoke job in .github/workflows/ci.yml.
 export const NEXT_PKG = '{"name":"smoke","private":true,"scripts":{"dev":"next dev"},"dependencies":{"next":"16.0.0","react":"19.2.0","react-dom":"19.2.0"}}';
 export const REACT_PKG = '{"name":"smoke","private":true,"scripts":{"dev":"vite"},"dependencies":{"react":"19.2.0","react-dom":"19.2.0"},"devDependencies":{"vite":"7.0.0"}}';
-const COMMON = ['core', 'feature-workflow', 'LINTER', 'unused', 'dupes', 'tailwind', 'unit', 'e2e', 'commitlint', 'pre-commit', 'sync-deps', 'best-practices', 'context7', 'libraries', 'next-docs', 'page-speed'];
+const COMMON = ['core', 'types', 'prettier', 'feature-workflow', 'LINTER', 'unused', 'dupes', 'tailwind', 'unit', 'e2e', 'commitlint', 'pre-commit', 'sync-deps', 'best-practices', 'context7', 'libraries', 'next-docs', 'page-speed'];
 export const ALL_REACT = COMMON.map((m) => (m === 'LINTER' ? 'oxlint' : m));
 export const ALL_NEXT = COMMON.map((m) => (m === 'LINTER' ? 'eslint' : m));
 

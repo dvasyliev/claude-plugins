@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Use when the user wants to set up the frontend harness (Claude Code hooks, rules, skills, checks, git hooks) in a React (Vite) or Next.js project, add, remove or change its modules or checks, or move a harness fix into the plugin.
+description: Use when the user wants to set up the frontend harness (Claude Code hooks, rules, skills, checks, git hooks) in a React (Vite), Next.js or other project, add, remove or change its modules or checks, or move a harness fix into the plugin.
 ---
 
 # Set up the harness
@@ -11,14 +11,14 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 
 **Questions:** ask as `../../references/questions.md` (from this skill's base directory) says.
 
-**Catalog:** `<template>/modules.json` lists every framework and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/modules/<category>/<module>/`: `all/` for every framework, `<framework>/` for one, laid out as in the project. Read them; do not guess.
+**Catalog:** `<template>/modules.json` lists every stack and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/modules/<category>/<module>/`: `all/` for every stack it applies to, then `<language>/` and `<stack>/` for those only, laid out as in the project. Read them; do not guess.
 
 ## 1. Look at the project
 
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: the harness merges into the project's files, and the changes may be another agent's.
-2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `framework`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit. A project from before 0.19 may list `next-rules`: replace it with `page-speed`. A project from before 0.24 with `best-practices` had the performance rules in it: add `page-speed` too. A project with `performance` (0.24): replace it with `page-speed`. A project from before 0.25 with `quality`: replace it with `knip` and `jscpd`. A project from before 0.28 has its merge base in `.claude/harness-base/`: `apply.mjs` moves it into `.claude/harness.json` and deletes the folder. A project that lists `knip` or `jscpd` (before the modules were grouped by kind of check): `apply.mjs` renames them to `unused` and `dupes` (the checks keep their names `knip` and `dupes`) and adds the required `types` and `prettier`, which came out of `core`; nothing to ask. A project from before 0.29 has `.claude/harness.md`: `apply.mjs` writes `.claude/rules/harness.md` instead; remove the `@.claude/harness.md` line from `CLAUDE.md` if the merge left it.
-3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `description` as the label, such as "React (Vite)"). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `nextjs` wins over `react`, since a Next.js project has both. On an update, the `framework` in `.claude/harness.json` is the detected one. The framework decides which version of each module's files is installed.
-4. Check that the code sits where the harness configs look (Prettier, Vitest, the linter, the rules): `app/` and `lib/` for Next.js, `src/` for React. A Next.js project with its code in `src/` or a `components/` folder at the root is not covered there; tell the user before installing, since those folders would go unformatted and untested.
+2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `stacks`, `srcDirs`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit. A project from before 0.19 may list `next-rules`: replace it with `page-speed`. A project from before 0.24 with `best-practices` had the performance rules in it: add `page-speed` too. A project with `performance` (0.24): replace it with `page-speed`. A project from before 0.25 with `quality`: replace it with `unused` and `dupes`. A project from before 0.28 has its merge base in `.claude/harness-base/`: `apply.mjs` moves it into `.claude/harness.json` and deletes the folder. A project that lists `knip` or `jscpd` (before the modules were grouped by kind of check): `apply.mjs` renames them to `unused` and `dupes` (the checks keep their names `knip` and `dupes`) and adds the required `types` and `prettier`, which came out of `core`; nothing to ask. A project from before 0.29 has `.claude/harness.md`: `apply.mjs` writes `.claude/rules/harness.md` instead; remove the `@.claude/harness.md` line from `CLAUDE.md` if the merge left it.
+3. Ask which stacks the project uses (`AskUserQuestion`, `multiSelect: true`, one option per entry in `stacks`, its `description` as the label, such as "React (Vite)"). Mark the ones whose `detect` matches `package.json` "(detected)" and select them first; `nextjs` wins over `react`, since a Next.js project has both (a stack cannot be chosen with one it `excludes`). On an update, the `stacks` in `.claude/harness.json` are the detected ones. The stacks decide which modules apply and which version of each module's files is installed.
+4. For each stack, check that the code sits where the harness configs look (Prettier, tests, the linter, the rules): its `srcDirs` in the catalog (`app/` and `lib/` for Next.js, `src/` for React). Ask the user for the folders when the code sits elsewhere, and send them as `srcDirs` (stack: folders) in step 3; on an update, the ones in `.claude/harness.json` stay. A Next.js project with its code in `src/` or a `components/` folder at the root is not covered by the defaults; tell the user before installing, since those folders would go unformatted and untested.
 
 ## 2. Choose modules
 
@@ -29,9 +29,11 @@ Mark each module:
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
 - **offered:** the rest, unselected.
 
+Offer only modules whose `stacks` include a chosen stack or its language (a module with no `stacks` applies to every stack); the others are not asked about.
+
 Ask with `AskUserQuestion`, `multiSelect: true`, one question per `category` (but `core`) with the category in words as its header (such as "Code quality"), up to 4 questions per call (a second call for the rest). Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies. On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
 
-Exactly one `linter` module is installed: choose the one the project already uses (its `detect`), else the framework's `linter`. Ask only when the project has both or the user wants the other.
+Exactly one `linter` module is installed per stack: choose the one the project already uses (its `detect`), else the stack's `linter`. Ask only when the project has both or the user wants the other. `apply.mjs` fails with `choose one linter for <stack> of <...>` when a stack has none or several; ask then and run it again.
 
 Skills come with their modules; there is no separate skill question.
 
@@ -54,7 +56,7 @@ An answer is the option's `id`, `none` for "No library", or the name the user ga
 ## 3. Run the template
 
 ```bash
-node <template>/tasks/apply.mjs '{"framework": "<framework>", "modules": [...], "skipChecks": [...], "docsLanguage": "<language>", "libraries": {"<section id>": "<answer>"}}'
+node <template>/tasks/apply.mjs '{"stacks": ["<stack>", ...], "srcDirs": {"<stack>": ["<folder>", ...]}, "modules": [...], "skipChecks": [...], "docsLanguage": "<language>", "libraries": {"<section id>": "<answer>"}}'
 ```
 
 On an update, leave out the answers that do not change; they keep their values from `.claude/harness.json`. `docsLanguage` is the language of specs and plans (default English); ask if the project's docs do not show it. The dev server port, which the hooks and the end-to-end tests use, is the one the project's `dev` script sets (`--port` or `-p`), else one `apply.mjs` derives from the folder name (3000–3999) and adds to the `dev` script, so projects on one machine rarely share it. To change it, change the `dev` script.
@@ -74,7 +76,7 @@ Then read the `harness:` lines it printed, `git status` and `git diff`:
 ## 4. Finish
 
 1. **MCP:** for each server in `.claude/harness.json` `mcp`, check `claude mcp list`. A server that needs sign-in: tell the user to run `/mcp`.
-2. **Typed links (Next.js with TypeScript):** if `next.config` has no `typedRoutes: true`, add it, so the type check rejects a link to a page that does not exist. Run `npm run typecheck` and fix each link it flags: an address written in the code gets the type `Route` from `next`; only an address built at run time (from the current page, say) is cast with `as Route`. Commit this on its own.
+2. **Typed links (`nextjs` stack with TypeScript):** if `next.config` has no `typedRoutes: true`, add it, so the type check rejects a link to a page that does not exist. Run `npm run typecheck` and fix each link it flags: an address written in the code gets the type `Route` from `next`; only an address built at run time (from the current page, say) is cast with `as Route`. Commit this on its own.
 3. **Checks:** run the package install (`npm install`, or `pnpm install` when the project has `pnpm-lock.yaml`), then the `check` script. When a check fails on code the harness did not touch (for example `dupes` in an old project), ask: fix it now, or turn the check off (rerun step 3 with the check's name added to `skipChecks`).
 4. **`CLAUDE.md`:** if "What this is" or "Architecture" still hold the `<...>` placeholders, read the project (`package.json`, README, folders, main modules) and write them, then show the user what you wrote.
 5. **Commit** only the files the harness wrote or you merged (including the removal of `.claude/harness-base/` in a project from before 0.28), with the message `chore(harness): install harness <version>` or `chore(harness): update harness to <version>`.

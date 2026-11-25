@@ -20,7 +20,7 @@ Ask as `../../references/questions.md` (from this skill's base directory) says. 
 2. If its `version` is older than the template's, the project may lack the rules this skill checks and follows: ask whether to run `/frontend-harness:update` first or stop.
 3. Run `git status --short`. If anything is uncommitted, stop and tell the user: the fixes are committed area by area, and the changes may be another agent's.
 4. If `docs/superpowers/specs/` has an audit spec (`*-audit-design.md`) with unticked areas, ask whether to go on with it (step 6) or start a new audit.
-5. The modules to offer: those in `.claude/harness.json` `modules` that have an `audit` in the catalog. If there are none, say so and stop.
+5. The modules to offer: those in `.claude/harness.json` `modules` that have an `audit` in the catalog, taken from the module's own `audit` and from its `by.<language or stack>` for each of the project's `stacks`; give a subagent only the rules and skills of the stacks the project chose. If there are none, say so and stop.
 
 ## 2. Choose modules
 
@@ -31,10 +31,10 @@ Modules named after the command (`$ARGUMENTS`) that are installed and have an `a
 Run one subagent per chosen module, in parallel, each on a mid-tier model (such as Sonnet) named in the call: a subagent with no model runs on the session's, usually the most expensive one. Give each:
 
 - The module's `audit` paths. A path missing in the project is skipped and named in the report.
-- The whole project to check, but `node_modules`, build output and generated files. The source folders (`frameworks.<framework>.srcDirs` in the catalog) are where app code should live: components, pages or logic outside them are a structure finding (tests, configs and scripts are not). A rule's `paths:` says which kind of files it is about; files of that kind elsewhere (tests named `*.test.ts` or in `__tests__/`) are findings of that rule, not out of scope.
+- The whole project to check, but `node_modules`, build output and generated files. The source folders (`srcDirs` in `.claude/harness.json`, per stack) are where app code should live: components, pages or logic outside them are a structure finding (tests, configs and scripts are not). A rule's `paths:` says which kind of files it is about; files of that kind elsewhere (tests named `*.test.ts` or in `__tests__/`) are findings of that rule, not out of scope.
 - The task: read each area's rules, check the code against them, and return the findings. A finding is one kind of problem in one area: the area, where (folders, with the number of files), what is wrong (the rule it breaks, in a sentence) and the fix. Group the same problem in many files into one finding. A libraries finding is code that does a section's job other than the section says: with another library or by hand where it names a library, or with a library where it names only the platform. A library comes with conditions ("when a form has many fields"); code where they do not hold is no finding. A fix that needs a library not yet in `package.json` says so ("adds react-hook-form").
 - Another way to fix a finding only when a reasonable developer could really pick it: it costs or changes something different (a smaller change, a rule changed instead of the code). Do not make one up to fill a choice.
-- Leave out what the checks already catch (the linter, `knip`, `jscpd`, types), and matters of taste.
+- Leave out what the checks already catch (the linter, the `unused` and `dupes` checks, types), and matters of taste.
 
 Then merge across modules: findings about the same code with the same fix become one, under the area fixed first. Where their fixes contradict (a hand-made store from one area, the data library from another), keep the one the rules support best, under its own area, and say in the report which was dropped and why.
 
