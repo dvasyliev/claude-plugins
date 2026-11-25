@@ -152,6 +152,8 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 | `commitlint` | Checks that commit messages follow one format. | Recommended |
 | `pre-commit` | Before each commit, looks for passwords and keys and checks the changed files. | Recommended |
 | `sync-deps` | Runs the package install (`npm install` or `pnpm install`, and `uv sync` on Python) for you after a pull or branch switch that changed the lockfile. | Optional |
+| `ci` | Runs every check on GitHub (GitHub Actions) on each push to `main` and each pull request, so code pushed without the hooks is checked too. | Recommended |
+| `dependency-updates` | Dependabot opens a pull request each week with new versions of your packages and GitHub Actions. | Optional |
 | `context7` | Lets Claude read the current docs of your libraries, not old ones from memory. | Recommended |
 | `libraries` | One chosen library for each job, so Claude does not add new ones. | Recommended |
 

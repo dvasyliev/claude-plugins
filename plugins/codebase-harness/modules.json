@@ -674,6 +674,17 @@
         }
       }
     },
+    "ci": {
+      "description": "A GitHub Actions workflow that runs every check on each push to main and each pull request.",
+      "group": "shared",
+      "category": "ci",
+      "recommended": true
+    },
+    "dependency-updates": {
+      "description": "Dependabot: a weekly pull request per package manager (npm or pnpm, uv, GitHub Actions) with the new versions.",
+      "group": "shared",
+      "category": "ci"
+    },
     "react-practices": {
       "description": "Vercel's performance rules, composition patterns and Web Interface Guidelines review skills, and a rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write.",
       "group": "web",

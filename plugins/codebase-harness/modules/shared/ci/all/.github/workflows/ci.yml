@@ -1,0 +1,38 @@
+# Runs every project check on GitHub, as the `check` script does locally, so a push from
+# someone without the hooks, or with them skipped, is checked too.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # JavaScript: Node and the project's packages, with pnpm when it has pnpm-lock.yaml.
+      - if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+      - if: hashFiles('pnpm-lock.yaml') != ''
+        run: npm install -g "$(jq -r '(.packageManager // "pnpm") | split("+")[0]' package.json)"
+      - if: hashFiles('package.json') != ''
+        run: |
+          if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile
+          elif [ -f package-lock.json ]; then npm ci
+          else npm install; fi
+
+      # Python: uv and the project's packages, the dev tools included.
+      - if: hashFiles('pyproject.toml') != ''
+        uses: astral-sh/setup-uv@v10
+      - if: hashFiles('pyproject.toml') != ''
+        run: uv sync
+
+      - run: bash .claude/hooks/check-all.sh --force

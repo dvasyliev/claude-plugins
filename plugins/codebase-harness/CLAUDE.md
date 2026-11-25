@@ -40,13 +40,14 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 | `.claude/harness.json` | Answers, version, the checks the hooks run, what this run wrote, and `base`: the text of each file the harness wrote last, the base for the next merge. |
 | `.claude/rules/harness.md` | Installed modules and commands; always loaded, as a rule with no `paths`. |
 | `.claude/rules/libraries.md` | With the `libraries` module: `modules/shared/libraries/libraries.md` (`libraries-node.md` on `node`, `libraries-python.md` when no `js` stack is chosen; with both, the Python sections follow under `libraries-python-after-js.md` and `paths` adds `**/*.py`) with one section per `sections.json` entry of the chosen stacks, written from the `libraries` answers, and merged with the project's edits like a module file. |
+| `.github/dependabot.yml` | With the `dependency-updates` module: a weekly grouped update for GitHub Actions, npm (a `js` stack) and uv (`python`), merged with the project's edits like a module file. |
 | `core.hooksPath` | `.githooks` when a module brings git hooks, unless the project runs its hooks from elsewhere (husky). |
 
 A module that goes takes its files (unless the project edited them), scripts, settings, MCP servers and `.gitignore` lines with it; npm packages stay.
 
 ## Conventions
 
-- Plain files, no templating. A file whose text depends on the language or stack gets one version per language or stack (`<language>/`, `<stack>/`). The exceptions are the two rules `apply.mjs` writes from the answers.
+- Plain files, no templating. A file whose text depends on the language or stack gets one version per language or stack (`<language>/`, `<stack>/`). The exceptions are what `apply.mjs` writes from the answers: the two rules, and `.github/dependabot.yml`, which names only the package managers of the chosen stacks.
 - Modules stand alone: no file needs another module to be installed. A step that only applies with another module says so in plain text ("With `playwright`: ...").
 - The project's own work wins: edited files are merged, not overwritten; a script, setting or hooks path the project set stays; the harness takes back only what it added.
 - `modules.json` lists the modules in the order their checks run, cheap ones first, not by group; the groups' order is that of `groups`.

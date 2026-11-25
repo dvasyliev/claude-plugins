@@ -154,8 +154,10 @@ for (const [id, m] of modules) {
     }
   }
 }
-// .claude/rules/libraries.md has no source file: its text comes from the `libraries` answers.
+// Two files have no source file: the libraries rule comes from the `libraries` answers, and the Dependabot config from the
+// stacks (one file can name only package managers the project has, which per-language files cannot do for JS + Python).
 if (wanted.has("libraries")) files[".claude/rules/libraries.md"] = null;
+if (wanted.has("dependency-updates")) files[".github/dependabot.yml"] = null;
 const installs = collect("install");
 const paths = [...new Set([...Object.keys(files), ...installs.flatMap((i) => i.creates ?? [])])];
 
@@ -230,6 +232,32 @@ function librariesRule() {
   return js.replace(/^(paths:\n(?: {2}- .*\n)*)/m, '$1  - "**/*.py"\n') + "\n" + fill("libraries-python-after-js.md", python);
 }
 
+// The Dependabot config: a weekly grouped pull request for GitHub Actions and for each package manager the stacks use.
+// The `chore(deps)` commit messages pass commitlint.
+function dependabotConfig() {
+  const ecosystems = ["github-actions", ...(hasJs ? ["npm"] : []), ...(stackIds.some((id) => !isJs(id)) ? ["uv"] : [])];
+  const update = (ecosystem) =>
+    [
+      `  - package-ecosystem: ${ecosystem}`,
+      "    directory: /",
+      "    schedule:",
+      "      interval: weekly",
+      "    commit-message:",
+      "      prefix: chore",
+      "      include: scope",
+      "    groups:",
+      `      ${ecosystem}:`,
+      '        patterns: ["*"]',
+    ].join("\n");
+  return [
+    "# Opens a weekly pull request with the new versions of this project's packages and GitHub Actions.",
+    "version: 2",
+    "updates:",
+    ...ecosystems.map(update),
+    "",
+  ].join("\n");
+}
+
 // Each file keeps the project's edits: `base` holds what the harness wrote last,
 // and the harness changes since then are merged into the project's version, as git merges branches.
 const write = (path, text) => {
@@ -246,7 +274,7 @@ const sibling = (path) =>
     ? readdirSync(dirname(path)).find((f) => f !== basename(path) && stem(f) === stem(basename(path)) && configFormat(f))
     : undefined;
 for (const [path, source] of Object.entries(files)) {
-  const next = source ? readFileSync(source, "utf8") : librariesRule();
+  const next = source ? readFileSync(source, "utf8") : path === ".github/dependabot.yml" ? dependabotConfig() : librariesRule();
   const other = sibling(path) && join(dirname(path), sibling(path));
   if (other && !existsSync(path)) {
     // The project has this file under another name: leave it for the skill to merge and rename.

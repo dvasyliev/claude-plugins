@@ -258,3 +258,20 @@ test('every raw.githubusercontent.com download in the catalog names a tag or com
   assert.ok(urls.length > 0);
   for (const url of urls) assert.doesNotMatch(url.split('/')[5], /^(master|main|HEAD)$/, url);
 });
+
+test('ci writes the workflow; dependency-updates lists only the package managers of the chosen stacks', () => {
+  const ecosystems = (dir) => [...readFileSync(join(dir, '.github/dependabot.yml'), 'utf8').matchAll(/package-ecosystem: (\S+)/g)].map((m) => m[1]);
+  const pyproject = '[project]\nname = "app"\n';
+  const both = makeProject({ 'package.json': REACT_PKG, 'pyproject.toml': pyproject });
+  let r = apply(both, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff', 'ci', 'dependency-updates'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(existsSync(join(both, '.github/workflows/ci.yml')));
+  assert.deepEqual(ecosystems(both), ['github-actions', 'npm', 'uv']);
+  const python = makeProject({ 'pyproject.toml': pyproject });
+  r = apply(python, { stacks: ['python'], modules: ['core', 'ruff', 'dependency-updates'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(ecosystems(python), ['github-actions', 'uv']);
+  r = apply(python, { modules: ['core', 'ruff'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(!existsSync(join(python, '.github')), 'the file and its folders go with the module');
+});
