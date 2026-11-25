@@ -110,3 +110,12 @@ test('knip on node takes every JS file as an entry, so loose scripts are not unu
   assert.equal(knip.includeEntryExports, true);
   assert.equal(knip.ignoreDependencies.includes('@testing-library/react'), false);
 });
+
+test('node ignores node_modules, once', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT, 'scripts/a.mjs': '', '.gitignore': '.venv\n' });
+  assert.equal(apply(dir, ANSWERS).status, 0);
+  assert.match(read(dir, '.gitignore'), /^node_modules\/$/m);
+  const has = makeProject({ 'package.json': EXPRESS_PKG, '.gitignore': 'node_modules/\n' });
+  assert.equal(apply(has, { stacks: ['node'], modules: ['core', 'oxlint'] }).status, 0);
+  assert.equal(read(has, '.gitignore'), 'node_modules/\n');
+});

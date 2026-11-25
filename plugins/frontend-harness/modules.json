@@ -54,6 +54,9 @@
               "description": "all checks at once, as the Stop hook runs them"
             }
           }
+        },
+        "node": {
+          "gitignore": ["node_modules/"]
         }
       },
       "settings": {
