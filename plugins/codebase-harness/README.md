@@ -141,7 +141,7 @@ Pick only what you need. `core`, `types` and `prettier` are always on (`prettier
 | `eslint` or `oxlint` | Finds code mistakes, bad patterns and accessibility problems in JavaScript. Also stops files from getting too long. |
 | `ruff` | Python: formats and lints, and stops files over 500 lines. |
 | `unused` | Finds code and packages nobody uses (knip; on Python, vulture and deptry). |
-| `dupes` | Finds copied code (jscpd). |
+| `dupes` | Finds copied code in JavaScript, TypeScript and Python files (jscpd). |
 | `imports` | Python: import contracts (which package must never import which), checked with import-linter. |
 | `tailwind` | Keeps Tailwind classes in the same order everywhere. |
 | `unit` | Runs unit tests (Vitest, or pytest on Python). |

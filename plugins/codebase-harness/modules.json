@@ -433,7 +433,7 @@
       }
     },
     "dupes": {
-      "description": "jscpd: duplicated code in the source folders, checked at the end of every turn. Often red in older projects.",
+      "description": "jscpd: duplicated JavaScript, TypeScript and Python code in the source folders, checked at the end of every turn. Often red in older projects.",
       "category": "code-health",
       "recommended": true,
       "by": {
@@ -443,7 +443,7 @@
       },
       "scripts": {
         "dupes": {
-          "command": "jscpd {srcDirs} --threshold 0 --reporters console --ignore \"**/*.md,.claude/harness.json\"",
+          "command": "jscpd {srcDirs} --threshold 0 --reporters console --format \"javascript,typescript,jsx,tsx,python\"",
           "npx": "jscpd@5.4.3",
           "description": "duplicated code (jscpd)"
         }
