@@ -421,9 +421,11 @@ console.log(`harness ${version}: ${modules.map(([id]) => id).join(", ")} on ${st
 for (const note of notes) console.log(`harness: ${note}`);
 
 // Packages last, so every file above is written even when the install fails.
-// Install only what the project does not have yet.
+// Install only what the project does not have yet. A package may name its version (`size-limit@14.3.0`), for packages
+// that must match each other.
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const missing = [...new Set(onLanguage("js").flatMap((m) => m.devDependencies ?? []))].filter((p) => !(p in have));
+const packageName = (p) => p.replace(/(?<=.)@.*$/, "");
+const missing = [...new Set(onLanguage("js").flatMap((m) => m.devDependencies ?? []))].filter((p) => !(packageName(p) in have));
 if (missing.length && !noInstall) {
   try {
     execSync(`${pm === "pnpm" ? "pnpm add --save-dev" : "npm install --save-dev"} ${missing.join(" ")}`, { stdio: "inherit" });

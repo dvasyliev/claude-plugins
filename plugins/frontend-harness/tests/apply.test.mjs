@@ -1,7 +1,8 @@
 // apply.mjs answers: stacks in place of one framework, and the checks on them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REACT_PKG, apply, makeProject } from './helpers.mjs';
 
@@ -51,4 +52,32 @@ test('passed answers with old module names are renamed too', () => {
   const json = harnessJson(dir);
   assert.ok(json.modules.includes('unused') && json.modules.includes('dupes'));
   assert.ok(!json.modules.includes('knip') && !json.modules.includes('jscpd'));
+});
+
+// A fake `npm` on PATH logs its arguments instead of installing.
+function fakeNpm() {
+  const bin = mkdtempSync(join(tmpdir(), 'harness-bin-'));
+  symlinkSync(process.execPath, join(bin, 'node'));
+  const log = join(bin, 'npm.log');
+  writeFileSync(join(bin, 'npm'), `#!/bin/sh\necho "$@" >> "${log}"\n`);
+  chmodSync(join(bin, 'npm'), 0o755);
+  return { PATH: `${bin}:/usr/bin:/bin`, log };
+}
+
+test('size-limit and its file plugin install as one pinned pair, and not again once the project has them', () => {
+  const answers = { stacks: ['react'], modules: ['core', 'oxlint', 'page-speed'] };
+  const dir = makeProject({ 'package.json': REACT_PKG });
+  const npm = fakeNpm();
+  const r = apply(dir, answers, { PATH: npm.PATH, HARNESS_NO_INSTALL: '' });
+  assert.equal(r.status, 0, r.stderr);
+  const install = readFileSync(npm.log, 'utf8');
+  assert.match(install, / size-limit@14\.3\.0\b/);
+  assert.match(install, / @size-limit\/file@14\.3\.0\b/);
+  const pkg = JSON.parse(REACT_PKG);
+  pkg.devDependencies = { ...pkg.devDependencies, 'size-limit': '^14.3.0', '@size-limit/file': '^14.3.0' };
+  const has = makeProject({ 'package.json': JSON.stringify(pkg) });
+  const again = fakeNpm();
+  assert.equal(apply(has, answers, { PATH: again.PATH, HARNESS_NO_INSTALL: '' }).status, 0);
+  const second = existsSync(again.log) ? readFileSync(again.log, 'utf8') : '';
+  assert.doesNotMatch(second, /size-limit/);
 });
