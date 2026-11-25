@@ -1,5 +1,5 @@
 {
-  ".claude/harness.json": "be36d6b2102b6c65c6dd0e26c51ffeb2d301588055c3da0b645d7b724322b68c",
+  ".claude/harness.json": "f4b105199d0b2360740440e50a6264a77158865a24e03919959b6473340c3214",
   ".claude/hooks/check-all.sh": "b75b528aed8cbc8bbb1b686d179d4e1d4359f6f191b7e3e6c5c0710122625a72",
   ".claude/hooks/format-lint-file.sh": "aee38a39b951ae4b4fbf12c42c50858899f6a91d9414b52d7b81a4ccde1bc0bd",
   ".claude/hooks/guard-commands.sh": "572ca4e78b4e26814451a9a7c7a88e677601a673578f5299244e5bdd9d148bc5",
@@ -36,7 +36,7 @@
   "CLAUDE.md": "3c90205f2aa4c08040d18cf907059db16accd203a75471edbffb94ff13738830",
   "commitlint.config.mjs": "7076035808cb1e0973b5567f401170ebbae906a65ad1c6bb5c9bc4217f52c87b",
   "knip.json": "9ce53534b6ae9e8a8815e909f610044cbb313ad1ec8122eb2ba6915be4aceb09",
-  "package.json": "ad6429f363b9b02c19cc33ec6fc928816d9796e322688227227132642b311644",
+  "package.json": "22a1cccc78eec85a51ae8024408bb8995d31c8d04be3206d73688aa34bdb1ea9",
   "playwright.config.ts": "f06d533e2f2f0647d561df0a35748ccfb403a85d7161ea6e15075fda5d03db00",
   "tests/fixtures.ts": "4d3d18613e7ed92a32658f66793de06078a87f5b1fd952cd7380008ce4c4ee20",
   "tests/seed.spec.ts": "fd81a5b7d432922e5efea6eeec3175d5155b842836b550e6a7caddc07cc58f54",

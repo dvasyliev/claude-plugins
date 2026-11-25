@@ -171,7 +171,9 @@ test('python-only: pytest, vulture, deptry, jscpd through npx, and the reports',
   assert.equal(r.status, 0, r.stderr);
   const { checks, reports } = harnessJson(dir);
   const command = (name) => checks.find((c) => c.name === name)?.command;
-  assert.equal(command('dupes'), 'npx -y jscpd@5.4.3 app tools --threshold 0 --reporters console');
+  // Markdown is prose, not code (the Stop hook skips it too), and harness.json is the harness's own; both sit in
+  // .claude/, a source folder when the project keeps scripts there.
+  assert.equal(command('dupes'), 'npx -y jscpd@5.4.3 app tools --threshold 0 --reporters console --ignore "**/*.md,.claude/harness.json"');
   assert.equal(command('vulture'), 'uv run vulture app tools --min-confidence 80');
   assert.equal(command('deptry'), 'uv run deptry . --experimental-namespace-package');
   assert.equal(command('pytest'), 'uv run pytest || [ $? -eq 5 ]');

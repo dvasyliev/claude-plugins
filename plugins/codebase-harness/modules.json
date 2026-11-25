@@ -443,7 +443,7 @@
       },
       "scripts": {
         "dupes": {
-          "command": "jscpd {srcDirs} --threshold 0 --reporters console",
+          "command": "jscpd {srcDirs} --threshold 0 --reporters console --ignore \"**/*.md,.claude/harness.json\"",
           "npx": "jscpd@5.4.3",
           "description": "duplicated code (jscpd)"
         }
