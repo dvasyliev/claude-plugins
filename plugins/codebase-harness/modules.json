@@ -415,7 +415,7 @@
       "description": "Fails for a Python file over 500 lines in the source folders, checked at the end of every turn.",
       "group": "python",
       "category": "code-health",
-      "recommended": true,
+      "required": true,
       "scripts": {
         "file-size": {
           "command": "bash .claude/checks/file-size.sh {srcDirs}",

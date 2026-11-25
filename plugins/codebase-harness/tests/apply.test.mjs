@@ -68,7 +68,7 @@ test('a react + python project with the old modules updates to the new ones that
   });
   assert.equal(apply(dir, {}).status, 0);
   const json = harnessJson(dir);
-  const expected = ['core', 'oxlint', 'ruff', 'prettier', 'tsc', 'basedpyright', 'knip', 'vulture', 'deptry', 'vitest', 'pytest',
+  const expected = ['core', 'oxlint', 'ruff', 'file-size', 'prettier', 'tsc', 'basedpyright', 'knip', 'vulture', 'deptry', 'vitest', 'pytest',
     'react-practices', 'python-practices', 'playwright'];
   assert.deepEqual([...json.modules].sort(), [...expected].sort());
   const files = (d) => Object.fromEntries(readdirSync(d, { recursive: true, withFileTypes: true })
@@ -78,6 +78,16 @@ test('a react + python project with the old modules updates to the new ones that
   const again = apply(dir, {});
   assert.equal(again.status, 0, again.stderr);
   assert.deepEqual(files(dir), before);
+});
+
+test('an old python project with core and ruff keeps the file-size check after an update', () => {
+  const old = { stacks: ['python'], srcDirs: { python: ['app'] }, modules: ['core', 'ruff'] };
+  const dir = makeProject({ 'pyproject.toml': '[project]\nname = "app"\nversion = "0.1.0"\n', '.claude/harness.json': JSON.stringify(old) });
+  const r = apply(dir, {});
+  assert.equal(r.status, 0, r.stderr);
+  const json = harnessJson(dir);
+  assert.ok(json.modules.includes('file-size'));
+  assert.equal(json.checks.find((c) => c.name === 'file-size')?.command, 'bash .claude/checks/file-size.sh app');
 });
 
 test('a module whose group covers none of the chosen stacks is not written, even when passed', () => {
