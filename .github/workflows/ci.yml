@@ -21,6 +21,15 @@ jobs:
       - run: claude plugin validate .
       - run: claude plugin validate plugins/frontend-harness
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: node --test plugins/*/tests/*.test.mjs
+
   commitlint:
     # Dependabot's commit bodies hold release notes with long lines that commitlint rejects.
     if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
