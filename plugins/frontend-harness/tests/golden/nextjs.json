@@ -1,5 +1,5 @@
 {
-  ".claude/harness.json": "23df5039221eed806f5436babaf35ab36a9a1ac3b610b7347c9e83f3aec853a1",
+  ".claude/harness.json": "6359d8beec37bbaaff07f98f4602ed03732aff6adcb8a60738a6967cfaccbfca",
   ".claude/hooks/check-all.sh": "b75b528aed8cbc8bbb1b686d179d4e1d4359f6f191b7e3e6c5c0710122625a72",
   ".claude/hooks/format-lint-file.sh": "aee38a39b951ae4b4fbf12c42c50858899f6a91d9414b52d7b81a4ccde1bc0bd",
   ".claude/hooks/guard-commands.sh": "572ca4e78b4e26814451a9a7c7a88e677601a673578f5299244e5bdd9d148bc5",

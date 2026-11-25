@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Writes the chosen modules (modules.json, modules/) into the project in the current folder.
-// Usage: node apply.mjs '{"framework": "nextjs", "modules": [...], "skipChecks": [...], "docsLanguage": "English"}'
+// Usage: node apply.mjs '{"stacks": ["nextjs"], "modules": [...], "skipChecks": [...], "docsLanguage": "English"}'
 // An answer left out keeps its value from the last run (.claude/harness.json).
 import { execSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
+import { applies, checkStacks, combine, effective } from "./lib/stacks.mjs";
 
 const root = join(import.meta.dirname, "..");
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
@@ -13,12 +14,15 @@ const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null,
 if (!existsSync("package.json")) fail("no package.json here; run this in the project folder");
 const pkg = readJson("package.json");
 const old = readJson(".claude/harness.json", {});
-const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, ...old, ...JSON.parse(process.argv[2] || "{}") };
+// Answers from before stacks name one `framework`; it becomes `stacks: [framework]`.
+const withStacks = ({ framework, ...a }) => (framework && !a.stacks ? { ...a, stacks: [framework] } : a);
+const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, srcDirs: {}, ...withStacks(old), ...withStacks(JSON.parse(process.argv[2] || "{}")) };
 const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
 const catalog = readJson(join(root, "modules.json"));
-const frameworkId = answers.framework;
-const framework = catalog.frameworks[frameworkId];
-if (!framework) fail(`unknown framework "${frameworkId}"`);
+const stackIds = answers.stacks ?? [];
+attempt(() => checkStacks(catalog, stackIds));
+// Each chosen stack's source folders: the answer, else the stack's own.
+const srcDirs = Object.fromEntries(stackIds.map((id) => [id, answers.srcDirs[id] ?? catalog.stacks[id].srcDirs]));
 // The dev server port the hooks and the end-to-end tests use: the one the `dev` script sets, else one from the
 // folder name, so projects on one machine rarely share it (the `dev` script then gets it below).
 const portIn = (script) => Number(script?.match(/(?:^|\s)(?:--port|-p)[\s=]*(\d+)/)?.[1]) || undefined;
@@ -34,9 +38,17 @@ function fail(message) {
   console.error(`harness: ${message}`);
   process.exit(1);
 }
+// A lib function's error is a harness failure.
+function attempt(fn) {
+  try {
+    return fn();
+  } catch (error) {
+    fail(error.message);
+  }
+}
 
 // Selected modules plus the required ones, and the `auto` ones whose `detect` matches (package.json or files),
-// in catalog order, with exactly one linter.
+// in catalog order, with exactly one linter per chosen stack.
 const detected = (m) =>
   Object.entries(m.detect ?? {}).some(([field, names]) => names.some((name) => (field === "files" ? existsSync(name) : name in (pkg[field] ?? {}))));
 const wanted = new Set(answers.modules);
@@ -48,9 +60,21 @@ for (const id of wanted) {
   const m = catalog.modules[id];
   if (!m) fail(`unknown module "${id}"`);
 }
-const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id));
-const linters = Object.entries(catalog.modules).filter(([, m]) => m.linter).map(([id]) => id);
-if (modules.filter(([, m]) => m.linter).length !== 1) fail(`choose one linter of ${linters.join(", ")} (default for ${frameworkId}: ${framework.linter})`);
+// Each module on the chosen stacks it applies to: its own fields with `by.<language>` and `by.<stack>` merged over them,
+// for each of those stacks. A module that applies to none of them is not installed.
+const appliesTo = (m, stackId) => applies(m, stackId, catalog, existsSync, pkg);
+const stacksOf = {};
+const modules = [];
+for (const [id, m] of Object.entries(catalog.modules)) {
+  if (!wanted.has(id)) continue;
+  stacksOf[id] = stackIds.filter((stackId) => appliesTo(m, stackId));
+  if (stacksOf[id].length) modules.push([id, attempt(() => combine(stacksOf[id].map((stackId) => effective(m, stackId, catalog, srcDirs))))]);
+}
+for (const stackId of stackIds) {
+  const linters = Object.entries(catalog.modules).filter(([, m]) => m.linter && appliesTo(m, stackId)).map(([id]) => id);
+  if (modules.filter(([id, m]) => m.linter && stacksOf[id].includes(stackId)).length !== 1)
+    fail(`choose one linter for ${stackId} of ${linters.join(", ")} (default: ${catalog.stacks[stackId].linter})`);
+}
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 
 // JSON the modules add to the project's own files: objects by key, arrays by item.
@@ -82,14 +106,24 @@ function unmerge(target, added, keep = {}) {
   }
 }
 
-// Files: modules/<category>/<module>/all/ and .../<framework>/, each written at the same path in the project.
+// Files: modules/<category>/<module>/all/, <language>/ and <stack>/ for each stack the module applies to, each written at
+// the same path in the project; a later folder replaces the same path. Two stacks give one path only with the same text.
 const files = {};
 for (const [id, m] of modules) {
-  for (const dir of ["all", frameworkId]) {
-    const base = join(root, "modules", m.category, id, dir);
-    if (!existsSync(base)) continue;
-    for (const d of readdirSync(base, { recursive: true, withFileTypes: true })) {
-      if (d.isFile() && d.name !== ".DS_Store") files[relative(base, join(d.parentPath, d.name))] = join(d.parentPath, d.name);
+  const from = {};
+  for (const stackId of stacksOf[id]) {
+    const mine = {};
+    for (const dir of ["all", catalog.stacks[stackId].language, stackId]) {
+      const base = join(root, "modules", m.category, id, dir);
+      if (!existsSync(base)) continue;
+      for (const d of readdirSync(base, { recursive: true, withFileTypes: true })) {
+        if (d.isFile() && d.name !== ".DS_Store") mine[relative(base, join(d.parentPath, d.name))] = join(d.parentPath, d.name);
+      }
+    }
+    for (const [path, source] of Object.entries(mine)) {
+      if (path in from && readFileSync(files[path], "utf8") !== readFileSync(source, "utf8")) fail(`${path} comes from both ${from[path]} and ${stackId}`);
+      from[path] ??= stackId;
+      files[path] = source;
     }
   }
 }
@@ -217,9 +251,9 @@ for (const [path, source] of Object.entries(files)) {
 rmSync(tmp, { recursive: true });
 
 // package.json scripts, .claude/settings.json and .mcp.json servers: the modules' keys are set, the project's own are kept.
-const scripts = Object.assign({}, ...modules.map(([, m]) => ({ ...m.scripts, ...m.frameworkScripts?.[frameworkId] })));
+const scripts = Object.assign({}, ...modules.map(([, m]) => m.scripts));
 const merged = {
-  "package.json": { scripts: Object.fromEntries(Object.entries(scripts).map(([name, s]) => [name, s.command.replace("{srcDirs}", framework.srcDirs.join(" "))])) },
+  "package.json": { scripts: Object.fromEntries(Object.entries(scripts).map(([name, s]) => [name, s.command])) },
   ".claude/settings.json": modules.reduce((settings, [, m]) => merge(settings, m.settings ?? {}), {}),
   ".mcp.json": { mcpServers: Object.assign({}, ...modules.map(([, m]) => m.mcpServers ?? {})) },
 };
@@ -286,7 +320,8 @@ const fileChecks = collect("fileChecks")
 writeJson(".claude/harness.json", {
   $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with /frontend-harness:setup.",
   version,
-  framework: frameworkId,
+  stacks: stackIds,
+  srcDirs,
   modules: modules.map(([id]) => id),
   skipChecks: [...skip],
   docsLanguage: answers.docsLanguage,
@@ -340,14 +375,13 @@ try {
   // Not a git repo yet; the install runs `prepare` later.
 }
 
-console.log(`harness ${version}: ${modules.map(([id]) => id).join(", ")} on ${frameworkId}`);
+console.log(`harness ${version}: ${modules.map(([id]) => id).join(", ")} on ${stackIds.join(", ")}`);
 for (const note of notes) console.log(`harness: ${note}`);
 
 // Packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const frameworkDeps = modules.flatMap(([, m]) => m.frameworkDevDependencies?.[frameworkId] ?? []);
-const missing = [...new Set([...collect("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));
+const missing = [...new Set(collect("devDependencies"))].filter((p) => !(p in have));
 if (missing.length && !noInstall) {
   try {
     execSync(`${pm === "pnpm" ? "pnpm add --save-dev" : "npm install --save-dev"} ${missing.join(" ")}`, { stdio: "inherit" });

@@ -10,7 +10,7 @@ for (const [framework, pkg, modules] of [
 ]) {
   test(`apply.mjs output for ${framework} matches the golden`, () => {
     const dir = makeProject({ 'package.json': pkg });
-    const r = apply(dir, { framework, modules });
+    const r = apply(dir, { stacks: [framework], modules });
     assert.equal(r.status, 0, r.stderr);
     golden(framework, snapshot(dir));
   });
