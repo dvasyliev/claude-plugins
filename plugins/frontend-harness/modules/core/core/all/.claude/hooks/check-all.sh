@@ -48,9 +48,12 @@ $(tail -15 <<<"$out")
 }
 
 # The checks the installed harness modules list in .claude/harness.json, in order.
-while IFS=$'\t' read -r name command; do
+# One JSON record per line, so a command keeps its backslashes and newlines.
+while IFS= read -r check; do
+  name=$(jq -r '.name' <<<"$check")
+  command=$(jq -r '.command' <<<"$check")
   run "$name" bash -c "$command" </dev/null
-done < <(jq -r '.checks[] | [.name, .command] | @tsv' .claude/harness.json)
+done < <(jq -c '.checks[]' .claude/harness.json)
 
 # Red: send Claude back to fix. Green: remember it, so the same code is not checked again.
 if [ -n "$failed" ]; then

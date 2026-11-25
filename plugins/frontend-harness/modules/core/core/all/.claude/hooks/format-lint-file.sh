@@ -16,7 +16,11 @@ ext=${path##*.}
 
 # Run each file check from .claude/harness.json that covers this extension.
 # A blocking check (lint) makes Claude fix the errors right away; the others (format) run silently.
-while IFS=$'\t' read -r name command block; do
+# One JSON record per line, so a command keeps its backslashes and newlines.
+while IFS= read -r check; do
+  name=$(jq -r '.name' <<<"$check")
+  command=$(jq -r '.command' <<<"$check")
+  block=$(jq -r '.blocking' <<<"$check")
   if ! out=$(bash -c "$command \"\$1\"" _ "$path" 2>&1 </dev/null) && [ "$block" = "true" ]; then
     {
       echo "$name failed on $path. Fix these before moving on:"
@@ -24,7 +28,7 @@ while IFS=$'\t' read -r name command block; do
     } >&2
     exit 2
   fi
-done < <(jq -r --arg ext "$ext" '.fileChecks[] | select(.extensions | index($ext)) | [.name, .command, .blocking] | @tsv' .claude/harness.json)
+done < <(jq -c --arg ext "$ext" '.fileChecks[] | select(.extensions | index($ext))' .claude/harness.json)
 
 # Keep CLAUDE.md and the rules short: past the limit, Claude moves the extra out
 # to where it is loaded only when a task needs it.
