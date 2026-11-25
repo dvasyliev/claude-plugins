@@ -95,3 +95,24 @@ test('session-start.sh asks for uv sync in a Python project without .venv, and n
   assert.match(r.stdout, /Python dependencies are not installed \(uv sync\)/);
   assert.doesNotMatch(r.stdout, /port/);
 });
+
+test('guard.sh blocks force push, skipped git hooks and secret env files, and lets the rest through', () => {
+  const dir = project({ checks: [], fileChecks: [] });
+  const guard = (tool_input) => run(dir, 'guard.sh', [], JSON.stringify({ tool_input })).status;
+  const E = '.' + 'env';
+  for (const blocked of [
+    { command: 'git push --force origin main' },
+    { command: 'git commit -m x --no-verify' },
+    { command: `cat ${E}.local` },
+    { file_path: join(dir, E) },
+    { file_path: join(dir, `${E}.production`) },
+    { path: dir, glob: `${E}*` },
+  ]) assert.equal(guard(blocked), 2, JSON.stringify(blocked));
+  for (const allowed of [
+    { command: 'git push origin main' },
+    { command: 'git commit -F .githooks/pre-push' },
+    { command: `cp ${E}.example /tmp/x` },
+    { file_path: join(dir, `${E}.example`) },
+    { file_path: join(dir, 'src/app.ts') },
+  ]) assert.equal(guard(allowed), 0, JSON.stringify(allowed));
+});
