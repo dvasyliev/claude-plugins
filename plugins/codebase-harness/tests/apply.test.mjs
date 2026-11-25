@@ -148,3 +148,20 @@ test('only the hooks the harness writes are made executable, not the project fil
   assert.equal(mode('.claude/hooks/check-all.sh'), 0o755);
   assert.equal(mode('.githooks/commit-msg'), 0o755);
 });
+
+test('MCP args the harness added last time are replaced whole, in the harness order', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG });
+  assert.equal(apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'page-speed'] }).status, 0);
+  // An earlier version added the server with @latest.
+  const latest = ['-y', 'chrome-devtools-mcp@latest', '--isolated'];
+  const json = harnessJson(dir);
+  json.merged['.mcp.json'].mcpServers['chrome-devtools'].args = latest;
+  writeFileSync(join(dir, '.claude/harness.json'), JSON.stringify(json));
+  const mcp = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf8'));
+  mcp.mcpServers['chrome-devtools'].args = latest;
+  writeFileSync(join(dir, '.mcp.json'), JSON.stringify(mcp));
+  const r = apply(dir, {});
+  assert.equal(r.status, 0, r.stderr);
+  const args = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf8')).mcpServers['chrome-devtools'].args;
+  assert.deepEqual(args, ['-y', 'chrome-devtools-mcp@1.12.0', '--isolated']);
+});

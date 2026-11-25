@@ -117,7 +117,9 @@ function unmerge(target, added, keep = {}) {
   for (const [k, v] of Object.entries(added)) {
     if (!(k in target)) continue;
     const kept = (x) => (keep[k] ?? []).some((y) => same(x, y));
-    if (Array.isArray(v)) target[k] = target[k].filter((x) => !v.some((y) => same(x, y)) || kept(x));
+    // An array still as the harness added it is replaced whole, so the new one keeps the harness order.
+    if (Array.isArray(v) && same(target[k], v)) target[k] = structuredClone(keep[k] ?? []);
+    else if (Array.isArray(v)) target[k] = target[k].filter((x) => !v.some((y) => same(x, y)) || kept(x));
     else if (isObject(v)) unmerge(target[k], v, keep[k] ?? {});
     else if (same(target[k], v) && !same(keep[k], v)) delete target[k];
     if (isObject(target[k]) || Array.isArray(target[k])) if (!Object.keys(target[k]).length) delete target[k];
