@@ -60,7 +60,7 @@ forbidden_modules =
     <target>
 ```
 
-One contract per answer. With no answer, leave `imports` out. On an update, a `.importlinter` already there stays as it is.
+One contract per answer. With no answer, leave `imports` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `imports` without asking, and write no `.importlinter`, which import-linter would read instead.
 
 Ask about `skipChecks` only when the user asks to turn a check off, or in step 4.
 
