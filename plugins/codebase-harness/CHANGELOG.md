@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 (2026-11-25)
+
+### Features
+
+- feature-workflow offers a worktree when the work calls for one (3e739e2)
+
+### Other
+
+- move Contributing and License above the courses (0165e36)
+
 ## 1.1.1 (2026-11-25)
 
 ### Fixes
