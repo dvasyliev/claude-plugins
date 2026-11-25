@@ -3,16 +3,7 @@
 [![CI](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **Breaking change: frontend-harness is now codebase-harness.** If you use frontend-harness, run these, in order (`<scope>` is the scope the plugin is installed in: `user`, `project` or `local`):
->
-> ```bash
-> claude plugin uninstall frontend-harness@frontend-harness --scope <scope>
-> claude plugin marketplace remove frontend-harness
-> claude plugin marketplace add dvasyliev/claude-plugins
-> claude plugin install codebase-harness@dvasyliev --scope <scope>
-> ```
->
-> Then, in `~/.claude/settings.json` and in the project's `.claude/settings.json`, replace the `enabledPlugins` key `frontend-harness@frontend-harness` with `codebase-harness@dvasyliev` (keep its `true` or `false` value). Last, run `/reload-plugins`, then `/codebase-harness:update`. The harness files already in the project stay and keep working.
+> frontend-harness is now codebase-harness: [how to move](plugins/codebase-harness/README.md#moving-from-frontend-harness).
 
 My [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugins, in one marketplace, `dvasyliev`.
 

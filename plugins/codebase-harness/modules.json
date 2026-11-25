@@ -456,7 +456,7 @@
       ]
     },
     "imports": {
-      "description": "import-linter: the import contracts in .importlinter (layers, forbidden imports), checked at the end of every turn.",
+      "description": "import-linter: the import contracts in .importlinter or [tool.importlinter] in pyproject.toml (layers, forbidden imports), checked at the end of every turn.",
       "category": "code-health",
       "stacks": ["python"],
       "scripts": {

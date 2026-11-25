@@ -1,16 +1,5 @@
 # codebase-harness
 
-> **Breaking change: frontend-harness is now codebase-harness.** It is in the marketplace `dvasyliev` and supports React, Next.js, Python and Node. If you use frontend-harness, run these, in order (`<scope>` is the scope the plugin is installed in: `user`, `project` or `local`):
->
-> ```bash
-> claude plugin uninstall frontend-harness@frontend-harness --scope <scope>
-> claude plugin marketplace remove frontend-harness
-> claude plugin marketplace add dvasyliev/claude-plugins
-> claude plugin install codebase-harness@dvasyliev --scope <scope>
-> ```
->
-> Then, in `~/.claude/settings.json` and in the project's `.claude/settings.json`, replace the `enabledPlugins` key `frontend-harness@frontend-harness` with `codebase-harness@dvasyliev` (keep its `true` or `false` value). Last, run `/reload-plugins`, then `/codebase-harness:update`. The harness files already in the project stay and keep working.
-
 [![CI](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml)
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdvasyliev%2Fclaude-plugins%2Fmain%2Fplugins%2Fcodebase-harness%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
@@ -30,6 +19,7 @@ codebase-harness makes Claude check its own work. After every change, it checks 
 - [Commands](#commands)
 - [Stacks](#stacks)
 - [Modules](#modules)
+- [Moving from frontend-harness](#moving-from-frontend-harness)
 - [My Educational Courses](#my-educational-courses)
 - [Contributing](#contributing)
 - [License](#license)
@@ -124,7 +114,7 @@ A project can have several stacks. Setup offers the ones it detects, and each mo
 |---|---|---|---|
 | `react` | React (Vite) | oxlint | tsc, Prettier, knip, Vitest |
 | `nextjs` | Next.js (App Router); replaces `react` | ESLint | tsc, Prettier, knip, Vitest |
-| `node` | Node.js: Express, Fastify, loose scripts; replaces `react` and `nextjs` | oxlint | tsc, Prettier, knip, Vitest |
+| `node` | Node.js: Express, Fastify, loose scripts; replaces `react` and `nextjs` | oxlint | tsc (when the project has `tsconfig.json`), Prettier, knip, Vitest |
 | `python` | Python, with uv | Ruff | basedpyright, vulture, deptry, pytest |
 
 ## Modules
@@ -142,19 +132,32 @@ Pick only what you need. `core`, `types` and `prettier` are always on (`prettier
 | `ruff` | Python: formats and lints, and stops files over 500 lines. |
 | `unused` | Finds code and packages nobody uses (knip; on Python, vulture and deptry). |
 | `dupes` | Finds copied code in JavaScript, TypeScript and Python files (jscpd). |
-| `imports` | Python: import contracts (which package must never import which), checked with import-linter. |
+| `imports` | Python: import contracts (which package must never import which), in `.importlinter` or `[tool.importlinter]` in `pyproject.toml`, checked with import-linter. |
 | `tailwind` | Keeps Tailwind classes in the same order everywhere. |
 | `unit` | Runs unit tests (Vitest, or pytest on Python). |
 | `e2e` | React and Next.js: runs browser tests (Playwright) and checks pages for accessibility problems before you push. |
 | `commitlint` | Checks that commit messages follow one format. |
 | `pre-commit` | Before each commit, looks for passwords and keys and checks the changed files. |
-| `sync-deps` | Runs the package install (`npm install` or `pnpm install`) for you after a pull that changed the lockfile. |
+| `sync-deps` | Runs the package install (`npm install` or `pnpm install`, and `uv sync` on Python) for you after a pull or branch switch that changed the lockfile. |
 | `best-practices` | Gives Claude best-practice guides: Vercel's for React and Next.js, others for Node and Python. |
 | `context7` | Lets Claude read the current docs of your libraries, not old ones from memory. |
 | `libraries` | One chosen library for each job, so Claude does not add new ones. |
 | `next-docs` | Gives Claude the docs of your exact Next.js version. |
 | `resilience` | Calls to other services get time limits and safe retries, failures show an error you can act on, and a change clears old cached data. |
 | `page-speed` | React and Next.js: rules for fast pages, a browser tool to measure them, and a size limit for your code bundle (React). |
+
+## Moving from frontend-harness
+
+frontend-harness is now codebase-harness. It is in the marketplace `dvasyliev` and supports React, Next.js, Python and Node. If you use frontend-harness, run these, in order (`<scope>` is the scope the plugin is installed in: `user`, `project` or `local`):
+
+```bash
+claude plugin uninstall frontend-harness@frontend-harness --scope <scope>
+claude plugin marketplace remove frontend-harness
+claude plugin marketplace add dvasyliev/claude-plugins
+claude plugin install codebase-harness@dvasyliev --scope <scope>
+```
+
+Then, in `~/.claude/settings.json` and in the project's `.claude/settings.json`, replace the `enabledPlugins` key `frontend-harness@frontend-harness` with `codebase-harness@dvasyliev` (keep its `true` or `false` value). Last, run `/reload-plugins`, then `/codebase-harness:update`. The harness files already in the project stay and keep working.
 
 <!-- COURSES:START -->
 ## My Educational Courses
