@@ -329,6 +329,16 @@
       "category": "linting",
       "stacks": ["python"],
       "linter": true,
+      "by": {
+        "python": {
+          "scripts": {
+            "file-size": {
+              "command": "bash .claude/checks/file-size.sh {srcDirs}",
+              "description": "fails for a .py file over 500 lines"
+            }
+          }
+        }
+      },
       "scripts": {
         "ruff": {
           "command": "uv run ruff check .",
@@ -337,10 +347,6 @@
         "ruff-format": {
           "command": "uv run ruff format --check .",
           "description": "Ruff format check only"
-        },
-        "file-size": {
-          "command": "bash .claude/checks/file-size.sh {srcDirs}",
-          "description": "fails for a .py file over 500 lines"
         },
         "ruff-format:file": {
           "command": "uv run ruff format",

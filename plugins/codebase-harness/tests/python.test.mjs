@@ -257,3 +257,10 @@ test('an update that passes only the python srcDirs keeps the react ones', () =>
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
   assert.match(pkg.scripts.dupes, /jscpd web app tools /);
 });
+
+test('file-size checks the python folders only', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG, 'pyproject.toml': PYPROJECT });
+  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff'], srcDirs: { react: ['web'], python: ['app'] } });
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(harnessJson(dir).checks.find((c) => c.name === 'file-size').command, 'bash .claude/checks/file-size.sh app');
+});
