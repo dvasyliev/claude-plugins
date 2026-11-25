@@ -154,3 +154,45 @@ test('uv adds the dev dependencies the project lacks, and nothing when it has th
   assert.equal(apply(full, PY_ANSWERS, { PATH: second.PATH, HARNESS_NO_INSTALL: '' }).status, 0);
   assert.equal(/\badd\b/.test(logged(second.log)), false);
 });
+
+const TEST_MODULES = ['core', 'ruff', 'types', 'unit', 'unused', 'dupes'];
+
+test('python-only: pytest, vulture, deptry, jscpd through npx, and the reports', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  const r = apply(dir, { stacks: ['python'], modules: TEST_MODULES, srcDirs: { python: ['app', 'tools'] } });
+  assert.equal(r.status, 0, r.stderr);
+  const { checks, reports } = harnessJson(dir);
+  const command = (name) => checks.find((c) => c.name === name)?.command;
+  assert.equal(command('dupes'), 'npx -y jscpd@5.4.3 app tools --threshold 0 --reporters console');
+  assert.equal(command('vulture'), 'uv run vulture app tools --min-confidence 80');
+  assert.equal(command('deptry'), 'uv run deptry .');
+  assert.equal(command('pytest'), 'uv run pytest');
+  assert.equal(command('test'), undefined);
+  assert.deepEqual(reports.map((x) => x.name), ['ruff-strict', 'coverage']);
+  for (const f of ['pytest.ini', '.coveragerc', '.claude/rules/tests-python.md']) assert.ok(existsSync(join(dir, f)), f);
+  assert.equal(existsSync(join(dir, 'package.json')), false);
+});
+
+test('imports runs lint-imports on python only', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  assert.equal(apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'imports'] }).status, 0);
+  assert.equal(harnessJson(dir).checks.find((c) => c.name === 'imports').command, 'uv run lint-imports');
+  const react = makeProject({ 'package.json': REACT_PKG });
+  const r = apply(react, { stacks: ['react'], modules: ['core', 'oxlint', 'imports'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(harnessJson(react).modules.includes('imports'), false);
+  assert.equal('reports' in harnessJson(react), false);
+});
+
+test('React and Python: dupes is a package.json script covering both stacks, tests keep their names', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG, 'pyproject.toml': PYPROJECT });
+  const r = apply(dir, { stacks: ['react', 'python'], modules: [...TEST_MODULES, 'oxlint'], srcDirs: { python: ['app', 'tools'] } });
+  assert.equal(r.status, 0, r.stderr);
+  const { checks } = harnessJson(dir);
+  assert.equal(checks.find((c) => c.name === 'dupes').command, 'npm run -s dupes');
+  assert.equal(checks.find((c) => c.name === 'test').command, 'npm run -s test');
+  assert.equal(checks.find((c) => c.name === 'pytest').command, 'uv run pytest');
+  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  assert.match(pkg.scripts.dupes, /src app tools/);
+  assert.equal('pytest' in pkg.scripts, false);
+});

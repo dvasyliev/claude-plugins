@@ -338,6 +338,8 @@ const checks = collect("checks")
 const fileChecks = collect("fileChecks")
   .filter((c) => !skip.has(c.name))
   .map(({ name, script, extensions, blocking }) => ({ name, command: inPackage.has(script) ? `${pm} run -s ${script} --` : direct(script), extensions, blocking }));
+// Reports are commands for audits; the hooks do not run them. The key is there only when a module brings one.
+const reports = collect("reports");
 writeJson(".claude/harness.json", {
   $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with /frontend-harness:setup.",
   version,
@@ -350,6 +352,7 @@ writeJson(".claude/harness.json", {
   port,
   checks,
   fileChecks,
+  ...(reports.length && { reports }),
   paths,
   merged,
   mcp: mcpNames,

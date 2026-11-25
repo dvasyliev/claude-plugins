@@ -388,6 +388,29 @@
             }
           ],
           "devDependencies": ["knip"]
+        },
+        "python": {
+          "scripts": {
+            "vulture": {
+              "command": "uv run vulture {srcDirs} --min-confidence 80",
+              "description": "unused Python code (vulture)"
+            },
+            "deptry": {
+              "command": "uv run deptry .",
+              "description": "unused, missing and transitive Python dependencies (deptry)"
+            }
+          },
+          "checks": [
+            {
+              "name": "vulture",
+              "script": "vulture"
+            },
+            {
+              "name": "deptry",
+              "script": "deptry"
+            }
+          ],
+          "devDependencies": ["vulture", "deptry"]
         }
       }
     },
@@ -403,6 +426,7 @@
       "scripts": {
         "dupes": {
           "command": "jscpd {srcDirs} --threshold 0 --reporters console",
+          "npx": "jscpd@5.4.3",
           "description": "duplicated code (jscpd)"
         }
       },
@@ -412,6 +436,24 @@
           "script": "dupes"
         }
       ]
+    },
+    "imports": {
+      "description": "import-linter: the import contracts in .importlinter (layers, forbidden imports), checked at the end of every turn.",
+      "category": "code-health",
+      "stacks": ["python"],
+      "scripts": {
+        "imports": {
+          "command": "uv run lint-imports",
+          "description": "import contracts (import-linter)"
+        }
+      },
+      "checks": [
+        {
+          "name": "imports",
+          "script": "imports"
+        }
+      ],
+      "devDependencies": ["import-linter"]
     },
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
@@ -427,13 +469,13 @@
     "unit": {
       "description": "Vitest unit tests, run at the end of every turn.",
       "category": "testing",
-      "audit": [".claude/rules/tests-unit.md"],
       "recommended": true,
       "detect": {
         "devDependencies": ["vitest"]
       },
       "by": {
         "js": {
+          "audit": [".claude/rules/tests-unit.md"],
           "scripts": {
             "test": {
               "command": "vitest run --passWithNoTests",
@@ -453,6 +495,28 @@
             "@testing-library/react",
             "@testing-library/dom"
           ]
+        },
+        "python": {
+          "scripts": {
+            "pytest": {
+              "command": "uv run pytest",
+              "description": "all Python tests (pytest)"
+            }
+          },
+          "checks": [
+            {
+              "name": "pytest",
+              "script": "pytest"
+            }
+          ],
+          "reports": [
+            {
+              "name": "coverage",
+              "command": "uv run pytest --cov=. --cov-report=term:skip-covered"
+            }
+          ],
+          "devDependencies": ["pytest", "pytest-cov", "responses"],
+          "audit": [".claude/rules/tests-python.md"]
         }
       }
     },
