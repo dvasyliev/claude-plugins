@@ -517,8 +517,8 @@
         "python": {
           "scripts": {
             "pytest": {
-              "command": "uv run pytest",
-              "description": "all Python tests (pytest)"
+              "command": "uv run pytest || [ $? -eq 5 ]",
+              "description": "all Python tests (pytest); green with none yet (exit 5, no tests collected)"
             }
           },
           "checks": [

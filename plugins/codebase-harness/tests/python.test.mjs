@@ -174,7 +174,7 @@ test('python-only: pytest, vulture, deptry, jscpd through npx, and the reports',
   assert.equal(command('dupes'), 'npx -y jscpd@5.4.3 app tools --threshold 0 --reporters console');
   assert.equal(command('vulture'), 'uv run vulture app tools --min-confidence 80');
   assert.equal(command('deptry'), 'uv run deptry .');
-  assert.equal(command('pytest'), 'uv run pytest');
+  assert.equal(command('pytest'), 'uv run pytest || [ $? -eq 5 ]');
   assert.equal(command('test'), undefined);
   assert.deepEqual(reports.map((x) => x.name), ['ruff-strict', 'coverage']);
   for (const f of ['pytest.ini', '.coveragerc', '.claude/rules/tests-python.md']) assert.ok(existsSync(join(dir, f)), f);
@@ -200,7 +200,7 @@ test('React and Python: dupes is a package.json script covering both stacks, tes
   const { checks } = harnessJson(dir);
   assert.equal(checks.find((c) => c.name === 'dupes').command, 'npm run -s dupes');
   assert.equal(checks.find((c) => c.name === 'test').command, 'npm run -s test');
-  assert.equal(checks.find((c) => c.name === 'pytest').command, 'uv run pytest');
+  assert.equal(checks.find((c) => c.name === 'pytest').command, 'uv run pytest || [ $? -eq 5 ]');
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
   assert.match(pkg.scripts.dupes, /src app tools/);
   assert.equal('pytest' in pkg.scripts, false);
@@ -229,4 +229,19 @@ test('libraries: python-only gets the Python sections only, React and Python get
   assert.ok(at('## Working on the platform alone') < at('# Python'));
   assert.ok(at('# Python') < at('## HTTP'));
   assert.ok(at('## Forms') >= 0 && at('# Python') >= 0);
+});
+
+test('pytest passes with no tests collected (exit 5) and fails on a failing test', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  assert.equal(apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'unit'] }).status, 0);
+  const { command } = harnessJson(dir).checks.find((c) => c.name === 'pytest');
+  const run = (code) => {
+    const bin = mkdtempSync(join(tmpdir(), 'harness-bin-'));
+    writeFileSync(join(bin, 'uv'), `#!/bin/sh\nexit ${code}\n`);
+    chmodSync(join(bin, 'uv'), 0o755);
+    return spawnSync('bash', ['-c', command], { cwd: dir, env: cleanEnv({ PATH: `${bin}:/usr/bin:/bin` }) }).status;
+  };
+  assert.equal(run(0), 0);
+  assert.equal(run(5), 0);
+  assert.notEqual(run(1), 0);
 });
