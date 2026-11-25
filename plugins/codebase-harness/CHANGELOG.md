@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.1 (2026-11-25)
+
+### Fixes
+
+- guard every secret env file, keep the example open (3ce8854)
+
+### Other
+
+- one guard.sh hook instead of two (d529696)
+- hooks rule says to edit files naming a secret env file with Edit (4a3070c)
+
 ## 1.1.0 (2026-11-25)
 
 ### Features
