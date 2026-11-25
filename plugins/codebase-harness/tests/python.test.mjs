@@ -173,7 +173,7 @@ test('python-only: pytest, vulture, deptry, jscpd through npx, and the reports',
   const command = (name) => checks.find((c) => c.name === name)?.command;
   assert.equal(command('dupes'), 'npx -y jscpd@5.4.3 app tools --threshold 0 --reporters console');
   assert.equal(command('vulture'), 'uv run vulture app tools --min-confidence 80');
-  assert.equal(command('deptry'), 'uv run deptry .');
+  assert.equal(command('deptry'), 'uv run deptry . --experimental-namespace-package');
   assert.equal(command('pytest'), 'uv run pytest || [ $? -eq 5 ]');
   assert.equal(command('test'), undefined);
   assert.deepEqual(reports.map((x) => x.name), ['ruff-strict', 'coverage']);

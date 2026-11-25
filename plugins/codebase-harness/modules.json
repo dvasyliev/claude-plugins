@@ -414,8 +414,8 @@
               "description": "unused Python code (vulture)"
             },
             "deptry": {
-              "command": "uv run deptry .",
-              "description": "unused, missing and transitive Python dependencies (deptry)"
+              "command": "uv run deptry . --experimental-namespace-package",
+              "description": "unused, missing and transitive Python dependencies (deptry); a folder without __init__.py counts as the project's own package"
             }
           },
           "checks": [
