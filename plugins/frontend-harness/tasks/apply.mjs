@@ -17,8 +17,10 @@ const old = readJson(".claude/harness.json", {});
 // Answers from before stacks name one `framework`; it becomes `stacks: [framework]`.
 const withStacks = ({ framework, ...a }) => (framework && !a.stacks ? { ...a, stacks: [framework] } : a);
 const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, srcDirs: {}, ...withStacks(old), ...withStacks(JSON.parse(process.argv[2] || "{}")) };
-const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
+// Modules renamed since the project's last run (`renamed` in modules.json) go by their new names.
 const catalog = readJson(join(root, "modules.json"));
+answers.modules = [...new Set(answers.modules.map((id) => catalog.renamed?.[id] ?? id))];
+const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
 const stackIds = answers.stacks ?? [];
 attempt(() => checkStacks(catalog, stackIds));
 // Each chosen stack's source folders: the answer, else the stack's own.

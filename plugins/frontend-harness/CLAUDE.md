@@ -11,9 +11,10 @@ skills/update/                             /frontend-harness:update: the same, a
 skills/libraries/                          /frontend-harness:libraries: chooses or changes the libraries at any time
 skills/audit/                              /frontend-harness:audit: checks existing code against the modules' rules, asks what to fix, fixes it
 references/questions.md                    how the skills ask questions (AskUserQuestion)
-modules.json                               every framework and module
-modules/<category>/<module>/all/           a module's files for every framework, at their paths in the project
-modules/<category>/<module>/<framework>/   its files for one framework
+modules.json                               every stack and module
+modules/<category>/<module>/all/           a module's files for every stack it applies to, at their paths in the project
+modules/<category>/<module>/<language>/    its files for one language (js), after all/
+modules/<category>/<module>/<stack>/       its files for one stack (react, nextjs), after <language>/
 tasks/apply.mjs                            writes the chosen modules into the project in the current folder
 ```
 
@@ -21,10 +22,11 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 
 | Entity | What it is |
 |---|---|
-| Framework | `modules.json` `frameworks`: `nextjs` or `react`, with its source folders, default linter and how to detect it. Picks the `<framework>/` version of each file. |
-| Module | `modules.json` `modules`: one thing a project gets, in a `category` (the folder its files are in). Brings files, `scripts` / `frameworkScripts` (package.json), `checks` / `fileChecks` (run by the hooks), `settings` (.claude/settings.json), `mcpServers` (.mcp.json), `gitignore` (lines for .gitignore), npm `devDependencies` / `frameworkDevDependencies`, `install` commands with the paths each `creates` (and the `.mcp.json` servers it adds in `mcp`), and `audit`: the rule files and skill folders the audit skill checks code against. |
+| Stack | `modules.json` `stacks`: `nextjs` or `react`, with its `language` (`js`), source folders, default linter, the stacks it `excludes` and how to detect it. Picks the `<stack>/` version of each file. |
+| Module | `modules.json` `modules`: one thing a project gets, in a `category` (the kind of check: `formatting`, `linting`, `types`, `code-health`, `testing`, ...; also the folder its files are in). Applies to the stacks or languages in its `stacks` (every stack when absent). Brings files, `scripts` (package.json), `checks` / `fileChecks` (run by the hooks), `settings` (.claude/settings.json), `mcpServers` (.mcp.json), `gitignore` (lines for .gitignore), npm `devDependencies`, `install` commands with the paths each `creates` (and the `.mcp.json` servers it adds in `mcp`), and `audit`: the rule files and skill folders the audit skill checks code against. `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own (language first, then stack). |
+| Renamed modules | `modules.json` `renamed`: old module name to new (`knip` to `unused`, `jscpd` to `dupes`). `apply.mjs` replaces the old names in the stored and the passed `modules`; check names (`skipChecks`) do not change. |
 | How a module is chosen | `required` always; `auto` exactly when its `detect` matches (package.json or files); `linter` exactly one; `recommended` suggested; the rest offered, one question per category. |
-| Answers | `framework`, `modules`, `skipChecks`, `docsLanguage`, `libraries`: passed to `apply.mjs`, kept in `.claude/harness.json`. |
+| Answers | `stacks`, `modules`, `skipChecks`, `docsLanguage`, `libraries`: passed to `apply.mjs`, kept in `.claude/harness.json`. |
 
 ## What apply.mjs writes in a project
 
@@ -42,7 +44,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 
 ## Conventions
 
-- Plain files, no templating. A file whose text depends on the framework gets one version per framework (`<framework>/`). The exceptions are the two rules `apply.mjs` writes from the answers.
+- Plain files, no templating. A file whose text depends on the language or stack gets one version per language or stack (`<language>/`, `<stack>/`). The exceptions are the two rules `apply.mjs` writes from the answers.
 - Modules stand alone: no file needs another module to be installed. A step that only applies with another module says so in plain text ("With `e2e`: ...").
 - The project's own work wins: edited files are merged, not overwritten; a script, setting or hooks path the project set stays; the harness takes back only what it added.
 - `modules.json` is ordered by category; checks run in module order, so cheap ones come first.
@@ -53,13 +55,13 @@ A module that goes takes its files (unless the project edited them), scripts, se
 ## Changing the harness
 
 - New module: an entry in `modules.json` with its `category`, its files in `modules/<category>/<module>/`. A module whose rules or skills apply to the app's code lists them in `audit`. Another repo's skill installs with `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`); a tool with its own setup (like `npx ctx7 setup`) installs with that command, with what it writes in `creates`.
-- New framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks`, and a `<framework>/` version of each per-framework file next to the module's `all/`.
+- New stack (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `stacks`, and a `<stack>/` version of each per-stack file next to the module's `all/`.
 - How to ask questions is written twice, since project files cannot read the plugin's: `references/questions.md` for the plugin's skills and the "Questions" section of the `feature-workflow` rule for projects. Change both together.
-- Renamed or removed module: a line in the skill's step 1 telling it what to put in its place for projects that still list it.
+- Renamed module: an entry in `renamed`, which `apply.mjs` applies. Removed module: a line in the skill's step 1 telling it what to put in its place for projects that still list it.
 - Try it on a scratch project with a `package.json`:
 
   ```bash
-  HARNESS_NO_INSTALL=1 node <plugin>/tasks/apply.mjs '{"framework": "react", "modules": ["core", "oxlint"]}'
+  HARNESS_NO_INSTALL=1 node <plugin>/tasks/apply.mjs '{"stacks": ["react"], "modules": ["core", "types", "prettier", "oxlint"]}'
   ```
 
   `HARNESS_NO_INSTALL=1` skips packages and install commands.

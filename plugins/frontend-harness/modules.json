@@ -1,91 +1,51 @@
 {
-  "$comment": "Every stack and module the harness can install. A project chooses one or more `stacks`; each has a `language` (stacks of one language share tools), `srcDirs` (its source folders, the default answer), `detect`, a default `linter`, and the stacks it `excludes`. A module applies to the stacks or languages in its `stacks` (every stack when absent). Its files are in modules/<category>/<module>/: all/ for every stack it applies to, then <language>/, then <stack>/, a later folder replacing the same path; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies`, and `audit` (the rule files and skill folders, at their paths in the project, that the audit skill checks existing code against). `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own for each chosen stack (language first, then stack; a `detect` in it limits the module to stacks where it matches). `{srcDirs}` in a command is the folders of every chosen stack, or inside `by` those of its language or stack. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module per chosen stack is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in).",
+  "$comment": "Every stack and module the harness can install. A project chooses one or more `stacks`; each has a `language` (stacks of one language share tools), `srcDirs` (its source folders, the default answer), `detect`, a default `linter`, and the stacks it `excludes`. A module applies to the stacks or languages in its `stacks` (every stack when absent). Its files are in modules/<category>/<module>/: all/ for every stack it applies to, then <language>/, then <stack>/, a later folder replacing the same path; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies`, and `audit` (the rule files and skill folders, at their paths in the project, that the audit skill checks existing code against). `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own for each chosen stack (language first, then stack; a `detect` in it limits the module to stacks where it matches). `{srcDirs}` in a command is the folders of every chosen stack, or inside `by` those of its language or stack. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module per chosen stack is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in). `renamed` maps a module's old name to its new one, for projects that still list the old.",
   "stacks": {
     "nextjs": {
       "description": "Next.js App Router",
       "language": "js",
-      "excludes": ["react"],
-      "srcDirs": ["app", "lib"],
+      "excludes": [
+        "react"
+      ],
+      "srcDirs": [
+        "app",
+        "lib"
+      ],
       "detect": {
-        "dependencies": ["next"]
+        "dependencies": [
+          "next"
+        ]
       },
       "linter": "eslint"
     },
     "react": {
       "description": "React (Vite)",
       "language": "js",
-      "srcDirs": ["src"],
+      "srcDirs": [
+        "src"
+      ],
       "detect": {
-        "dependencies": ["react"]
+        "dependencies": [
+          "react"
+        ]
       },
       "linter": "oxlint"
     }
   },
   "modules": {
     "core": {
-      "description": "Claude Code hooks, the structure and hooks rules, typecheck and Prettier on every edit and turn.",
+      "description": "Claude Code hooks, the structure and hooks rules, and the `check` script that runs every check.",
       "category": "core",
-      "audit": [".claude/rules/structure.md"],
+      "audit": [
+        ".claude/rules/structure.md"
+      ],
       "required": true,
       "by": {
         "js": {
           "scripts": {
-            "typecheck": {
-              "command": "tsc -b",
-              "description": "TypeScript; never `tsc --noEmit`"
-            },
-            "format": {
-              "command": "prettier --write .",
-              "description": "Prettier, whole repo"
-            },
-            "format:check": {
-              "command": "prettier --check .",
-              "description": "Prettier check only"
-            },
-            "format:file": {
-              "command": "prettier --write",
-              "description": "Prettier on one file (used by the edit hook)"
-            },
             "check": {
               "command": ".claude/hooks/check-all.sh --force",
               "description": "all checks at once, as the Stop hook runs them"
-            }
-          },
-          "checks": [
-            {
-              "name": "types",
-              "script": "typecheck"
-            },
-            {
-              "name": "format",
-              "script": "format:check"
-            }
-          ],
-          "fileChecks": [
-            {
-              "name": "format",
-              "script": "format:file",
-              "extensions": [
-                "ts",
-                "tsx",
-                "mts",
-                "js",
-                "jsx",
-                "mjs",
-                "css",
-                "json",
-                "md"
-              ],
-              "blocking": false
-            }
-          ],
-          "devDependencies": ["typescript", "prettier"]
-        },
-        "nextjs": {
-          "scripts": {
-            "typecheck": {
-              "command": "next typegen && tsc -b",
-              "description": "TypeScript, after regenerating Next.js route types; never `tsc --noEmit`"
             }
           }
         }
@@ -153,6 +113,87 @@
         }
       }
     },
+    "types": {
+      "description": "Type checking on every turn: TypeScript with `tsc -b` (on Next.js after regenerating the route types).",
+      "category": "types",
+      "required": true,
+      "by": {
+        "js": {
+          "scripts": {
+            "typecheck": {
+              "command": "tsc -b",
+              "description": "TypeScript; never `tsc --noEmit`"
+            }
+          },
+          "checks": [
+            {
+              "name": "types",
+              "script": "typecheck"
+            }
+          ],
+          "devDependencies": [
+            "typescript"
+          ]
+        },
+        "nextjs": {
+          "scripts": {
+            "typecheck": {
+              "command": "next typegen && tsc -b",
+              "description": "TypeScript, after regenerating Next.js route types; never `tsc --noEmit`"
+            }
+          }
+        }
+      }
+    },
+    "prettier": {
+      "description": "Prettier formats each file Claude edits and is checked at the end of every turn.",
+      "category": "formatting",
+      "required": true,
+      "stacks": [
+        "js"
+      ],
+      "scripts": {
+        "format": {
+          "command": "prettier --write .",
+          "description": "Prettier, whole repo"
+        },
+        "format:check": {
+          "command": "prettier --check .",
+          "description": "Prettier check only"
+        },
+        "format:file": {
+          "command": "prettier --write",
+          "description": "Prettier on one file (used by the edit hook)"
+        }
+      },
+      "checks": [
+        {
+          "name": "format",
+          "script": "format:check"
+        }
+      ],
+      "fileChecks": [
+        {
+          "name": "format",
+          "script": "format:file",
+          "extensions": [
+            "ts",
+            "tsx",
+            "mts",
+            "js",
+            "jsx",
+            "mjs",
+            "css",
+            "json",
+            "md"
+          ],
+          "blocking": false
+        }
+      ],
+      "devDependencies": [
+        "prettier"
+      ]
+    },
     "feature-workflow": {
       "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, several at once), the rule for carrying out a plan (yourself or with subagents), the superpowers plugin and the improve-harness skill.",
       "category": "workflow",
@@ -189,10 +230,14 @@
     },
     "eslint": {
       "description": "ESLint with type-aware typescript-eslint rules, strict accessibility rules (jsx-a11y), no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
-      "category": "code-quality",
-      "stacks": ["js"],
+      "category": "linting",
+      "stacks": [
+        "js"
+      ],
       "detect": {
-        "devDependencies": ["eslint"]
+        "devDependencies": [
+          "eslint"
+        ]
       },
       "linter": true,
       "scripts": {
@@ -215,7 +260,14 @@
         {
           "name": "lint",
           "script": "lint:file",
-          "extensions": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
+          "extensions": [
+            "ts",
+            "tsx",
+            "mts",
+            "js",
+            "jsx",
+            "mjs"
+          ],
           "blocking": true
         }
       ],
@@ -246,10 +298,14 @@
     },
     "oxlint": {
       "description": "oxlint (what create-vite sets up; works with TypeScript 7) with accessibility rules, no import cycles and a 400-line file limit.",
-      "category": "code-quality",
-      "stacks": ["js"],
+      "category": "linting",
+      "stacks": [
+        "js"
+      ],
       "detect": {
-        "devDependencies": ["oxlint"]
+        "devDependencies": [
+          "oxlint"
+        ]
       },
       "linter": true,
       "scripts": {
@@ -272,15 +328,24 @@
         {
           "name": "lint",
           "script": "lint:file",
-          "extensions": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
+          "extensions": [
+            "ts",
+            "tsx",
+            "mts",
+            "js",
+            "jsx",
+            "mjs"
+          ],
           "blocking": true
         }
       ],
-      "devDependencies": ["oxlint"]
+      "devDependencies": [
+        "oxlint"
+      ]
     },
-    "knip": {
+    "unused": {
       "description": "knip: unused files, exports and dependencies, checked at the end of every turn.",
-      "category": "code-quality",
+      "category": "code-health",
       "recommended": true,
       "by": {
         "js": {
@@ -296,50 +361,66 @@
               "script": "knip"
             }
           ],
-          "devDependencies": ["knip"]
+          "devDependencies": [
+            "knip"
+          ]
         }
       }
     },
-    "jscpd": {
+    "dupes": {
       "description": "jscpd: duplicated code in the source folders, checked at the end of every turn. Often red in older projects.",
-      "category": "code-quality",
+      "category": "code-health",
       "recommended": true,
       "by": {
         "js": {
-          "scripts": {
-            "dupes": {
-              "command": "jscpd {srcDirs} --threshold 0 --reporters console",
-              "description": "duplicated code (jscpd)"
-            }
-          },
-          "checks": [
-            {
-              "name": "dupes",
-              "script": "dupes"
-            }
-          ],
-          "devDependencies": ["jscpd"]
+          "devDependencies": [
+            "jscpd"
+          ]
         }
-      }
+      },
+      "scripts": {
+        "dupes": {
+          "command": "jscpd {srcDirs} --threshold 0 --reporters console",
+          "description": "duplicated code (jscpd)"
+        }
+      },
+      "checks": [
+        {
+          "name": "dupes",
+          "script": "dupes"
+        }
+      ]
     },
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
-      "category": "code-quality",
-      "stacks": ["js"],
+      "category": "formatting",
+      "stacks": [
+        "js"
+      ],
       "auto": true,
       "detect": {
-        "dependencies": ["tailwindcss"],
-        "devDependencies": ["tailwindcss"]
+        "dependencies": [
+          "tailwindcss"
+        ],
+        "devDependencies": [
+          "tailwindcss"
+        ]
       },
-      "devDependencies": ["prettier-plugin-tailwindcss"]
+      "devDependencies": [
+        "prettier-plugin-tailwindcss"
+      ]
     },
     "unit": {
       "description": "Vitest unit tests, run at the end of every turn.",
       "category": "testing",
-      "audit": [".claude/rules/tests-unit.md"],
+      "audit": [
+        ".claude/rules/tests-unit.md"
+      ],
       "recommended": true,
       "detect": {
-        "devDependencies": ["vitest"]
+        "devDependencies": [
+          "vitest"
+        ]
       },
       "by": {
         "js": {
@@ -368,11 +449,17 @@
     "e2e": {
       "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
       "category": "testing",
-      "stacks": ["js"],
-      "audit": [".claude/rules/tests-e2e.md"],
+      "stacks": [
+        "js"
+      ],
+      "audit": [
+        ".claude/rules/tests-e2e.md"
+      ],
       "recommended": true,
       "detect": {
-        "devDependencies": ["@playwright/test"]
+        "devDependencies": [
+          "@playwright/test"
+        ]
       },
       "scripts": {
         "verify": {
@@ -389,11 +476,17 @@
         "@playwright/cli",
         "@axe-core/playwright"
       ],
-      "gitignore": ["/test-results/", "/playwright-report/", "/.playwright-cli/"],
+      "gitignore": [
+        "/test-results/",
+        "/playwright-report/",
+        "/.playwright-cli/"
+      ],
       "install": [
         {
           "command": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y",
-          "creates": [".claude/skills/playwright-cli"]
+          "creates": [
+            ".claude/skills/playwright-cli"
+          ]
         }
       ]
     },
@@ -409,13 +502,18 @@
               "description": "turns on the git hooks in .githooks/ (the install runs it)"
             }
           },
-          "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"]
+          "devDependencies": [
+            "@commitlint/cli",
+            "@commitlint/config-conventional"
+          ]
         }
       },
       "install": [
         {
           "command": "mkdir -p .claude/skills/committing-with-commitlint && curl -fLo .claude/skills/committing-with-commitlint/SKILL.md https://raw.githubusercontent.com/conventional-changelog/commitlint/master/skills/committing-with-commitlint/SKILL.md",
-          "creates": [".claude/skills/committing-with-commitlint"]
+          "creates": [
+            ".claude/skills/committing-with-commitlint"
+          ]
         }
       ]
     },
@@ -456,20 +554,30 @@
     "best-practices": {
       "description": "Vercel's skills: React and Next.js performance rules, composition patterns, and the Web Interface Guidelines review.",
       "category": "best-practices",
-      "audit": [".claude/skills/vercel-react-best-practices", ".claude/skills/vercel-composition-patterns", ".claude/skills/web-design-guidelines"],
+      "audit": [
+        ".claude/skills/vercel-react-best-practices",
+        ".claude/skills/vercel-composition-patterns",
+        ".claude/skills/web-design-guidelines"
+      ],
       "recommended": true,
       "install": [
         {
           "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
-          "creates": [".claude/skills/vercel-react-best-practices"]
+          "creates": [
+            ".claude/skills/vercel-react-best-practices"
+          ]
         },
         {
           "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
-          "creates": [".claude/skills/vercel-composition-patterns"]
+          "creates": [
+            ".claude/skills/vercel-composition-patterns"
+          ]
         },
         {
           "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
-          "creates": [".claude/skills/web-design-guidelines"]
+          "creates": [
+            ".claude/skills/web-design-guidelines"
+          ]
         }
       ]
     },
@@ -477,7 +585,9 @@
       "description": "Context7 MCP server, rule and skill for current library docs.",
       "category": "best-practices",
       "recommended": true,
-      "mcp": ["context7"],
+      "mcp": [
+        "context7"
+      ],
       "install": [
         {
           "command": "npx -y ctx7 setup --claude --project --oauth --mcp -y",
@@ -491,35 +601,51 @@
     "libraries": {
       "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more).",
       "category": "best-practices",
-      "audit": [".claude/rules/libraries.md"],
+      "audit": [
+        ".claude/rules/libraries.md"
+      ],
       "recommended": true
     },
     "next-docs": {
       "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules, and the Next.js DevTools MCP server (Next.js versions that ship them).",
       "category": "best-practices",
-      "stacks": ["nextjs"],
+      "stacks": [
+        "nextjs"
+      ],
       "auto": true,
       "detect": {
-        "files": ["node_modules/next/dist/docs"]
+        "files": [
+          "node_modules/next/dist/docs"
+        ]
       },
       "mcpServers": {
         "next-devtools": {
           "command": "npx",
-          "args": ["-y", "next-devtools-mcp@latest"]
+          "args": [
+            "-y",
+            "next-devtools-mcp@latest"
+          ]
         }
       }
     },
     "resilience": {
       "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write.",
       "category": "best-practices",
-      "audit": [".claude/rules/external-requests.md"],
+      "audit": [
+        ".claude/rules/external-requests.md"
+      ],
       "recommended": true
     },
     "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
       "category": "performance",
-      "stacks": ["js"],
-      "audit": [".claude/rules/data-loading.md", ".claude/rules/page-loading.md"],
+      "stacks": [
+        "js"
+      ],
+      "audit": [
+        ".claude/rules/data-loading.md",
+        ".claude/rules/page-loading.md"
+      ],
       "recommended": true,
       "by": {
         "react": {
@@ -529,15 +655,26 @@
               "description": "builds and fails when the JavaScript loaded first is over its limit (.size-limit.json)"
             }
           },
-          "devDependencies": ["size-limit", "@size-limit/file"]
+          "devDependencies": [
+            "size-limit",
+            "@size-limit/file"
+          ]
         }
       },
       "mcpServers": {
         "chrome-devtools": {
           "command": "npx",
-          "args": ["-y", "chrome-devtools-mcp@latest", "--isolated"]
+          "args": [
+            "-y",
+            "chrome-devtools-mcp@latest",
+            "--isolated"
+          ]
         }
       }
     }
+  },
+  "renamed": {
+    "knip": "unused",
+    "jscpd": "dupes"
   }
 }

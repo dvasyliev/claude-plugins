@@ -31,3 +31,24 @@ test('a stack without a linter fails', () => {
   assert.equal(r.status, 1);
   assert.match(r.stderr, /one linter for react/);
 });
+
+test('old module names become their new ones, and the split core modules are added', () => {
+  const old = { stacks: ['react'], modules: ['core', 'oxlint', 'knip', 'jscpd'] };
+  const dir = makeProject({ 'package.json': REACT_PKG, '.claude/harness.json': JSON.stringify(old) });
+  const r = apply(dir, {});
+  assert.equal(r.status, 0, r.stderr);
+  const json = harnessJson(dir);
+  for (const id of ['unused', 'dupes', 'prettier', 'types']) assert.ok(json.modules.includes(id), id);
+  for (const id of ['knip', 'jscpd']) assert.ok(!json.modules.includes(id), id);
+  const names = json.checks.map((c) => c.name);
+  for (const name of ['knip', 'dupes', 'types', 'format']) assert.ok(names.includes(name), name);
+});
+
+test('passed answers with old module names are renamed too', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG });
+  const r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'knip', 'jscpd'] });
+  assert.equal(r.status, 0, r.stderr);
+  const json = harnessJson(dir);
+  assert.ok(json.modules.includes('unused') && json.modules.includes('dupes'));
+  assert.ok(!json.modules.includes('knip') && !json.modules.includes('jscpd'));
+});

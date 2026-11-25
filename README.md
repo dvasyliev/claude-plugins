@@ -106,16 +106,18 @@ To turn off one check, ask Claude: "turn off the dupes check". To remove the plu
 
 ## Modules
 
-Pick only what you need. `core` is always on, you pick one linter, and `tailwind` and `next-docs` turn on by themselves when the project uses Tailwind or Next.js. Setup marks the ones it recommends.
+Pick only what you need. `core`, `types` and `prettier` are always on, you pick one linter, and `tailwind` and `next-docs` turn on by themselves when the project uses Tailwind or Next.js. Setup marks the ones it recommends.
 
 | Module | What it does for you |
 |---|---|
-| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Checks types (TypeScript). Keeps `CLAUDE.md` and the rules under 200 lines. |
+| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Keeps `CLAUDE.md` and the rules under 200 lines. |
+| `types` | Checks types (TypeScript). Always on. |
+| `prettier` | Formats each file Claude edits and checks formatting before Claude finishes. Always on. |
 | `feature-workflow` | Claude works in steps: describe the feature, plan it, write tests first, check it in the browser. |
 | `context-size` | Warns before every message once the chat is over 200K tokens, so you `/compact` it or start over with `/clear`. |
 | `eslint` or `oxlint` | Finds code mistakes, bad patterns and accessibility problems. Also stops files from getting too long. |
-| `knip` | Finds code and packages nobody uses. |
-| `jscpd` | Finds copied code. |
+| `unused` | Finds code and packages nobody uses (knip). |
+| `dupes` | Finds copied code (jscpd). |
 | `tailwind` | Keeps Tailwind classes in the same order everywhere. |
 | `unit` | Runs unit tests (Vitest). |
 | `e2e` | Runs browser tests (Playwright) and checks pages for accessibility problems before you push. |

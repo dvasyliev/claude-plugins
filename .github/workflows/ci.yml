@@ -69,7 +69,7 @@ jobs:
         run: |
           mkdir "$RUNNER_TEMP/app" && cd "$RUNNER_TEMP/app"
           git init -q && echo '${{ matrix.package }}' > package.json
-          modules='"core","feature-workflow","${{ matrix.linter }}","knip","jscpd","tailwind","unit","e2e","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","next-docs","page-speed"'
+          modules='"core","types","prettier","feature-workflow","${{ matrix.linter }}","unused","dupes","tailwind","unit","e2e","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","next-docs","page-speed"'
           node "$GITHUB_WORKSPACE/plugins/frontend-harness/tasks/apply.mjs" "{\"framework\":\"${{ matrix.framework }}\",\"modules\":[$modules]}"
           for f in CLAUDE.md .claude/harness.json .claude/settings.json .claude/hooks/check-all.sh .githooks/pre-commit; do
             test -f "$f" || { echo "missing $f"; exit 1; }
