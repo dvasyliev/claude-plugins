@@ -77,8 +77,9 @@ test('python checks: ruff and basedpyright, in catalog order, and a second run c
   assert.deepEqual(checks.map((c) => c.name), ['basedpyright', 'ruff-format', 'ruff', 'file-size']);
   assert.match(checks.at(-1).command, /file-size\.sh app$/);
   assert.deepEqual(fileChecks.map((c) => [c.name, c.command, c.blocking, c.extensions]), [
-    ['ruff-format', 'uv run ruff format', false, ['py']],
+    // Lint fixes first, so the format after them leaves the file formatted.
     ['ruff', 'uv run ruff check --fix --force-exclude', true, ['py']],
+    ['ruff-format', 'uv run ruff format', false, ['py']],
   ]);
   for (const f of ['ruff.toml', 'pyrightconfig.json', '.claude/rules/python.md', '.claude/checks/file-size.sh']) assert.ok(existsSync(join(dir, f)), f);
   const before = snapshot(dir);
@@ -170,6 +171,7 @@ test('python-only: pytest, vulture, deptry, jscpd through npx, and the reports',
   assert.equal(command('test'), undefined);
   assert.deepEqual(reports.map((x) => x.name), ['ruff-strict', 'coverage']);
   for (const f of ['pytest.ini', '.coveragerc', '.claude/rules/tests-python.md']) assert.ok(existsSync(join(dir, f)), f);
+  assert.match(readFileSync(join(dir, '.gitignore'), 'utf8'), /^\/\.coverage$/m);
   assert.equal(existsSync(join(dir, 'package.json')), false);
 });
 

@@ -349,16 +349,16 @@
       ],
       "fileChecks": [
         {
-          "name": "ruff-format",
-          "script": "ruff-format:file",
-          "extensions": ["py"],
-          "blocking": false
-        },
-        {
           "name": "ruff",
           "script": "ruff:file",
           "extensions": ["py"],
           "blocking": true
+        },
+        {
+          "name": "ruff-format",
+          "script": "ruff-format:file",
+          "extensions": ["py"],
+          "blocking": false
         }
       ],
       "reports": [
@@ -516,6 +516,7 @@
             }
           ],
           "devDependencies": ["pytest", "pytest-cov", "responses"],
+          "gitignore": ["/.coverage"],
           "audit": [".claude/rules/tests-python.md"]
         }
       }

@@ -1,4 +1,6 @@
 line-length = 120
+# Python only: ruff 0.17 also formats the code blocks in Markdown, which would check skills and docs.
+extend-exclude = ["*.md"]
 
 [lint]
 select = ["E4", "E7", "E9", "F", "S113"]
