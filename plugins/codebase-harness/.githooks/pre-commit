@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 # Runs from the repo root (the root pre-commit hook calls it).
-exec node --test plugins/frontend-harness/tests/*.test.mjs
+exec node --test plugins/codebase-harness/tests/*.test.mjs

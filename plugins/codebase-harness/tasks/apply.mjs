@@ -316,7 +316,7 @@ else rmSync(".mcp.json", { force: true });
 
 // .gitignore: the modules' lines go in one block under a harness comment. A line the project already has
 // (with or without its leading or trailing slash) stays the project's; only the lines the harness added go with their module.
-const gitignoreHeader = "# Added by the frontend-harness plugin";
+const gitignoreHeader = "# Added by the codebase-harness plugin";
 const ignoreKey = (line) => line.trim().replace(/^\/|\/$/g, "");
 const ignores = [...new Set(collect("gitignore"))];
 const gitignoreText = existsSync(".gitignore") ? readFileSync(".gitignore", "utf8") : "";
@@ -325,6 +325,8 @@ const lines = (gitignoreText ? gitignoreText.replace(/\n$/, "").split("\n") : []
 const stillAdded = (previous.gitignore ?? []).filter((line) => ignores.includes(line) && lines.includes(line));
 const newIgnores = ignores.filter((line) => !lines.some((l) => ignoreKey(l) === ignoreKey(line)));
 const ignoresAdded = [...stillAdded, ...newIgnores];
+const legacyHeader = lines.indexOf("# Added by the frontend-harness plugin");
+if (legacyHeader >= 0) lines[legacyHeader] = gitignoreHeader;
 let header = lines.indexOf(gitignoreHeader);
 if (newIgnores.length && header < 0) {
   if (lines.length && lines.at(-1).trim()) lines.push("");
@@ -355,7 +357,7 @@ const fileChecks = collect("fileChecks")
 // Reports are commands for audits; the hooks do not run them. The key is there only when a module brings one.
 const reports = collect("reports");
 writeJson(".claude/harness.json", {
-  $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with /frontend-harness:setup.",
+  $comment: "Written by the codebase-harness plugin (tasks/apply.mjs). Do not edit; change the answers with /codebase-harness:setup.",
   version,
   stacks: stackIds,
   srcDirs,
@@ -380,7 +382,7 @@ rmSync(".claude/harness.md", { force: true });
 const md = [
   "# Harness",
   "",
-  "Written by the frontend-harness plugin from `.claude/harness.json`; do not edit by hand.",
+  "Written by the codebase-harness plugin from `.claude/harness.json`; do not edit by hand.",
   "",
   ...(paths.includes("AGENTS.md") ? ["@../../AGENTS.md", ""] : []),
   `Harness modules: ${modules.map(([id]) => id).join(", ")}. Specs and plans are written in ${answers.docsLanguage}.`,

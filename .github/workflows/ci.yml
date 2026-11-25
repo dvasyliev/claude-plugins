@@ -20,6 +20,7 @@ jobs:
           node-version: 22
       - run: npm install -g @anthropic-ai/claude-code
       - run: claude plugin validate .
+      - run: claude plugin validate plugins/codebase-harness
       - run: claude plugin validate plugins/frontend-harness
 
   test:
@@ -91,7 +92,7 @@ jobs:
           git init -q
           if [ -n '${{ matrix.package }}' ]; then echo '${{ matrix.package }}' > package.json; fi
           case '${{ matrix.stacks }}' in *python*) printf '[project]\nname = "smoke"\nversion = "0.1.0"\n' > pyproject.toml ;; esac
-          node "$GITHUB_WORKSPACE/plugins/frontend-harness/tasks/apply.mjs" '{"stacks":[${{ matrix.stacks }}],"srcDirs":{${{ matrix.srcDirs }}},"modules":[${{ matrix.modules }}]}'
+          node "$GITHUB_WORKSPACE/plugins/codebase-harness/tasks/apply.mjs" '{"stacks":[${{ matrix.stacks }}],"srcDirs":{${{ matrix.srcDirs }}},"modules":[${{ matrix.modules }}]}'
           case '${{ matrix.stacks }}' in *node*) test -f package.json || { echo "missing package.json"; exit 1; } ;; esac
           for f in CLAUDE.md .claude/harness.json .claude/settings.json .claude/hooks/check-all.sh .githooks/pre-commit; do
             test -f "$f" || { echo "missing $f"; exit 1; }
@@ -100,5 +101,5 @@ jobs:
         run: |
           cd "$RUNNER_TEMP/app"
           git add -A
-          node "$GITHUB_WORKSPACE/plugins/frontend-harness/tasks/apply.mjs" '{}'
+          node "$GITHUB_WORKSPACE/plugins/codebase-harness/tasks/apply.mjs" '{}'
           git diff --exit-code

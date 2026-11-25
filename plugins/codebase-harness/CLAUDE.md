@@ -1,4 +1,4 @@
-# frontend-harness
+# codebase-harness
 
 How the plugin is built and how to change it. How to use it is in the repository's `README.md`.
 
@@ -6,10 +6,10 @@ How the plugin is built and how to change it. How to use it is in the repository
 
 ```
 .claude-plugin/plugin.json                 name and version
-skills/setup/                              /frontend-harness:setup: picks modules, runs apply.mjs, merges what it cannot
-skills/update/                             /frontend-harness:update: the same, as an update
-skills/libraries/                          /frontend-harness:libraries: chooses or changes the libraries at any time
-skills/audit/                              /frontend-harness:audit: checks existing code against the modules' rules, asks what to fix, fixes it
+skills/setup/                              /codebase-harness:setup: picks modules, runs apply.mjs, merges what it cannot
+skills/update/                             /codebase-harness:update: the same, as an update
+skills/libraries/                          /codebase-harness:libraries: chooses or changes the libraries at any time
+skills/audit/                              /codebase-harness:audit: checks existing code against the modules' rules, asks what to fix, fixes it
 references/questions.md                    how the skills ask questions (AskUserQuestion)
 modules.json                               every stack and module
 modules/<category>/<module>/all/           a module's files for every stack it applies to, at their paths in the project

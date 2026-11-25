@@ -3,7 +3,7 @@ import { readdirSync } from "node:fs";
 
 // The scope says what a commit changes: a plugin's folder name for plugins/<name>/,
 // `marketplace` for .claude-plugin/, `repo` for everything else. A commit that changes
-// several names them all, comma-separated (`feat(frontend-harness,marketplace): ...`).
+// several names them all, comma-separated (`feat(codebase-harness,marketplace): ...`).
 const plugins = readdirSync(new URL("./plugins", import.meta.url), { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name);

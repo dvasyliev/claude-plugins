@@ -1,5 +1,5 @@
 {
-  "name": "frontend-harness",
+  "name": "claude-plugins",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.11.0",

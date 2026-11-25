@@ -1,23 +1,19 @@
 ---
 name: update
-description: Use when the user wants to update the frontend harness in this project to the plugin's current version.
+description: Use when the user asks to update the frontend harness: the plugin moved to codebase-harness, this tells how to migrate.
 ---
 
-# Update the harness
+# frontend-harness is now codebase-harness
 
-## Get the newest plugin
+Tell the user this, then stop; do nothing else.
 
-Skip this when `$HARNESS_TEMPLATE` is set or the plugin runs from a local checkout (`--plugin-dir`: this skill's base directory is not under `~/.claude/plugins/cache/`).
+frontend-harness is now **codebase-harness**, in the marketplace **dvasyliev**. Run these, in order (`<scope>` is the scope the plugin is installed in: `user`, `project` or `local`):
 
-1. Run `claude plugin marketplace update frontend-harness`: the plugin updates only from the marketplace's local copy, which nothing else refreshes.
-2. Find the one scope this project runs the plugin from, by where it is installed, not where it is enabled (a user install is often turned off in `~/.claude/settings.json` and on in the project's settings). Run `claude plugin list --json` and take the entries with `id` `frontend-harness@frontend-harness`: the one whose `projectPath` is this project's root folder (scope `local` or `project`), else the one with scope `user`. Run `claude plugin update frontend-harness@frontend-harness --scope <scope>` for that scope only: another scope serves other projects, whose harness files would then lag behind their plugin. When there is no such entry, skip this step; never install the plugin here.
-3. If it updated, this session still runs the old version's skills. Take the new version's folder (`~/.claude/plugins/cache/frontend-harness/frontend-harness/<new version>/`) as the template, read its `skills/update/SKILL.md` and follow that from "Update the project files", not this file.
+1. `claude plugin uninstall frontend-harness@frontend-harness --scope <scope>`
+2. `claude plugin marketplace remove frontend-harness`
+3. `claude plugin marketplace add dvasyliev/claude-plugins`
+4. `claude plugin install codebase-harness@dvasyliev --scope <scope>`
+5. In `~/.claude/settings.json` and in the project's `.claude/settings.json`, replace the `enabledPlugins` key `frontend-harness@frontend-harness` with `codebase-harness@dvasyliev` (keep its `true` or `false` value).
+6. `/reload-plugins`, then `/codebase-harness:update`.
 
-## Update the project files
-
-Follow the `setup` skill (`../setup/SKILL.md`, next to this skill's folder) as an **update**:
-
-- Stop if `.claude/harness.json` is missing: the project has no harness yet; offer `/frontend-harness:setup`.
-- Keep the installed stacks, their source folders, modules and answers. Do not ask about them again; ask only about stacks and modules that are new since the installed `version`, about the ones a renamed or removed module needs (setup's step 1; `apply.mjs` itself renames `knip` to `unused` and `jscpd` to `dupes` and adds `types` and `prettier`, so ask nothing about those), and about `libraries` sections with no answer yet (setup's step 2).
-- Run setup's step 3 with only the answers that change (none, most of the time), then its merge steps and step 4.
-- Tell the user the version it went from and to, and what changed in the project. If the plugin was updated, tell them to run `/reload-plugins` (or restart Claude Code) to get its new skills.
+The harness files already in the project stay and keep working.

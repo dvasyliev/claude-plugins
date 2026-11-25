@@ -105,3 +105,16 @@ test('every npx -y in the catalog and the module files names an exact version', 
   }
   assert.ok(seen > 10, `only ${seen} npx calls found`);
 });
+
+test('the old frontend-harness .gitignore header is replaced in place by the new one', () => {
+  const dir = makeProject({
+    'package.json': REACT_PKG,
+    '.gitignore': '# Added by the frontend-harness plugin\n/test-results/\n',
+  });
+  const r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'e2e'] });
+  assert.equal(r.status, 0, r.stderr);
+  const text = readFileSync(join(dir, '.gitignore'), 'utf8');
+  assert.equal(text.split('# Added by the codebase-harness plugin').length, 2);
+  assert.ok(!text.includes('frontend-harness'));
+  assert.equal(text.split('/test-results/').length, 2);
+});

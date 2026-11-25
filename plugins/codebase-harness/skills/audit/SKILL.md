@@ -16,8 +16,8 @@ Ask as `../../references/questions.md` (from this skill's base directory) says. 
 
 ## 1. Look at the project
 
-1. If `.claude/harness.json` is missing, the project has no harness yet: ask whether to run `/frontend-harness:setup` now or stop.
-2. If its `version` is older than the template's, the project may lack the rules this skill checks and follows: ask whether to run `/frontend-harness:update` first or stop.
+1. If `.claude/harness.json` is missing, the project has no harness yet: ask whether to run `/codebase-harness:setup` now or stop.
+2. If its `version` is older than the template's, the project may lack the rules this skill checks and follows: ask whether to run `/codebase-harness:update` first or stop.
 3. Run `git status --short`. If anything is uncommitted, stop and tell the user: the fixes are committed area by area, and the changes may be another agent's.
 4. If `docs/superpowers/specs/` has an audit spec (`*-audit-design.md`) with unticked areas, ask whether to go on with it (step 6) or start a new audit.
 5. The modules to offer: those in `.claude/harness.json` `modules` that have an `audit` in the catalog. A module's `audit` is its own `audit` plus the one in its `by.<language or stack>` for each of the project's `stacks`. Give a subagent only the rules and skills of the stacks the project chose. If no module has an `audit`, say so and stop.

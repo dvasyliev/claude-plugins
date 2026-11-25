@@ -4,11 +4,11 @@ name: Release
 
 on:
   push:
-    tags: ["frontend-harness-v*"]
+    tags: ["*-v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to publish, e.g. frontend-harness-v0.34.1"
+        description: "Tag to publish, e.g. codebase-harness-v1.0.0"
         required: true
 
 permissions:
@@ -26,7 +26,8 @@ jobs:
           ref: ${{ env.TAG }}
       - name: Notes from the changelog
         run: |
-          version="${TAG#frontend-harness-v}"
-          awk -v v="$version" '$0 ~ "^## " v " " {on=1; next} /^## / {on=0} on' plugins/frontend-harness/CHANGELOG.md > notes.md
+          plugin="${TAG%-v*}"
+          version="${TAG##*-v}"
+          awk -v v="$version" '$0 ~ "^## " v " " {on=1; next} /^## / {on=0} on' "plugins/$plugin/CHANGELOG.md" > notes.md
           test -s notes.md || { echo "no CHANGELOG.md section for $version"; exit 1; }
-      - run: gh release create "$TAG" --title "v${TAG#frontend-harness-v}" --notes-file notes.md --verify-tag
+      - run: gh release create "$TAG" --title "${TAG%-v*} v${TAG##*-v}" --notes-file notes.md --verify-tag

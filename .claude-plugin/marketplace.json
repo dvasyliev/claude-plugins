@@ -1,15 +1,20 @@
 {
-  "name": "frontend-harness",
-  "description": "Dmytro Vasyliev's frontend-harness Claude Code plugin",
+  "name": "dvasyliev",
+  "description": "Dmytro Vasyliev's Claude Code plugins",
   "owner": {
     "name": "Dmytro Vasyliev"
   },
   "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
   "plugins": [
     {
+      "name": "codebase-harness",
+      "source": "./plugins/codebase-harness",
+      "description": "Claude Code plugin that sets up hooks, rules and checks so Claude writes code that fits your project, whatever its stack (React, Next.js, Python, Node)"
+    },
+    {
       "name": "frontend-harness",
       "source": "./plugins/frontend-harness",
-      "description": "Claude Code plugin that sets up hooks, rules and checks so Claude writes code that fits your React or Next.js project"
+      "description": "Moved to codebase-harness"
     }
   ]
 }

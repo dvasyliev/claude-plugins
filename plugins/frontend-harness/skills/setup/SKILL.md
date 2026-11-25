@@ -1,116 +1,19 @@
 ---
 name: setup
-description: Use when the user wants to set up the frontend harness (Claude Code hooks, rules, skills, checks, git hooks) in a React (Vite), Next.js or other project, add, remove or change its modules or checks, or move a harness fix into the plugin.
+description: Use when the user asks to set up the frontend harness: the plugin moved to codebase-harness, this tells how to migrate.
 ---
 
-# Set up the harness
+# frontend-harness is now codebase-harness
 
-This skill picks the modules that fit the project, runs `tasks/apply.mjs` to write them, and finishes what the script cannot: merge conflicts, `CLAUDE.md`, MCP sign-in, and a green `check` script.
+Tell the user this, then stop; do nothing else.
 
-**Template:** `$HARNESS_TEMPLATE` if set (a local checkout of this plugin, to try changes), else this plugin's folder: two folders up from this skill's base directory. Its version is `version` in `.claude-plugin/plugin.json`.
+frontend-harness is now **codebase-harness**, in the marketplace **dvasyliev**. Run these, in order (`<scope>` is the scope the plugin is installed in: `user`, `project` or `local`):
 
-**Questions:** ask as `../../references/questions.md` (from this skill's base directory) says.
+1. `claude plugin uninstall frontend-harness@frontend-harness --scope <scope>`
+2. `claude plugin marketplace remove frontend-harness`
+3. `claude plugin marketplace add dvasyliev/claude-plugins`
+4. `claude plugin install codebase-harness@dvasyliev --scope <scope>`
+5. In `~/.claude/settings.json` and in the project's `.claude/settings.json`, replace the `enabledPlugins` key `frontend-harness@frontend-harness` with `codebase-harness@dvasyliev` (keep its `true` or `false` value).
+6. `/reload-plugins`, then `/codebase-harness:update`.
 
-**Catalog:** `<template>/modules.json` lists every stack and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/modules/<category>/<module>/`: `all/` for every stack it applies to, then `<language>/` and `<stack>/` for those only, laid out as in the project. Read them; do not guess.
-
-## 1. Look at the project
-
-1. Run `git status --short`. If anything is uncommitted, stop and tell the user: the harness merges into the project's files, and the changes may be another agent's.
-2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `stacks`, `srcDirs`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit. A project from before 0.19 may list `next-rules`: replace it with `page-speed`. A project from before 0.24 with `best-practices` had the performance rules in it: add `page-speed` too. A project with `performance` (0.24): replace it with `page-speed`. A project from before 0.25 with `quality`: replace it with `unused` and `dupes`. A project from before 0.28 has its merge base in `.claude/harness-base/`: `apply.mjs` moves it into `.claude/harness.json` and deletes the folder. A project that lists `knip` or `jscpd` (before the modules were grouped by kind of check): `apply.mjs` renames them to `unused` and `dupes` (the checks keep their names `knip` and `dupes`) and adds the required `types` and `prettier`, which came out of `core`; nothing to ask. A project from before 0.29 has `.claude/harness.md`: `apply.mjs` writes `.claude/rules/harness.md` instead; remove the `@.claude/harness.md` line from `CLAUDE.md` if the merge left it.
-3. Ask which stacks the project uses (`AskUserQuestion`, `multiSelect: true`, one option per entry in `stacks`, its `description` as the label, such as "React (Vite)"). A stack is detected when its `detect` matches: a `package.json` dependency, or a file that exists (`pyproject.toml` for Python). List the detected ones first, marked "(detected)"; of `nextjs` and `react`, only `nextjs` is detected, since a Next.js project has both. `node` is also detected when `package.json` has neither `react` nor `next` in its dependencies, or when there is no `package.json` and git tracks `.js`, `.mjs`, `.cjs` or `.ts` files outside `node_modules` (`git ls-files`); never when `react` or `nextjs` is detected, as it excludes both. On an update, the `stacks` in `.claude/harness.json` are the detected ones. A stack cannot be chosen with one it `excludes`: when the user picks both, keep the one that excludes the other (`nextjs` over `react`) and say so. The stacks decide which modules apply and which version of each module's files is installed.
-4. For each stack, check that the code sits where the harness configs look (Prettier, tests, the linter, the rules): its `srcDirs` in the catalog (`app/` and `lib/` for Next.js, `src/` for React). Ask the user for the folders when the code sits elsewhere, and send them as `srcDirs` (stack: folders) in the run command (section 3); on an update, the ones in `.claude/harness.json` stay. A Next.js project with its code in `src/` or a `components/` folder at the root is not covered by the defaults; tell the user before installing, since those folders would go unformatted and untested.
-5. **Python** (the `python` stack):
-   1. Check that `uv` is installed (`uv --version`). Without it, stop and tell the user to install it (https://docs.astral.sh/uv/): the harness runs every Python tool through `uv`.
-   2. Find the Python folders: the top-level folders that hold `.py` files, not `tests`, `.venv` or other virtual environments, build or generated output, or folders git ignores. Loose `.py` files at the root are not a folder: ruff and basedpyright still check them, the folder-based checks (vulture, file size, duplicates) do not. Show the list and ask the user to confirm or change it. Always send it as `srcDirs.python` in the run command (section 3), on an update too when it changes: the stack has no default, and with none the checks scan the whole project, `.venv` included.
-6. **Node** (the `node` stack):
-   1. Find the Node folders: the top-level folders that hold `.js`, `.mjs`, `.cjs` or `.ts` files git tracks, not `node_modules`, `dist` or other build output, tests-only folders, or folders git ignores. Loose files at the root are not a folder: Prettier, oxlint, knip and Vitest still check them, the duplicates check does not. Show the list and ask the user to confirm or change it, and send it as `srcDirs.node` in the run command (section 3), on an update too when it changes; with none, the duplicates check scans the whole project, the harness's own files and the lockfile included, and fails on their repeats.
-   2. Without a `package.json`, say that `apply.mjs` creates a minimal one (`{"name": "<folder>", "private": true}`) to hold the scripts and dev dependencies, and that `node_modules` comes with it.
-
-## 2. Choose modules
-
-Mark each module:
-
-- **required:** always installed; do not ask.
-- **auto** (such as `tailwind`, or `next-docs` when `node_modules/next/dist/docs` exists): installed exactly when its `detect` matches, checked again on every update; do not ask, only say whether it is in.
-- **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
-- **offered:** the rest, unselected.
-
-Offer only modules whose `stacks` include a chosen stack or its language (a module with no `stacks` applies to every stack); the others are not asked about.
-
-Ask with `AskUserQuestion`, `multiSelect: true`, one question per `category` (but `core`) with the category in words as its header (such as "Code quality"), up to 4 questions per call (a second call for the rest). Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies. On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
-
-Exactly one `linter` module is installed per stack: choose the one the project already uses (its `detect`), else the stack's `linter`. Ask only when the project has both or the user wants the other. `apply.mjs` fails with `choose one linter for <stack> of <...>` when a stack has none or several; ask then and run it again.
-
-Skills come with their modules; there is no separate skill question.
-
-**`imports`** (Python): offer it only when the Python folders hold two or more packages (a folder with `__init__.py`, or the packages inside a `src/` folder). List them and ask which must never import which (such as "`tools` never imports `pipelines`"). Write the answers to `.importlinter` at the root, which the project owns:
-
-```ini
-[importlinter]
-root_packages =
-    <package>
-    <package>
-
-[importlinter:contract:<source>-not-<target>]
-name = <source> never imports <target>
-type = forbidden
-source_modules =
-    <source>
-forbidden_modules =
-    <target>
-```
-
-One contract per answer. With no answer, leave `imports` out. On an update, a `.importlinter` already there stays as it is.
-
-Ask about `skipChecks` only when the user asks to turn a check off, or in step 4.
-
-### Libraries
-
-With the `libraries` module, settle which library each job uses. The jobs are the `sections` in `<template>/modules/best-practices/libraries/sections.json` whose `stacks` include a chosen stack or its language; ask nothing about the others. On an update, handle only sections with no answer in `.claude/harness.json` `libraries`; a section that has one keeps it. Do not look for use cases in the code: the rule is about code to come, and a chosen library is not installed, as a project adds it when its first code needs it.
-
-1. Give each section a recommended library, taking the first of these that applies:
-   - The section's current answer in `.claude/harness.json` `libraries`.
-   - An option found in `package.json` (`dependencies` or `devDependencies`; a name in `packages` ending in `/` matches a whole scope), or for a Python section in `pyproject.toml` (`[project] dependencies` or a dependency group). With several found, it is the first in the section's order, and the section gets its own question in step 3.
-   - An option whose `firstWhen` matches another section's library, such as Base UI for notifications when components use Base UI. In step 3 the answer already given counts, not the recommendation.
-   - The section's first option; "No library" for a section with no options (the platform covers it, such as `fetch` for HTTP on Node).
-2. Show the whole list in one `AskUserQuestion`, in the user's language and with nothing else in the question: "Recommended libraries as the project grows: components — Base UI; forms — React Hook Form; ...". Its options are "Accept" and "Change by section". On "Accept", these are the answers, except for sections left for step 3.
-3. On "Change by section", ask with `AskUserQuestion`, one question per section, the section's `title` as header, up to 4 questions per call (a second call for the rest). Options, in this order: the recommended library with "(recommended)" after its label, the section's other options in their order, then "No library", described by the section's `platform`. Each option's label is its `name`, its description its `when`. The user names any other library through "Other".
-
-An answer is the option's `id`, `none` for "No library", or the name the user gave.
-
-## 3. Run the template
-
-```bash
-node <template>/tasks/apply.mjs '{"stacks": ["<stack>", ...], "srcDirs": {"<stack>": ["<folder>", ...]}, "modules": [...], "skipChecks": [...], "docsLanguage": "<language>", "libraries": {"<section id>": "<answer>"}}'
-```
-
-On an update, leave out the answers that do not change; they keep their values from `.claude/harness.json`. `docsLanguage` is the language of specs and plans (default English); ask if the project's docs do not show it. The dev server port, which the hooks and the end-to-end tests use, is the one the project's `dev` script sets (`--port` or `-p`), else one `apply.mjs` derives from the folder name (3000–3999) and adds to the `dev` script, so projects on one machine rarely share it. To change it, change the `dev` script.
-
-The script writes each module's files, merges its `scripts` into `package.json`, its `settings` into `.claude/settings.json` (the project's own keys stay), its `gitignore` lines into `.gitignore` (lines the project has are not added again), takes back what a removed module added, writes `.claude/harness.json` and `.claude/rules/harness.md`, installs missing npm packages and Python dev dependencies (`uv add --dev`), and runs each `install` command whose `creates` paths are not all there (one without `creates` runs every time).
-
-Then read the `harness:` lines it printed, `git status` and `git diff`:
-
-- **Merge conflicts:** a file with `<<<<<<< project` markers. Resolve each so both the project's change and the harness change survive; ask the user when the two contradict.
-- **The same file under another name:** the project's `eslint.config.js` for the harness `eslint.config.mjs` (the tool reads only one). Merge the harness version (`.claude/harness-merge/<path>`) into the project's file and rename it to the harness name (fix its syntax if the new extension needs it, such as `module.exports` in a `.mjs` file). When both files are there, merge the other into the harness one and delete it.
-- **Files the project had before the harness:** a file the project already had is left as it was, with the harness version in `.claude/harness-merge/<path>`. Merge the harness version into the project's file, asking the user where they contradict; the next update merges from the harness version, which `apply.mjs` keeps in `.claude/harness.json`. For `CLAUDE.md`, `.claude/rules/harness.md` lists the commands and the other files in `.claude/rules/` the rest, so if `CLAUDE.md` repeats any of these, ask the user before removing it.
-- **Settings in `pyproject.toml`:** a line such as `pyproject.toml has [tool.ruff]; ruff.toml now wins` means the tool now reads the harness file, not that section. Move each of the project's settings from the section into the named file, asking the user where the two contradict, then delete the section.
-- When every file is merged, delete `.claude/harness-merge/`.
-- **Kept files:** a file no module needs any more stays when the project edited it. Ask the user whether to delete it.
-- **Kept values:** a `package.json` script or `.claude/settings.json` value the project set differently (such as `"prepare": "husky"` or its own `lint`) stays the project's, and the harness one is printed. Ask the user: keep the project's (the checks then run it), or set the harness one; a value equal to the harness one becomes the harness's on the next run.
-- **Git hooks elsewhere:** when git runs its hooks from another folder (husky's `.husky/`), the harness git hooks in `.githooks/` do not run. Offer to call each from the project's hook of the same name (such as `.githooks/commit-msg "$1"` in `.husky/commit-msg`).
-
-## 4. Finish
-
-1. **MCP:** for each server in `.claude/harness.json` `mcp`, check `claude mcp list`. A server that needs sign-in: tell the user to run `/mcp`.
-2. **Typed links (`nextjs` stack with TypeScript):** if `next.config` has no `typedRoutes: true`, add it, so the type check rejects a link to a page that does not exist. Run `npm run typecheck` and fix each link it flags: an address written in the code gets the type `Route` from `next`; only an address built at run time (from the current page, say) is cast with `as Route`. Commit this on its own.
-3. **Checks:** run the package install (`npm install`, or `pnpm install` when the project has `pnpm-lock.yaml`; `uv sync` for Python), then the `check` script (`bash .claude/hooks/check-all.sh --force` in a project with no `package.json`). When a check fails on code the harness did not touch (for example `dupes` in an old project), ask: fix it now, or turn the check off (rerun step 3 with the check's name added to `skipChecks`).
-4. **`CLAUDE.md`:** if "What this is" or "Architecture" still hold the `<...>` placeholders, read the project (`package.json`, README, folders, main modules) and write them, then show the user what you wrote.
-5. **Commit** only the files the harness wrote or you merged (including the removal of `.claude/harness-base/` in a project from before 0.28), with the message `chore(harness): install harness <version>` or `chore(harness): update harness to <version>`.
-6. Tell the user, in short: modules installed or removed, version, what still needs them (`/mcp` sign-in, a conflict you could not merge).
-
-## Improving the harness itself
-
-A fix to a harness-owned file (anything the template writes, or the hooks, rules and skills it installs) goes into the template, not only into the project, or the next update overwrites it.
-
-1. Make the change in a checkout of the plugin (`$HARNESS_TEMPLATE`), not in the plugin cache, as its `CLAUDE.md` says: the layout, the conventions, how to try a change and how to release it.
-2. Update the project: step 3 with `HARNESS_TEMPLATE` set to that checkout, or once the plugin itself is updated.
+The harness files already in the project stay and keep working.

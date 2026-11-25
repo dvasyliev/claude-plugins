@@ -14,7 +14,7 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Run /frontend-harness:setup in a new Next.js project
+        1. Run /codebase-harness:setup in a new Next.js project
         2. Pick the e2e module
         3. ...
     validations:
@@ -30,7 +30,7 @@ body:
     id: plugin-version
     attributes:
       label: Plugin version
-      description: The frontend-harness version in `claude plugin list`.
+      description: The codebase-harness version in `claude plugin list`.
       placeholder: "0.34.1"
     validations:
       required: true

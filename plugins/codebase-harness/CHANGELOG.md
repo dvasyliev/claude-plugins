@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0 (2026-11-25)
+
+### Features
+
+- frontend-harness is now codebase-harness, in the dvasyliev marketplace
+- the python and node stacks, and several stacks in one project
+
 ## 0.45.0 (2026-11-23)
 
 ### Features
