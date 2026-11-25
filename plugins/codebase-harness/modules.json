@@ -590,7 +590,7 @@
       },
       "install": [
         {
-          "command": "mkdir -p .claude/skills/committing-with-commitlint && curl -fLo .claude/skills/committing-with-commitlint/SKILL.md https://raw.githubusercontent.com/conventional-changelog/commitlint/master/skills/committing-with-commitlint/SKILL.md",
+          "command": "mkdir -p .claude/skills/committing-with-commitlint && curl -fLo .claude/skills/committing-with-commitlint/SKILL.md https://raw.githubusercontent.com/conventional-changelog/commitlint/v21.2.4/skills/committing-with-commitlint/SKILL.md",
           "creates": [".claude/skills/committing-with-commitlint"]
         }
       ]

@@ -165,3 +165,10 @@ test('MCP args the harness added last time are replaced whole, in the harness or
   const args = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf8')).mcpServers['chrome-devtools'].args;
   assert.deepEqual(args, ['-y', 'chrome-devtools-mcp@1.12.0', '--isolated']);
 });
+
+test('every raw.githubusercontent.com download in the catalog names a tag or commit, not a branch', () => {
+  const catalog = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'modules.json'), 'utf8');
+  const urls = catalog.match(/https:\/\/raw\.githubusercontent\.com\/[^\s"]+/g) ?? [];
+  assert.ok(urls.length > 0);
+  for (const url of urls) assert.doesNotMatch(url.split('/')[5], /^(master|main|HEAD)$/, url);
+});
