@@ -247,3 +247,13 @@ test('pytest passes with no tests collected (exit 5) and fails on a failing test
   assert.equal(run(5), 0);
   assert.notEqual(run(1), 0);
 });
+
+test('an update that passes only the python srcDirs keeps the react ones', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG, 'pyproject.toml': PYPROJECT });
+  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff', 'dupes'], srcDirs: { react: ['web'], python: ['app'] } });
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(apply(dir, { srcDirs: { python: ['app', 'tools'] } }).status, 0);
+  assert.deepEqual(harnessJson(dir).srcDirs, { react: ['web'], python: ['app', 'tools'] });
+  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  assert.match(pkg.scripts.dupes, /jscpd web app tools /);
+});

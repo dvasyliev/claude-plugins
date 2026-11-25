@@ -15,7 +15,9 @@ const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null,
 const old = readJson(".claude/harness.json", {});
 // Answers from before stacks name one `framework`; it becomes `stacks: [framework]`.
 const withStacks = ({ framework, ...a }) => (framework && !a.stacks ? { ...a, stacks: [framework] } : a);
-const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, srcDirs: {}, ...withStacks(old), ...withStacks(JSON.parse(process.argv[2] || "{}")) };
+const passed = withStacks(JSON.parse(process.argv[2] || "{}"));
+// srcDirs merge per stack: an update that passes one stack's folders keeps the others'.
+const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, ...withStacks(old), ...passed, srcDirs: { ...old.srcDirs, ...passed.srcDirs } };
 // Modules renamed since the project's last run (`renamed` in modules.json) go by their new names.
 const catalog = readJson(join(root, "modules.json"));
 answers.modules = [...new Set(answers.modules.map((id) => catalog.renamed?.[id] ?? id))];
