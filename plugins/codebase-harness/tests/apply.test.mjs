@@ -1,7 +1,7 @@
 // apply.mjs answers: stacks in place of one framework, and the checks on them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -132,4 +132,19 @@ test('a project script under another extension is not the harness file; a config
   assert.doesNotMatch(r.stdout, /check-all/);
   assert.equal(existsSync(join(dir, 'commitlint.config.mjs')), false);
   assert.match(r.stdout, /commitlint\.config\.mjs: the project has it as commitlint\.config\.js/);
+});
+
+test('only the hooks the harness writes are made executable, not the project files next to them', () => {
+  const dir = makeProject({
+    'pyproject.toml': '[project]\nname = "app"\nversion = "0.1.0"\n',
+    '.claude/hooks/guard.py': 'print("project hook")\n',
+    '.githooks/notes.txt': 'project notes\n',
+  });
+  const r = apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'commitlint'] });
+  assert.equal(r.status, 0, r.stderr);
+  const mode = (path) => statSync(join(dir, path)).mode & 0o777;
+  assert.equal(mode('.claude/hooks/guard.py'), 0o644);
+  assert.equal(mode('.githooks/notes.txt'), 0o644);
+  assert.equal(mode('.claude/hooks/check-all.sh'), 0o755);
+  assert.equal(mode('.githooks/commit-msg'), 0o755);
 });

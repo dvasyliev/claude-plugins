@@ -400,12 +400,11 @@ const md = [
 ].join("\n");
 write(".claude/rules/harness.md", md);
 
-// Hooks must be executable, and git must use .githooks/ (when a module brings git hooks)
-// even before the next install; without them, git goes back to the project's own hooks.
-// A project whose git hooks live elsewhere (husky) keeps them there.
-for (const dir of [".claude/hooks", ".githooks"]) {
-  if (!existsSync(dir)) continue;
-  for (const f of readdirSync(dir)) chmodSync(`${dir}/${f}`, 0o755);
+// The harness hooks must be executable (the project's own files next to them keep their mode), and git must use
+// .githooks/ (when a module brings git hooks) even before the next install; without them, git goes back to the
+// project's own hooks. A project whose git hooks live elsewhere (husky) keeps them there.
+for (const path of Object.keys(files)) {
+  if (/^(\.claude\/hooks|\.githooks)\//.test(path) && existsSync(path)) chmodSync(path, 0o755);
 }
 try {
   const hooksPath = execSync("git config core.hooksPath || true", { encoding: "utf8" }).trim();
