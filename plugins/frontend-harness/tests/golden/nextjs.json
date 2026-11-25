@@ -37,7 +37,7 @@
   "eslint.config.mjs": "e15f0e7cf407723367c7f89a869d36061108cada25e2df48153c0b9d30f271f9",
   "knip.json": "9ce53534b6ae9e8a8815e909f610044cbb313ad1ec8122eb2ba6915be4aceb09",
   "package.json": "2765c7fa3b681e098b091ad1bf0b1e486476379824ad19172239411a551f0a77",
-  "playwright.config.ts": "83ae78ad092bda4a59f52af7d6e498bbf6d253f28e65f3d14c72429fdb8beea8",
+  "playwright.config.ts": "f06d533e2f2f0647d561df0a35748ccfb403a85d7161ea6e15075fda5d03db00",
   "tests/fixtures.ts": "4d3d18613e7ed92a32658f66793de06078a87f5b1fd952cd7380008ce4c4ee20",
   "tests/seed.spec.ts": "fd81a5b7d432922e5efea6eeec3175d5155b842836b550e6a7caddc07cc58f54",
   "vitest.config.mts": "fdb27c02934b311ae5b30db9d60eb611d85f9814bdeb23b61991465f309241fc"

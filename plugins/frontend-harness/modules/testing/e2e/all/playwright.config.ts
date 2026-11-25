@@ -2,12 +2,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
 
 // The dev server port: PORT if set, else the `port` in .claude/harness.json.
-const { port } = JSON.parse(readFileSync(".claude/harness.json", "utf8")) as { port: number };
+const { port } = JSON.parse(readFileSync(".claude/harness.json", "utf8")) as {
+  port: number;
+};
 const devPort = process.env.PORT ?? String(port);
 const baseURL = `http://localhost:${devPort}`;
 
 // The `dev` script fixes the harness port; on another PORT, run it with that port instead.
-const { scripts } = JSON.parse(readFileSync("package.json", "utf8")) as { scripts: { dev: string } };
+const { scripts } = JSON.parse(readFileSync("package.json", "utf8")) as {
+  scripts: { dev: string };
+};
 const pnpm = existsSync("pnpm-lock.yaml");
 const command =
   devPort === String(port)

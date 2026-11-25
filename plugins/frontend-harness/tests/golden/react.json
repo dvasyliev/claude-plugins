@@ -37,7 +37,7 @@
   "commitlint.config.mjs": "7076035808cb1e0973b5567f401170ebbae906a65ad1c6bb5c9bc4217f52c87b",
   "knip.json": "9ce53534b6ae9e8a8815e909f610044cbb313ad1ec8122eb2ba6915be4aceb09",
   "package.json": "ad6429f363b9b02c19cc33ec6fc928816d9796e322688227227132642b311644",
-  "playwright.config.ts": "83ae78ad092bda4a59f52af7d6e498bbf6d253f28e65f3d14c72429fdb8beea8",
+  "playwright.config.ts": "f06d533e2f2f0647d561df0a35748ccfb403a85d7161ea6e15075fda5d03db00",
   "tests/fixtures.ts": "4d3d18613e7ed92a32658f66793de06078a87f5b1fd952cd7380008ce4c4ee20",
   "tests/seed.spec.ts": "fd81a5b7d432922e5efea6eeec3175d5155b842836b550e6a7caddc07cc58f54",
   "vitest.config.mts": "fb4eed80f0523e3a27266e41b930d13587122e4b1032034102966c15ce7d6b12"
