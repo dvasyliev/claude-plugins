@@ -28,7 +28,8 @@ const config = {
   ],
   rules: {
     "scope-empty": [2, "never"],
-    "scope-enum": [2, "always", [...plugins, "marketplace", "repo"]],
+    // A commit that removes a plugin names it too, though its folder is gone.
+    "scope-enum": [2, "always", [...new Set([...plugins, ...changed(), "marketplace", "repo"])]],
     "scope-matches-changes": [2, "always"],
   },
 };

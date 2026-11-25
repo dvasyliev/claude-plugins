@@ -1,9 +1,0 @@
-{
-  "name": "frontend-harness",
-  "version": "0.45.0",
-  "description": "Moved to codebase-harness: run /frontend-harness:setup for the steps",
-  "author": {
-    "name": "Dmytro Vasyliev"
-  },
-  "license": "MIT"
-}

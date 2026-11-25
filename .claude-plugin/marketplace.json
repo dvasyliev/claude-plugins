@@ -10,11 +10,6 @@
       "name": "codebase-harness",
       "source": "./plugins/codebase-harness",
       "description": "Claude Code plugin that sets up hooks, rules and checks so Claude writes code that fits your project, whatever its stack (React, Next.js, Python, Node)"
-    },
-    {
-      "name": "frontend-harness",
-      "source": "./plugins/frontend-harness",
-      "description": "Moved to codebase-harness"
     }
   ]
 }
