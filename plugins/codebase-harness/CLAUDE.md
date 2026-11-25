@@ -13,8 +13,8 @@ skills/audit/                              /codebase-harness:audit: checks exist
 references/questions.md                    how the skills ask questions (AskUserQuestion)
 modules.json                               every stack and module
 modules/<category>/<module>/all/           a module's files for every stack it applies to, at their paths in the project
-modules/<category>/<module>/<language>/    its files for one language (js), after all/
-modules/<category>/<module>/<stack>/       its files for one stack (react, nextjs), after <language>/
+modules/<category>/<module>/<language>/    its files for one language (js, python), after all/
+modules/<category>/<module>/<stack>/       its files for one stack (react, nextjs, python, node), after <language>/
 tasks/apply.mjs                            writes the chosen modules into the project in the current folder
 ```
 
@@ -22,7 +22,7 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 
 | Entity | What it is |
 |---|---|
-| Stack | `modules.json` `stacks`: `nextjs` or `react`, with its `language` (`js`), source folders, default linter, the stacks it `excludes` and how to detect it. Picks the `<stack>/` version of each file. |
+| Stack | `modules.json` `stacks`: `react`, `nextjs`, `python` or `node` (a project may have several), with its `language` (`js` or `python`), source folders, default linter, the stacks it `excludes` and how to detect it. Picks the `<stack>/` version of each file. |
 | Module | `modules.json` `modules`: one thing a project gets, in a `category` (the kind of check: `formatting`, `linting`, `types`, `code-health`, `testing`, ...; also the folder its files are in). Applies to the stacks or languages in its `stacks` (every stack when absent). Brings files, `scripts` (package.json), `checks` / `fileChecks` (run by the hooks), `settings` (.claude/settings.json), `mcpServers` (.mcp.json), `gitignore` (lines for .gitignore), npm `devDependencies`, `install` commands with the paths each `creates` (and the `.mcp.json` servers it adds in `mcp`), and `audit`: the rule files and skill folders the audit skill checks code against. `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own (language first, then stack). |
 | Renamed modules | `modules.json` `renamed`: old module name to new (`knip` to `unused`, `jscpd` to `dupes`). `apply.mjs` replaces the old names in the stored and the passed `modules`; check names (`skipChecks`) do not change. |
 | How a module is chosen | `required` always; `auto` exactly when its `detect` matches (package.json or files); `linter` exactly one; `recommended` suggested; the rest offered, one question per category. |
