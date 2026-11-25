@@ -62,6 +62,17 @@ test('format-lint-file.sh ignores a failing non-blocking check', () => {
   assert.equal(fileCheck(false, 'bad').status, 0);
 });
 
+test('format-lint-file.sh runs a py file check on a .py file and not on a .ts one', () => {
+  const dir = project({ checks: [], fileChecks: [{ name: 'ruff', command: 'grep -q ok', extensions: ['py'], blocking: true }] });
+  const edit = (name, content) => {
+    writeFileSync(join(dir, name), content);
+    return run(dir, 'format-lint-file.sh', [], JSON.stringify({ tool_input: { file_path: join(dir, name) } }));
+  };
+  assert.equal(edit('a.py', 'bad').status, 2);
+  assert.equal(edit('a.py', 'ok').status, 0);
+  assert.equal(edit('a.ts', 'bad').status, 0);
+});
+
 test('check-all.sh runs a command with a backslash and a newline unchanged', () => {
   const dir = project({ checks: [{ name: 'raw', command: "printf '%s\\n' 'a\\d'\necho two; false" }], fileChecks: [] });
   const r = run(dir, 'check-all.sh', ['--force']);

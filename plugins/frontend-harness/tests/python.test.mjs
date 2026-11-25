@@ -1,10 +1,12 @@
 // The python stack: dev dependencies read from pyproject.toml, and apply.mjs without package.json.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { missingDevDeps } from '../tasks/lib/python.mjs';
-import { REACT_PKG, apply, makeProject } from './helpers.mjs';
+import { REACT_PKG, apply, cleanEnv, makeProject, snapshot } from './helpers.mjs';
 
 const harnessJson = (dir) => JSON.parse(readFileSync(join(dir, '.claude/harness.json'), 'utf8'));
 const PYPROJECT = '[project]\nname = "app"\nversion = "0.1.0"\n';
@@ -12,6 +14,11 @@ const PYPROJECT = '[project]\nname = "app"\nversion = "0.1.0"\n';
 test('missingDevDeps finds the names the dev group lacks', () => {
   const text = '[dependency-groups]\ndev = ["ruff>=0.17", "Basedpyright"]';
   assert.deepEqual(missingDevDeps(text, ['ruff', 'basedpyright', 'pytest']), ['pytest']);
+});
+
+test('missingDevDeps reads a requirement with escaped quotes in its marker', () => {
+  const text = '[dependency-groups]\ndev = ["ruff; python_version >= \\"3.10\\"", "pytest"]';
+  assert.deepEqual(missingDevDeps(text, ['ruff', 'pytest', 'vulture']), ['vulture']);
 });
 
 test('missingDevDeps reads a multi-line group and [tool.uv] dev-dependencies', () => {
@@ -32,10 +39,9 @@ test('missingDevDeps reads a multi-line group and [tool.uv] dev-dependencies', (
   assert.deepEqual(missingDevDeps(text, wanted), ['requests']);
 });
 
-// The catalog has no python linter yet, so the stack needs none (react without one still fails: apply.test.mjs).
-test('a python-only project needs no package.json, no port and no linter', () => {
+test('a python-only project needs no package.json and no port', () => {
   const dir = makeProject({ 'pyproject.toml': PYPROJECT });
-  const r = apply(dir, { stacks: ['python'], modules: ['core'] });
+  const r = apply(dir, { stacks: ['python'], modules: ['core', 'ruff'] });
   assert.equal(r.status, 0, r.stderr);
   assert.equal(existsSync(join(dir, 'package.json')), false);
   const json = harnessJson(dir);
@@ -44,16 +50,107 @@ test('a python-only project needs no package.json, no port and no linter', () =>
   assert.doesNotMatch(readFileSync(join(dir, '.claude/rules/harness.md'), 'utf8'), /run dev/);
 });
 
-test('a pnpm React and Python project runs the js checks through pnpm', () => {
+test('a pnpm React and Python project runs js checks through pnpm and Python ones through uv', () => {
   const dir = makeProject({ 'package.json': REACT_PKG, 'pnpm-lock.yaml': '', 'pyproject.toml': PYPROJECT });
-  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint'] });
+  const r = apply(dir, { stacks: ['react', 'python'], modules: ['core', 'oxlint', 'ruff', 'types'], srcDirs: { python: ['app'] } });
   assert.equal(r.status, 0, r.stderr);
   const { checks, fileChecks } = harnessJson(dir);
-  assert.ok(checks.length);
-  for (const c of [...checks, ...fileChecks]) assert.ok(c.command.startsWith('pnpm run -s '), c.command);
-  // No module brings a Python check yet; Task 8 (ruff, basedpyright) adds them, and this test then
-  // asserts that each Python check command starts with `uv run `.
-  assert.equal(checks.some((c) => c.command.startsWith('uv run ')), false);
+  const python = ['basedpyright', 'ruff-format', 'ruff'];
+  for (const c of [...checks, ...fileChecks]) {
+    const prefix = c.name === 'file-size' ? 'bash ' : python.includes(c.name) ? 'uv run ' : 'pnpm run -s ';
+    assert.ok(c.command.startsWith(prefix), `${c.name}: ${c.command}`);
+  }
+  assert.deepEqual(checks.map((c) => c.name).filter((n) => n === 'file-size' || python.includes(n)), [...python.slice(0, 1), 'ruff-format', 'ruff', 'file-size']);
+  assert.ok(checks.some((c) => c.name === 'types' && c.command === 'pnpm run -s typecheck'));
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
   assert.equal(pkg.scripts.check, '.claude/hooks/check-all.sh --force');
+  assert.equal('ruff' in pkg.scripts, false);
+});
+
+const PY_ANSWERS = { stacks: ['python'], modules: ['core', 'ruff', 'types'], srcDirs: { python: ['app'] } };
+
+test('python checks: ruff and basedpyright, in catalog order, and a second run changes nothing', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  const r = apply(dir, PY_ANSWERS);
+  assert.equal(r.status, 0, r.stderr);
+  const { checks, fileChecks } = harnessJson(dir);
+  assert.deepEqual(checks.map((c) => c.name), ['basedpyright', 'ruff-format', 'ruff', 'file-size']);
+  assert.match(checks.at(-1).command, /file-size\.sh app$/);
+  assert.deepEqual(fileChecks.map((c) => [c.name, c.command, c.blocking, c.extensions]), [
+    ['ruff-format', 'uv run ruff format', false, ['py']],
+    ['ruff', 'uv run ruff check --fix --force-exclude', true, ['py']],
+  ]);
+  for (const f of ['ruff.toml', 'pyrightconfig.json', '.claude/rules/python.md', '.claude/checks/file-size.sh']) assert.ok(existsSync(join(dir, f)), f);
+  const before = snapshot(dir);
+  assert.equal(apply(dir, {}).status, 0);
+  assert.deepEqual(snapshot(dir), before);
+});
+
+test('harness.md lists the direct ruff script', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  assert.equal(apply(dir, PY_ANSWERS).status, 0);
+  assert.match(readFileSync(join(dir, '.claude/rules/harness.md'), 'utf8'), /^uv run ruff check \.  # Ruff lint$/m);
+});
+
+test('settings in pyproject.toml that a harness file now overrides are reported', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT + '\n[tool.ruff]\nline-length = 100\n\n[tool.basedpyright]\n' });
+  const r = apply(dir, PY_ANSWERS);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /\[tool\.ruff\].*ruff\.toml/);
+  assert.match(r.stdout, /\[tool\.basedpyright\].*pyrightconfig\.json/);
+});
+
+test('python needs a pyproject.toml in the folder', () => {
+  const dir = makeProject({ 'README.md': '' });
+  const r = apply(dir, PY_ANSWERS);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /pyproject\.toml is missing; run this in the project folder/);
+});
+
+test('file-size.sh lists each .py file over 500 lines', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  assert.equal(apply(dir, PY_ANSWERS).status, 0);
+  mkdirSync(join(dir, 'app'));
+  const run = () => spawnSync('bash', ['.claude/checks/file-size.sh', 'app'], { cwd: dir, encoding: 'utf8', env: cleanEnv() });
+  writeFileSync(join(dir, 'app/big.py'), 'x = 1\n'.repeat(500));
+  assert.equal(run().status, 0);
+  writeFileSync(join(dir, 'app/big.py'), 'x = 1\n'.repeat(501));
+  const r = run();
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout.trim(), 'app/big.py: 501 lines, limit 500');
+});
+
+// The uv path: a fake `uv` on PATH logs its arguments. A python-only project needs no npm install.
+function fakeBin({ uv }) {
+  const bin = mkdtempSync(join(tmpdir(), 'harness-bin-'));
+  symlinkSync(process.execPath, join(bin, 'node'));
+  const log = join(bin, 'uv.log');
+  if (uv) {
+    writeFileSync(join(bin, 'uv'), `#!/bin/sh\necho "$@" >> "${log}"\n`);
+    chmodSync(join(bin, 'uv'), 0o755);
+  }
+  return { PATH: `${bin}:/usr/bin:/bin`, log };
+}
+const logged = (log) => (existsSync(log) ? readFileSync(log, 'utf8') : '');
+
+test('without uv on PATH the install stops with a message', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  const { PATH } = fakeBin({ uv: false });
+  const r = apply(dir, PY_ANSWERS, { PATH, HARNESS_NO_INSTALL: '' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /harness: uv is not installed; the python stack needs it: https:\/\/docs\.astral\.sh\/uv\//);
+});
+
+test('uv adds the dev dependencies the project lacks, and nothing when it has them all', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  const { PATH, log } = fakeBin({ uv: true });
+  const r = apply(dir, PY_ANSWERS, { PATH, HARNESS_NO_INSTALL: '' });
+  assert.equal(r.status, 0, r.stderr);
+  const calls = logged(log).trim().split('\n');
+  const add = calls.find((c) => c.startsWith('add --dev'));
+  assert.ok(add && /\bruff\b/.test(add) && /\bbasedpyright\b/.test(add), calls.join('|'));
+  const full = makeProject({ 'pyproject.toml': PYPROJECT + '\n[dependency-groups]\ndev = ["ruff", "basedpyright"]\n' });
+  const second = fakeBin({ uv: true });
+  assert.equal(apply(full, PY_ANSWERS, { PATH: second.PATH, HARNESS_NO_INSTALL: '' }).status, 0);
+  assert.equal(/\badd\b/.test(logged(second.log)), false);
 });

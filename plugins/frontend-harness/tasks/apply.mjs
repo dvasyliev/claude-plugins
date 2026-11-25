@@ -26,6 +26,8 @@ attempt(() => checkStacks(catalog, stackIds));
 const isJs = (stackId) => catalog.stacks[stackId].language === "js";
 const hasJs = stackIds.some(isJs);
 if (hasJs && !existsSync("package.json")) fail("no package.json here; run this in the project folder");
+if (stackIds.some((id) => catalog.stacks[id].language === "python") && !existsSync("pyproject.toml"))
+  fail("pyproject.toml is missing; run this in the project folder");
 const pkg = readJson("package.json", {});
 // Each chosen stack's source folders: the answer, else the stack's own.
 const srcDirs = Object.fromEntries(stackIds.map((id) => [id, answers.srcDirs[id] ?? catalog.stacks[id].srcDirs]));
@@ -392,6 +394,15 @@ try {
   else notes.push(`git runs its hooks from ${hooksPath}, so the harness git hooks in .githooks/ do not run; call them from there`);
 } catch {
   // Not a git repo yet; the install runs `prepare` later.
+}
+
+// A tool reads its own file before pyproject.toml, so the settings the project has there stop counting.
+if (stackIds.some((id) => catalog.stacks[id].language === "python")) {
+  const pyproject = readFileSync("pyproject.toml", "utf8");
+  const tables = [["ruff", "ruff.toml"], ["pytest.ini_options", "pytest.ini"], ["pyright", "pyrightconfig.json"], ["basedpyright", "pyrightconfig.json"]];
+  for (const [table, file] of tables)
+    if (paths.includes(file) && new RegExp(`^\\[tool\\.${table.replace(".", "\\.")}[\\].]`, "m").test(pyproject))
+      notes.push(`pyproject.toml has [tool.${table}]; ${file} now wins, so move its settings there`);
 }
 
 console.log(`harness ${version}: ${modules.map(([id]) => id).join(", ")} on ${stackIds.join(", ")}`);

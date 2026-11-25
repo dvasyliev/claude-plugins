@@ -1,5 +1,5 @@
 {
-  "$comment": "Every stack and module the harness can install. A project chooses one or more `stacks`; each has a `language` (stacks of one language share tools), `srcDirs` (its source folders, the default answer), `detect`, a default `linter`, and the stacks it `excludes`. A module applies to the stacks or languages in its `stacks` (every stack when absent). Its files are in modules/<category>/<module>/: all/ for every stack it applies to, then <language>/, then <stack>/, a later folder replacing the same path; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (in package.json when the module applies to a `js` stack; otherwise the hooks run their `command` as written, its first word from `npx -y <npx>` when the script has an `npx` field), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies`, and `audit` (the rule files and skill folders, at their paths in the project, that the audit skill checks existing code against). `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own for each chosen stack (language first, then stack; a `detect` in it limits the module to stacks where it matches). `{srcDirs}` in a command is the folders of every chosen stack, or inside `by` those of its language or stack. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module per chosen stack that has one is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in). `renamed` maps a module's old name to its new one, for projects that still list the old.",
+  "$comment": "Every stack and module the harness can install. A project chooses one or more `stacks`; each has a `language` (stacks of one language share tools), `srcDirs` (its source folders, the default answer), `detect`, a default `linter`, and the stacks it `excludes`. A module applies to the stacks or languages in its `stacks` (every stack when absent). Its files are in modules/<category>/<module>/: all/ for every stack it applies to, then <language>/, then <stack>/, a later folder replacing the same path; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (in package.json when the module brings the script on a `js` stack; otherwise, such as a `by.python` script even with a `js` stack chosen, the hooks run its `command` as written, its first word from `npx -y <npx>` when the script has an `npx` field), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `reports` (commands for audits, not run by the hooks), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies`, and `audit` (the rule files and skill folders, at their paths in the project, that the audit skill checks existing code against). `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own for each chosen stack (language first, then stack; a `detect` in it limits the module to stacks where it matches). `{srcDirs}` in a command is the folders of every chosen stack, or inside `by` those of its language or stack. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module per chosen stack that has one is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in). `renamed` maps a module's old name to its new one, for projects that still list the old.",
   "stacks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -110,7 +110,7 @@
       }
     },
     "types": {
-      "description": "Type checking on every turn: TypeScript with `tsc -b` (on Next.js after regenerating the route types).",
+      "description": "Type checking on every turn: TypeScript with `tsc -b` (on Next.js after regenerating the route types), basedpyright on Python.",
       "category": "types",
       "required": true,
       "by": {
@@ -136,6 +136,21 @@
               "description": "TypeScript, after regenerating Next.js route types; never `tsc --noEmit`"
             }
           }
+        },
+        "python": {
+          "scripts": {
+            "basedpyright": {
+              "command": "uv run basedpyright",
+              "description": "Python types (basedpyright)"
+            }
+          },
+          "checks": [
+            {
+              "name": "basedpyright",
+              "script": "basedpyright"
+            }
+          ],
+          "devDependencies": ["basedpyright"]
         }
       }
     },
@@ -290,6 +305,69 @@
         }
       ],
       "devDependencies": ["oxlint"]
+    },
+    "ruff": {
+      "description": "Ruff formats and lints Python (checked at the end of every turn, and on each edited file), plus a 500-line file limit and a strict report.",
+      "category": "linting",
+      "stacks": ["python"],
+      "linter": true,
+      "scripts": {
+        "ruff": {
+          "command": "uv run ruff check .",
+          "description": "Ruff lint"
+        },
+        "ruff-format": {
+          "command": "uv run ruff format --check .",
+          "description": "Ruff format check only"
+        },
+        "file-size": {
+          "command": "bash .claude/checks/file-size.sh {srcDirs}",
+          "description": "fails for a .py file over 500 lines"
+        },
+        "ruff-format:file": {
+          "command": "uv run ruff format",
+          "description": "Ruff format on one file (used by the edit hook)"
+        },
+        "ruff:file": {
+          "command": "uv run ruff check --fix --force-exclude",
+          "description": "Ruff lint with fixes on one file (used by the edit hook)"
+        }
+      },
+      "checks": [
+        {
+          "name": "ruff-format",
+          "script": "ruff-format"
+        },
+        {
+          "name": "ruff",
+          "script": "ruff"
+        },
+        {
+          "name": "file-size",
+          "script": "file-size"
+        }
+      ],
+      "fileChecks": [
+        {
+          "name": "ruff-format",
+          "script": "ruff-format:file",
+          "extensions": ["py"],
+          "blocking": false
+        },
+        {
+          "name": "ruff",
+          "script": "ruff:file",
+          "extensions": ["py"],
+          "blocking": true
+        }
+      ],
+      "reports": [
+        {
+          "name": "ruff-strict",
+          "command": "uv run ruff check . --statistics --exit-zero --extend-select C901,PLR,B,SIM,ERA,UP,T20"
+        }
+      ],
+      "devDependencies": ["ruff"]
     },
     "unused": {
       "description": "knip: unused files, exports and dependencies, checked at the end of every turn.",

@@ -9,7 +9,7 @@ function strings(text, table, key) {
   const next = body.search(/^\[/m);
   if (!start || (next >= 0 && start.index > next)) return [];
   const out = [];
-  const token = /"([^"]*)"|'([^']*)'|#[^\n]*|(\])/g;
+  const token = /"((?:[^"\\]|\\.)*)"|'([^']*)'|#[^\n]*|(\])/g;
   token.lastIndex = start.index + start[0].length;
   for (let m; (m = token.exec(body)) && !m[3]; ) if (m[1] !== undefined || m[2] !== undefined) out.push(m[1] ?? m[2]);
   return out;
