@@ -46,3 +46,8 @@ test('a second run changes nothing', () => {
   assert.deepEqual(snapshot(dir), before);
   assert.equal(existsSync(join(dir, 'package.json')), true);
 });
+
+test('node is detected by its server framework, not by files a React project also has', () => {
+  const { detect } = JSON.parse(readFileSync(new URL('../modules.json', import.meta.url), 'utf8')).stacks.node;
+  assert.deepEqual(detect, { dependencies: ['express', 'fastify'] });
+});

@@ -26,7 +26,7 @@
       "excludes": ["react", "nextjs"],
       "srcDirs": [],
       "detect": {
-        "files": ["server.js", "server.mjs", "server.ts", "app.js", "app.ts", "src/server.ts", "src/index.ts", "src/index.js"]
+        "dependencies": ["express", "fastify"]
       },
       "linter": "oxlint"
     },
