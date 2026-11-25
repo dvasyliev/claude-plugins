@@ -4,30 +4,19 @@
     "nextjs": {
       "description": "Next.js App Router",
       "language": "js",
-      "excludes": [
-        "react"
-      ],
-      "srcDirs": [
-        "app",
-        "lib"
-      ],
+      "excludes": ["react"],
+      "srcDirs": ["app", "lib"],
       "detect": {
-        "dependencies": [
-          "next"
-        ]
+        "dependencies": ["next"]
       },
       "linter": "eslint"
     },
     "react": {
       "description": "React (Vite)",
       "language": "js",
-      "srcDirs": [
-        "src"
-      ],
+      "srcDirs": ["src"],
       "detect": {
-        "dependencies": [
-          "react"
-        ]
+        "dependencies": ["react"]
       },
       "linter": "oxlint"
     }
@@ -36,9 +25,7 @@
     "core": {
       "description": "Claude Code hooks, the structure and hooks rules, and the `check` script that runs every check.",
       "category": "core",
-      "audit": [
-        ".claude/rules/structure.md"
-      ],
+      "audit": [".claude/rules/structure.md"],
       "required": true,
       "by": {
         "js": {
@@ -131,9 +118,7 @@
               "script": "typecheck"
             }
           ],
-          "devDependencies": [
-            "typescript"
-          ]
+          "devDependencies": ["typescript"]
         },
         "nextjs": {
           "scripts": {
@@ -149,9 +134,7 @@
       "description": "Prettier formats each file Claude edits and is checked at the end of every turn.",
       "category": "formatting",
       "required": true,
-      "stacks": [
-        "js"
-      ],
+      "stacks": ["js"],
       "scripts": {
         "format": {
           "command": "prettier --write .",
@@ -176,23 +159,11 @@
         {
           "name": "format",
           "script": "format:file",
-          "extensions": [
-            "ts",
-            "tsx",
-            "mts",
-            "js",
-            "jsx",
-            "mjs",
-            "css",
-            "json",
-            "md"
-          ],
+          "extensions": ["ts", "tsx", "mts", "js", "jsx", "mjs", "css", "json", "md"],
           "blocking": false
         }
       ],
-      "devDependencies": [
-        "prettier"
-      ]
+      "devDependencies": ["prettier"]
     },
     "feature-workflow": {
       "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, several at once), the rule for carrying out a plan (yourself or with subagents), the superpowers plugin and the improve-harness skill.",
@@ -231,13 +202,9 @@
     "eslint": {
       "description": "ESLint with type-aware typescript-eslint rules, strict accessibility rules (jsx-a11y), no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
       "category": "linting",
-      "stacks": [
-        "js"
-      ],
+      "stacks": ["js"],
       "detect": {
-        "devDependencies": [
-          "eslint"
-        ]
+        "devDependencies": ["eslint"]
       },
       "linter": true,
       "scripts": {
@@ -260,29 +227,14 @@
         {
           "name": "lint",
           "script": "lint:file",
-          "extensions": [
-            "ts",
-            "tsx",
-            "mts",
-            "js",
-            "jsx",
-            "mjs"
-          ],
+          "extensions": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
           "blocking": true
         }
       ],
-      "devDependencies": [
-        "eslint",
-        "eslint-config-prettier",
-        "typescript-eslint"
-      ],
+      "devDependencies": ["eslint", "eslint-config-prettier", "typescript-eslint"],
       "by": {
         "nextjs": {
-          "devDependencies": [
-            "eslint-config-next",
-            "eslint-plugin-boundaries",
-            "eslint-plugin-jsx-a11y"
-          ]
+          "devDependencies": ["eslint-config-next", "eslint-plugin-boundaries", "eslint-plugin-jsx-a11y"]
         },
         "react": {
           "devDependencies": [
@@ -299,13 +251,9 @@
     "oxlint": {
       "description": "oxlint (what create-vite sets up; works with TypeScript 7) with accessibility rules, no import cycles and a 400-line file limit.",
       "category": "linting",
-      "stacks": [
-        "js"
-      ],
+      "stacks": ["js"],
       "detect": {
-        "devDependencies": [
-          "oxlint"
-        ]
+        "devDependencies": ["oxlint"]
       },
       "linter": true,
       "scripts": {
@@ -328,20 +276,11 @@
         {
           "name": "lint",
           "script": "lint:file",
-          "extensions": [
-            "ts",
-            "tsx",
-            "mts",
-            "js",
-            "jsx",
-            "mjs"
-          ],
+          "extensions": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
           "blocking": true
         }
       ],
-      "devDependencies": [
-        "oxlint"
-      ]
+      "devDependencies": ["oxlint"]
     },
     "unused": {
       "description": "knip: unused files, exports and dependencies, checked at the end of every turn.",
@@ -361,9 +300,7 @@
               "script": "knip"
             }
           ],
-          "devDependencies": [
-            "knip"
-          ]
+          "devDependencies": ["knip"]
         }
       }
     },
@@ -373,9 +310,7 @@
       "recommended": true,
       "by": {
         "js": {
-          "devDependencies": [
-            "jscpd"
-          ]
+          "devDependencies": ["jscpd"]
         }
       },
       "scripts": {
@@ -394,33 +329,21 @@
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
       "category": "formatting",
-      "stacks": [
-        "js"
-      ],
+      "stacks": ["js"],
       "auto": true,
       "detect": {
-        "dependencies": [
-          "tailwindcss"
-        ],
-        "devDependencies": [
-          "tailwindcss"
-        ]
+        "dependencies": ["tailwindcss"],
+        "devDependencies": ["tailwindcss"]
       },
-      "devDependencies": [
-        "prettier-plugin-tailwindcss"
-      ]
+      "devDependencies": ["prettier-plugin-tailwindcss"]
     },
     "unit": {
       "description": "Vitest unit tests, run at the end of every turn.",
       "category": "testing",
-      "audit": [
-        ".claude/rules/tests-unit.md"
-      ],
+      "audit": [".claude/rules/tests-unit.md"],
       "recommended": true,
       "detect": {
-        "devDependencies": [
-          "vitest"
-        ]
+        "devDependencies": ["vitest"]
       },
       "by": {
         "js": {
@@ -449,17 +372,11 @@
     "e2e": {
       "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
       "category": "testing",
-      "stacks": [
-        "js"
-      ],
-      "audit": [
-        ".claude/rules/tests-e2e.md"
-      ],
+      "stacks": ["js"],
+      "audit": [".claude/rules/tests-e2e.md"],
       "recommended": true,
       "detect": {
-        "devDependencies": [
-          "@playwright/test"
-        ]
+        "devDependencies": ["@playwright/test"]
       },
       "scripts": {
         "verify": {
@@ -471,22 +388,12 @@
           "description": "turns on the git hooks in .githooks/ (the install runs it)"
         }
       },
-      "devDependencies": [
-        "@playwright/test",
-        "@playwright/cli",
-        "@axe-core/playwright"
-      ],
-      "gitignore": [
-        "/test-results/",
-        "/playwright-report/",
-        "/.playwright-cli/"
-      ],
+      "devDependencies": ["@playwright/test", "@playwright/cli", "@axe-core/playwright"],
+      "gitignore": ["/test-results/", "/playwright-report/", "/.playwright-cli/"],
       "install": [
         {
           "command": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y",
-          "creates": [
-            ".claude/skills/playwright-cli"
-          ]
+          "creates": [".claude/skills/playwright-cli"]
         }
       ]
     },
@@ -502,18 +409,13 @@
               "description": "turns on the git hooks in .githooks/ (the install runs it)"
             }
           },
-          "devDependencies": [
-            "@commitlint/cli",
-            "@commitlint/config-conventional"
-          ]
+          "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"]
         }
       },
       "install": [
         {
           "command": "mkdir -p .claude/skills/committing-with-commitlint && curl -fLo .claude/skills/committing-with-commitlint/SKILL.md https://raw.githubusercontent.com/conventional-changelog/commitlint/master/skills/committing-with-commitlint/SKILL.md",
-          "creates": [
-            ".claude/skills/committing-with-commitlint"
-          ]
+          "creates": [".claude/skills/committing-with-commitlint"]
         }
       ]
     },
@@ -529,11 +431,7 @@
               "description": "turns on the git hooks in .githooks/ (the install runs it)"
             }
           },
-          "devDependencies": [
-            "lint-staged",
-            "secretlint",
-            "@secretlint/secretlint-rule-preset-recommend"
-          ]
+          "devDependencies": ["lint-staged", "secretlint", "@secretlint/secretlint-rule-preset-recommend"]
         }
       }
     },
@@ -563,21 +461,15 @@
       "install": [
         {
           "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
-          "creates": [
-            ".claude/skills/vercel-react-best-practices"
-          ]
+          "creates": [".claude/skills/vercel-react-best-practices"]
         },
         {
           "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
-          "creates": [
-            ".claude/skills/vercel-composition-patterns"
-          ]
+          "creates": [".claude/skills/vercel-composition-patterns"]
         },
         {
           "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
-          "creates": [
-            ".claude/skills/web-design-guidelines"
-          ]
+          "creates": [".claude/skills/web-design-guidelines"]
         }
       ]
     },
@@ -585,67 +477,46 @@
       "description": "Context7 MCP server, rule and skill for current library docs.",
       "category": "best-practices",
       "recommended": true,
-      "mcp": [
-        "context7"
-      ],
+      "mcp": ["context7"],
       "install": [
         {
           "command": "npx -y ctx7 setup --claude --project --oauth --mcp -y",
-          "creates": [
-            ".claude/rules/context7.md",
-            ".claude/skills/context7-mcp"
-          ]
+          "creates": [".claude/rules/context7.md", ".claude/skills/context7-mcp"]
         }
       ]
     },
     "libraries": {
       "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more).",
       "category": "best-practices",
-      "audit": [
-        ".claude/rules/libraries.md"
-      ],
+      "audit": [".claude/rules/libraries.md"],
       "recommended": true
     },
     "next-docs": {
       "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules, and the Next.js DevTools MCP server (Next.js versions that ship them).",
       "category": "best-practices",
-      "stacks": [
-        "nextjs"
-      ],
+      "stacks": ["nextjs"],
       "auto": true,
       "detect": {
-        "files": [
-          "node_modules/next/dist/docs"
-        ]
+        "files": ["node_modules/next/dist/docs"]
       },
       "mcpServers": {
         "next-devtools": {
           "command": "npx",
-          "args": [
-            "-y",
-            "next-devtools-mcp@latest"
-          ]
+          "args": ["-y", "next-devtools-mcp@latest"]
         }
       }
     },
     "resilience": {
       "description": "A rule for calls to outside services: time limits, retries only where they can help, errors the user can act on, and clearing caches after a write.",
       "category": "best-practices",
-      "audit": [
-        ".claude/rules/external-requests.md"
-      ],
+      "audit": [".claude/rules/external-requests.md"],
       "recommended": true
     },
     "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
       "category": "performance",
-      "stacks": [
-        "js"
-      ],
-      "audit": [
-        ".claude/rules/data-loading.md",
-        ".claude/rules/page-loading.md"
-      ],
+      "stacks": ["js"],
+      "audit": [".claude/rules/data-loading.md", ".claude/rules/page-loading.md"],
       "recommended": true,
       "by": {
         "react": {
@@ -655,20 +526,13 @@
               "description": "builds and fails when the JavaScript loaded first is over its limit (.size-limit.json)"
             }
           },
-          "devDependencies": [
-            "size-limit",
-            "@size-limit/file"
-          ]
+          "devDependencies": ["size-limit", "@size-limit/file"]
         }
       },
       "mcpServers": {
         "chrome-devtools": {
           "command": "npx",
-          "args": [
-            "-y",
-            "chrome-devtools-mcp@latest",
-            "--isolated"
-          ]
+          "args": ["-y", "chrome-devtools-mcp@latest", "--isolated"]
         }
       }
     }
