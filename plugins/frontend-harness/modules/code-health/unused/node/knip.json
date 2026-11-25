@@ -1,0 +1,6 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+  "ignore": [".claude/**", ".venv/**", "node_modules/**", "dist/**"],
+  "ignoreDependencies": ["@commitlint/cli", "lint-staged", "@secretlint/secretlint-rule-preset-recommend"]
+}

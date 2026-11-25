@@ -25,6 +25,11 @@ attempt(() => checkStacks(catalog, stackIds));
 // package.json is needed only on a `js` stack.
 const isJs = (stackId) => catalog.stacks[stackId].language === "js";
 const hasJs = stackIds.some(isJs);
+// The node stack may start without one (loose scripts next to Python): it gets a minimal one.
+if (stackIds.includes("node") && !existsSync("package.json")) {
+  writeJson("package.json", { name: basename(process.cwd()), private: true });
+  console.log("harness: created package.json for the node stack");
+}
 if (hasJs && !existsSync("package.json")) fail("no package.json here; run this in the project folder");
 if (stackIds.some((id) => catalog.stacks[id].language === "python") && !existsSync("pyproject.toml"))
   fail("pyproject.toml is missing; run this in the project folder");

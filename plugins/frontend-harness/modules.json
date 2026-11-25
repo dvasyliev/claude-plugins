@@ -20,6 +20,16 @@
       },
       "linter": "oxlint"
     },
+    "node": {
+      "description": "Node.js (Express, Fastify, scripts)",
+      "language": "js",
+      "excludes": ["react", "nextjs"],
+      "srcDirs": [],
+      "detect": {
+        "files": ["server.js", "server.mjs", "server.ts", "app.js", "app.ts", "src/server.ts", "src/index.ts", "src/index.js"]
+      },
+      "linter": "oxlint"
+    },
     "python": {
       "description": "Python (uv)",
       "language": "python",
@@ -137,6 +147,11 @@
             }
           }
         },
+        "node": {
+          "detect": {
+            "files": ["tsconfig.json"]
+          }
+        },
         "python": {
           "scripts": {
             "basedpyright": {
@@ -226,7 +241,7 @@
     "eslint": {
       "description": "ESLint with type-aware typescript-eslint rules, strict accessibility rules (jsx-a11y), no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
       "category": "linting",
-      "stacks": ["js"],
+      "stacks": ["react", "nextjs"],
       "detect": {
         "devDependencies": ["eslint"]
       },
@@ -458,7 +473,7 @@
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
       "category": "formatting",
-      "stacks": ["js"],
+      "stacks": ["react", "nextjs"],
       "auto": true,
       "detect": {
         "dependencies": ["tailwindcss"],
@@ -524,7 +539,7 @@
     "e2e": {
       "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
       "category": "testing",
-      "stacks": ["js"],
+      "stacks": ["react", "nextjs"],
       "audit": [".claude/rules/tests-e2e.md"],
       "recommended": true,
       "detect": {
@@ -735,7 +750,7 @@
     "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
       "category": "performance",
-      "stacks": ["js"],
+      "stacks": ["react", "nextjs"],
       "audit": [".claude/rules/data-loading.md", ".claude/rules/page-loading.md"],
       "recommended": true,
       "by": {
