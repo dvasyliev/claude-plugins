@@ -40,8 +40,8 @@ Say in one line which required, auto and linter modules go in. Ask about the sug
 
 - Header: the group in a word or two (Shared, JavaScript, Web, Next.js, Node, Python), within the header limit; the question names the group's stacks (its `description`).
 - Options: the group's modules to ask about, in catalog order. Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies.
-- More than 4: split the group over the fewest questions that hold them (5: 3 and 2; 8: 4 and 4), in catalog order, cutting between two categories where the counts allow; each question names the kinds of check in it.
-- Exactly 1: no question of its own. Add it to the question of the nearest group in `groups` order that has fewer than 4 options, and name both groups in that question. With no such question, say whether it goes in (in when suggested) and let the user change that.
+- More than 4: split the group over the fewest questions that hold them (5: 3 and 2; 8: 4 and 4), in catalog order, cutting between two categories where the counts allow; each question names the kinds of check in it, and its header adds a part number (Shared 1/2).
+- Exactly 1: no question of its own. Add it, after any split, to a question with fewer than 4 options: first one of a group of the same language (a Node module goes with JavaScript), else the group before it in `groups` order; name both groups in that question. With no such question, say whether it goes in (in when suggested) and let the user change that.
 - None: no question.
 - Up to 4 questions per call; a second call for the rest.
 
