@@ -1,9 +1,10 @@
 // apply.mjs answers: stacks in place of one framework, and the checks on them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { REACT_PKG, apply, makeProject } from './helpers.mjs';
 
 const harnessJson = (dir) => JSON.parse(readFileSync(join(dir, '.claude/harness.json'), 'utf8'));
@@ -80,4 +81,27 @@ test('size-limit and its file plugin install as one pinned pair, and not again o
   assert.equal(apply(has, answers, { PATH: again.PATH, HARNESS_NO_INSTALL: '' }).status, 0);
   const second = existsSync(again.log) ? readFileSync(again.log, 'utf8') : '';
   assert.doesNotMatch(second, /size-limit/);
+});
+
+test('every npx -y in the catalog and the module files names an exact version', () => {
+  const plugin = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const files = [join(plugin, 'modules.json'), ...readdirSync(join(plugin, 'modules'), { recursive: true, withFileTypes: true })
+    .filter((d) => d.isFile()).map((d) => join(d.parentPath, d.name))];
+  const pinned = /^(@[^/\s]+\/)?[^@\s]+@\d+\.\d+\.\d+$/;
+  let seen = 0;
+  for (const file of files) {
+    const text = readFileSync(file, 'utf8');
+    // `npx -y <pkg>`, `npx -y -p <pkg> -p <pkg>`, and an MCP server's "args": ["-y", "<pkg>"].
+    for (const [, flags] of text.matchAll(/npx -y((?: -p \S+)+| [^\s<"]+)/g)) {
+      for (const pkg of flags.trim().split(/\s+/).filter((w) => w !== '-p')) {
+        seen++;
+        assert.match(pkg, pinned, `${file}: npx -y ${pkg}`);
+      }
+    }
+    for (const [, pkg] of text.matchAll(/\["-y", "([^"]+)"/g)) {
+      seen++;
+      assert.match(pkg, pinned, `${file}: args -y ${pkg}`);
+    }
+  }
+  assert.ok(seen > 10, `only ${seen} npx calls found`);
 });

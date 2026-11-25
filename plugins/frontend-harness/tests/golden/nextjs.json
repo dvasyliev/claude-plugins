@@ -1,5 +1,5 @@
 {
-  ".claude/harness.json": "4ada6299029a11f6216c40dcedf205ae6c21050adde95bc5d777e5db50020ead",
+  ".claude/harness.json": "aec982a2e0683e1b5915dfa2c69d9769bb5cc7e91e616a74140dc388112017c2",
   ".claude/hooks/check-all.sh": "b75b528aed8cbc8bbb1b686d179d4e1d4359f6f191b7e3e6c5c0710122625a72",
   ".claude/hooks/format-lint-file.sh": "aee38a39b951ae4b4fbf12c42c50858899f6a91d9414b52d7b81a4ccde1bc0bd",
   ".claude/hooks/guard-commands.sh": "572ca4e78b4e26814451a9a7c7a88e677601a673578f5299244e5bdd9d148bc5",
@@ -29,7 +29,7 @@
   ".githooks/verify.sh": "251a0d11b25c8e4e9e5c4f54670f4a14edc159d3c0c48127ace1c4ff29f48067",
   ".gitignore": "b3d8953fe005dc7e2a1c16ba5b269c478d996ec4b83ecf911f7d0240a70f882b",
   ".lintstagedrc.json": "7bcb40220ae6e03939dc258237f8f0c755f49cd183439cfefa6adf649de72a4f",
-  ".mcp.json": "632b07ec4042b52143ab70c0e21e4fa4f19881459d29853f69f4220cbdf7da59",
+  ".mcp.json": "d1c84140486aa80d41c0958a1814556ec8d07e62484f722c152f07c96e2d8aa7",
   ".prettierignore": "acc64d294a9c4073f6889690ebcc44c7e1d7dd7856600e5c608c5aaeed6b9b58",
   ".secretlintrc.json": "80198081b4fc35e4d7a4619c1694d83ee5845bf85b0b790990373f4a5b50b9f0",
   "CLAUDE.md": "3c90205f2aa4c08040d18cf907059db16accd203a75471edbffb94ff13738830",

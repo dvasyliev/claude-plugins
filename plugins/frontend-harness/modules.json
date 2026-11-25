@@ -544,7 +544,7 @@
       "gitignore": ["/test-results/", "/playwright-report/", "/.playwright-cli/"],
       "install": [
         {
-          "command": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y",
+          "command": "npx -y skills@1.8.1 add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y",
           "creates": [".claude/skills/playwright-cli"]
         }
       ]
@@ -614,15 +614,15 @@
           ],
           "install": [
             {
-              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
               "creates": [".claude/skills/vercel-react-best-practices"]
             },
             {
-              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
               "creates": [".claude/skills/vercel-composition-patterns"]
             },
             {
-              "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
               "creates": [".claude/skills/web-design-guidelines"]
             }
           ]
@@ -635,15 +635,15 @@
           ],
           "install": [
             {
-              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
               "creates": [".claude/skills/vercel-react-best-practices"]
             },
             {
-              "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
               "creates": [".claude/skills/vercel-composition-patterns"]
             },
             {
-              "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
               "creates": [".claude/skills/web-design-guidelines"]
             }
           ]
@@ -659,27 +659,27 @@
           ],
           "install": [
             {
-              "command": "npx -y skills add wshobson/agents --skill python-anti-patterns -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-anti-patterns -a claude-code --copy -y",
               "creates": [".claude/skills/python-anti-patterns"]
             },
             {
-              "command": "npx -y skills add wshobson/agents --skill python-code-style -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-code-style -a claude-code --copy -y",
               "creates": [".claude/skills/python-code-style"]
             },
             {
-              "command": "npx -y skills add wshobson/agents --skill python-error-handling -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-error-handling -a claude-code --copy -y",
               "creates": [".claude/skills/python-error-handling"]
             },
             {
-              "command": "npx -y skills add wshobson/agents --skill python-project-structure -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-project-structure -a claude-code --copy -y",
               "creates": [".claude/skills/python-project-structure"]
             },
             {
-              "command": "npx -y skills add wshobson/agents --skill python-resilience -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-resilience -a claude-code --copy -y",
               "creates": [".claude/skills/python-resilience"]
             },
             {
-              "command": "npx -y skills add wshobson/agents --skill python-testing-patterns -a claude-code --copy -y",
+              "command": "npx -y skills@1.8.1 add wshobson/agents --skill python-testing-patterns -a claude-code --copy -y",
               "creates": [".claude/skills/python-testing-patterns"]
             }
           ]
@@ -693,7 +693,7 @@
       "mcp": ["context7"],
       "install": [
         {
-          "command": "npx -y ctx7 setup --claude --project --oauth --mcp -y",
+          "command": "npx -y ctx7@0.11.0 setup --claude --project --oauth --mcp -y",
           "creates": [".claude/rules/context7.md", ".claude/skills/context7-mcp"]
         }
       ]
@@ -715,7 +715,7 @@
       "mcpServers": {
         "next-devtools": {
           "command": "npx",
-          "args": ["-y", "next-devtools-mcp@latest"]
+          "args": ["-y", "next-devtools-mcp@0.4.0"]
         }
       }
     },
@@ -752,7 +752,7 @@
       "mcpServers": {
         "chrome-devtools": {
           "command": "npx",
-          "args": ["-y", "chrome-devtools-mcp@latest", "--isolated"]
+          "args": ["-y", "chrome-devtools-mcp@1.12.0", "--isolated"]
         }
       }
     }

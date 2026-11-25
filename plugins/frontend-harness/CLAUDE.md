@@ -54,7 +54,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 
 ## Changing the harness
 
-- New module: an entry in `modules.json` with its `category`, its files in `modules/<category>/<module>/`. A module whose rules or skills apply to the app's code lists them in `audit`. Another repo's skill installs with `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`); a tool with its own setup (like `npx ctx7 setup`) installs with that command, with what it writes in `creates`.
+- New module: an entry in `modules.json` with its `category`, its files in `modules/<category>/<module>/`. A module whose rules or skills apply to the app's code lists them in `audit`. Another repo's skill installs with `npx -y skills@<version> add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`); a tool with its own setup (like `npx -y ctx7@<version> setup`) installs with that command, with what it writes in `creates`.
 - New stack (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `stacks`, and a `<stack>/` version of each per-stack file next to the module's `all/`.
 - How to ask questions is written twice, since project files cannot read the plugin's: `references/questions.md` for the plugin's skills and the "Questions" section of the `feature-workflow` rule for projects. Change both together.
 - Renamed module: an entry in `renamed`, which `apply.mjs` applies. Removed module: a line in the skill's step 1 telling it what to put in its place for projects that still list it.
