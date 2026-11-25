@@ -3,7 +3,8 @@
 [![CI](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> frontend-harness is now codebase-harness: [how to move](plugins/codebase-harness/README.md#moving-from-frontend-harness).
+> [!IMPORTANT]
+> ⚠️ **Using frontend-harness?** It is the previous version of codebase-harness. See the [migration from frontend-harness](plugins/codebase-harness/README.md#migration-from-frontend-harness).
 
 My [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugins, in one marketplace, `dvasyliev`.
 

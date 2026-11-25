@@ -12,6 +12,7 @@ codebase-harness makes Claude check its own work. After every change, it checks 
 
 ## Table of Contents
 
+- ⚠️ [Migration from frontend-harness](#migration-from-frontend-harness)
 - [The problems it solves](#the-problems-it-solves)
 - [Use cases](#use-cases)
 - [Install](#install)
@@ -19,10 +20,23 @@ codebase-harness makes Claude check its own work. After every change, it checks 
 - [Commands](#commands)
 - [Stacks](#stacks)
 - [Modules](#modules)
-- [Moving from frontend-harness](#moving-from-frontend-harness)
 - [My Educational Courses](#my-educational-courses)
 - [Contributing](#contributing)
 - [License](#license)
+
+## Migration from frontend-harness
+
+> [!IMPORTANT]
+> **frontend-harness is the previous version of this plugin,** from before it supported Python and Node. It is now codebase-harness, in the marketplace `dvasyliev`. If you use frontend-harness, run these, in order (`<scope>` is the scope the plugin is installed in: `user`, `project` or `local`):
+>
+> ```bash
+> claude plugin uninstall frontend-harness@frontend-harness --scope <scope>
+> claude plugin marketplace remove frontend-harness
+> claude plugin marketplace add dvasyliev/claude-plugins
+> claude plugin install codebase-harness@dvasyliev --scope <scope>
+> ```
+>
+> Then, in `~/.claude/settings.json` and in the project's `.claude/settings.json`, replace the `enabledPlugins` key `frontend-harness@frontend-harness` with `codebase-harness@dvasyliev` (keep its `true` or `false` value). Last, run `/reload-plugins`, then `/codebase-harness:update`. The harness files already in the project stay and keep working.
 
 ## The problems it solves
 
@@ -145,19 +159,6 @@ Pick only what you need. `core`, `types` and `prettier` are always on (`prettier
 | `next-docs` | Gives Claude the docs of your exact Next.js version. |
 | `resilience` | Calls to other services get time limits and safe retries, failures show an error you can act on, and a change clears old cached data. |
 | `page-speed` | React and Next.js: rules for fast pages, a browser tool to measure them, and a size limit for your code bundle (React). |
-
-## Moving from frontend-harness
-
-frontend-harness is now codebase-harness. It is in the marketplace `dvasyliev` and supports React, Next.js, Python and Node. If you use frontend-harness, run these, in order (`<scope>` is the scope the plugin is installed in: `user`, `project` or `local`):
-
-```bash
-claude plugin uninstall frontend-harness@frontend-harness --scope <scope>
-claude plugin marketplace remove frontend-harness
-claude plugin marketplace add dvasyliev/claude-plugins
-claude plugin install codebase-harness@dvasyliev --scope <scope>
-```
-
-Then, in `~/.claude/settings.json` and in the project's `.claude/settings.json`, replace the `enabledPlugins` key `frontend-harness@frontend-harness` with `codebase-harness@dvasyliev` (keep its `true` or `false` value). Last, run `/reload-plugins`, then `/codebase-harness:update`. The harness files already in the project stay and keep working.
 
 <!-- COURSES:START -->
 ## My Educational Courses
