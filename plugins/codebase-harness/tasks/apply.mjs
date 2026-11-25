@@ -27,14 +27,15 @@ attempt(() => checkStacks(catalog, stackIds));
 // package.json is needed only on a `js` stack.
 const isJs = (stackId) => catalog.stacks[stackId].language === "js";
 const hasJs = stackIds.some(isJs);
+// Checked before anything is written, so a failed run leaves the folder as it was.
+if (stackIds.some((id) => catalog.stacks[id].language === "python") && !existsSync("pyproject.toml"))
+  fail("pyproject.toml is missing; run this in the project folder");
 // The node stack may start without one (loose scripts next to Python): it gets a minimal one.
 if (stackIds.includes("node") && !existsSync("package.json")) {
   writeJson("package.json", { name: basename(process.cwd()), private: true });
   console.log("harness: created package.json for the node stack");
 }
 if (hasJs && !existsSync("package.json")) fail("no package.json here; run this in the project folder");
-if (stackIds.some((id) => catalog.stacks[id].language === "python") && !existsSync("pyproject.toml"))
-  fail("pyproject.toml is missing; run this in the project folder");
 const pkg = readJson("package.json", {});
 // Each chosen stack's source folders: the answer, else the stack's own.
 const srcDirs = Object.fromEntries(stackIds.map((id) => [id, answers.srcDirs[id] ?? catalog.stacks[id].srcDirs]));

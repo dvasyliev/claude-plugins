@@ -119,3 +119,11 @@ test('node ignores node_modules, once', () => {
   assert.equal(apply(has, { stacks: ['node'], modules: ['core', 'oxlint'] }).status, 0);
   assert.equal(read(has, '.gitignore'), 'node_modules/\n');
 });
+
+test('node with Python and no pyproject.toml fails before it writes package.json', () => {
+  const dir = makeProject({ 'scripts/a.mjs': '' });
+  const r = apply(dir, ANSWERS);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /pyproject\.toml is missing/);
+  assert.equal(existsSync(join(dir, 'package.json')), false);
+});
