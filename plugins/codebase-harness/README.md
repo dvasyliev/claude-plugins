@@ -20,9 +20,9 @@ codebase-harness makes Claude check its own work. After every change, it checks 
 - [Commands](#commands)
 - [Stacks](#stacks)
 - [Modules](#modules)
-- [My Educational Courses](#my-educational-courses)
 - [Contributing](#contributing)
 - [License](#license)
+- [My Educational Courses](#my-educational-courses)
 
 ## Migration from frontend-harness
 
@@ -200,6 +200,16 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 | `pytest` | Runs unit tests (pytest), with coverage and mocked HTTP. | Recommended |
 | `python-practices` | Gives Claude guides for Python: patterns to avoid, code style, errors, project structure, retries and tests. Calls to other services get time limits, and retries only inside a service's client. | Recommended |
 
+## Contributing
+
+Have a question, found a bug or have an idea? [Open an issue](https://github.com/dvasyliev/claude-plugins/issues). Pull requests are welcome.
+
+After you clone the repo, run `pnpm install` once. It turns on git checks for your commits. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org), for example `fix(codebase-harness): ...`. Versions and the changelog are made from these messages, so do not change them by hand. Commit rules: [CLAUDE.md](../../CLAUDE.md). How the plugin is built: [plugin's CLAUDE.md](CLAUDE.md).
+
+## License
+
+[MIT](../../LICENSE) © Dmytro Vasyliev
+
 <!-- COURSES:START -->
 ## My Educational Courses
 
@@ -234,13 +244,3 @@ I teach developers what I use in production: practical, project-based courses on
 
 [See more courses →](https://www.dvasyliev.com/courses)
 <!-- COURSES:END -->
-
-## Contributing
-
-Have a question, found a bug or have an idea? [Open an issue](https://github.com/dvasyliev/claude-plugins/issues). Pull requests are welcome.
-
-After you clone the repo, run `pnpm install` once. It turns on git checks for your commits. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org), for example `fix(codebase-harness): ...`. Versions and the changelog are made from these messages, so do not change them by hand. Commit rules: [CLAUDE.md](../../CLAUDE.md). How the plugin is built: [plugin's CLAUDE.md](CLAUDE.md).
-
-## License
-
-[MIT](../../LICENSE) © Dmytro Vasyliev

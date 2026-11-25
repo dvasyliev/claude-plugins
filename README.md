@@ -22,6 +22,14 @@ claude plugin marketplace add dvasyliev/claude-plugins
 
 Then install a plugin from the table, as its README says.
 
+## Contributing
+
+Have a question, found a bug or have an idea? [Open an issue](https://github.com/dvasyliev/claude-plugins/issues). Pull requests are welcome. Commit rules and how plugins are added: [CLAUDE.md](CLAUDE.md).
+
+## License
+
+[MIT](LICENSE) © Dmytro Vasyliev
+
 <!-- COURSES:START -->
 ## My Educational Courses
 
@@ -56,11 +64,3 @@ I teach developers what I use in production: practical, project-based courses on
 
 [See more courses →](https://www.dvasyliev.com/courses)
 <!-- COURSES:END -->
-
-## Contributing
-
-Have a question, found a bug or have an idea? [Open an issue](https://github.com/dvasyliev/claude-plugins/issues). Pull requests are welcome. Commit rules and how plugins are added: [CLAUDE.md](CLAUDE.md).
-
-## License
-
-[MIT](LICENSE) © Dmytro Vasyliev
