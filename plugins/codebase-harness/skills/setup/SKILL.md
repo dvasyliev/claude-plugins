@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Use when the user wants to set up the frontend harness (Claude Code hooks, rules, skills, checks, git hooks) in a React (Vite), Next.js or other project, add, remove or change its modules or checks, or move a harness fix into the plugin.
+description: Use when the user wants to set up the codebase harness (Claude Code hooks, rules, skills, checks, git hooks) in a React (Vite), Next.js, Node or Python project, or one that mixes them, add, remove or change its stacks, modules or checks, or move a harness fix into the plugin.
 ---
 
 # Set up the harness

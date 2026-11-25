@@ -1,6 +1,6 @@
 ---
 name: update
-description: Use when the user wants to update the frontend harness in this project to the plugin's current version.
+description: Use when the user wants to update the codebase harness in this project to the plugin's current version.
 ---
 
 # Update the harness
