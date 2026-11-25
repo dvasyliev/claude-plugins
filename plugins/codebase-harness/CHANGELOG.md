@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.0 (2026-11-25)
+
+### Features
+
+- one module per tool, grouped by stack (9a618ec)
+
+### Fixes
+
+- file-size is required on python (543b06f)
+
+### Other
+
+- clearer setup question folding; update skips renamed modules (1e9ed47)
+- setup asks by stack; docs list modules by stack (6feac50)
+- renamed names resolve to modules; migration keeps the python checks (691bfe4)
+
 ## 1.0.1 (2026-11-25)
 
 ### Other
