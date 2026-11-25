@@ -118,3 +118,18 @@ test('the old frontend-harness .gitignore header is replaced in place by the new
   assert.ok(!text.includes('frontend-harness'));
   assert.equal(text.split('/test-results/').length, 2);
 });
+
+test('a project script under another extension is not the harness file; a config under another extension is', () => {
+  const dir = makeProject({
+    'pyproject.toml': '[project]\nname = "app"\nversion = "0.1.0"\n',
+    '.claude/hooks/check-all.py': 'print("project hook")\n',
+    'commitlint.config.js': 'module.exports = {};\n',
+  });
+  const r = apply(dir, { stacks: ['python'], modules: ['core', 'ruff', 'commitlint'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(existsSync(join(dir, '.claude/hooks/check-all.sh')));
+  assert.equal(readFileSync(join(dir, '.claude/hooks/check-all.py'), 'utf8'), 'print("project hook")\n');
+  assert.doesNotMatch(r.stdout, /check-all/);
+  assert.equal(existsSync(join(dir, 'commitlint.config.mjs')), false);
+  assert.match(r.stdout, /commitlint\.config\.mjs: the project has it as commitlint\.config\.js/);
+});

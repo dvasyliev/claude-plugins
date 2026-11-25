@@ -228,11 +228,13 @@ const write = (path, text) => {
   writeFileSync(path, text);
 };
 const tmp = mkdtempSync(join(tmpdir(), "harness-"));
-// The same file under another extension (eslint.config.js for eslint.config.mjs): its tool reads only one.
+// The same config under another extension (eslint.config.js for eslint.config.mjs, .prettierrc for .prettierrc.json):
+// its tool reads only one. A script under another extension (a project's check-all.py next to check-all.sh) is another file.
 const stem = (name) => (name.lastIndexOf(".") > 0 ? name.slice(0, name.lastIndexOf(".")) : name);
+const configFormat = (name) => stem(name) === name || /\.(js|mjs|cjs|ts|mts|cts|json|jsonc|json5|yaml|yml|toml|ini)$/.test(name);
 const sibling = (path) =>
-  stem(basename(path)) !== basename(path) && existsSync(dirname(path))
-    ? readdirSync(dirname(path)).find((f) => f !== basename(path) && stem(f) === stem(basename(path)))
+  stem(basename(path)) !== basename(path) && configFormat(basename(path)) && existsSync(dirname(path))
+    ? readdirSync(dirname(path)).find((f) => f !== basename(path) && stem(f) === stem(basename(path)) && configFormat(f))
     : undefined;
 for (const [path, source] of Object.entries(files)) {
   const next = source ? readFileSync(source, "utf8") : librariesRule();
