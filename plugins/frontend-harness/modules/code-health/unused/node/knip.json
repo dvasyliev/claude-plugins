@@ -1,0 +1,7 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["**/*.{js,mjs,cjs,ts,mts,cts}", "!**/*.config.*", "!{.venv,dist,build,coverage}/**"],
+  "includeEntryExports": true,
+  "ignoreDependencies": ["@commitlint/cli", "lint-staged", "@secretlint/secretlint-rule-preset-recommend"],
+  "ignore": [".claude/**"]
+}

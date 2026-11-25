@@ -101,3 +101,12 @@ test('unit brings the React test packages to React and Next.js only', async () =
   assert.deepEqual(devDeps('node'), ['vitest']);
   for (const stack of ['react', 'nextjs']) assert.deepEqual(devDeps(stack), ['vitest', 'jsdom', '@vitejs/plugin-react', '@testing-library/react', '@testing-library/dom']);
 });
+
+test('knip on node takes every JS file as an entry, so loose scripts are not unused files', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT, 'scripts/a.mjs': '' });
+  assert.equal(apply(dir, { ...ANSWERS, modules: [...ANSWERS.modules, 'unused'] }).status, 0);
+  const knip = JSON.parse(read(dir, 'knip.json'));
+  assert.equal(knip.entry[0], '**/*.{js,mjs,cjs,ts,mts,cts}');
+  assert.equal(knip.includeEntryExports, true);
+  assert.equal(knip.ignoreDependencies.includes('@testing-library/react'), false);
+});
