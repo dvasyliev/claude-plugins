@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 (2026-11-25)
+
+### Other
+
+- highlight the migration from frontend-harness (6d19b53)
+
 ## 1.0.0 (2026-11-25)
 
 ### Features
