@@ -101,6 +101,13 @@ test('settings in pyproject.toml that a harness file now overrides are reported'
   assert.match(r.stdout, /\[tool\.basedpyright\].*pyrightconfig\.json/);
 });
 
+test('coverage settings in pyproject.toml that .coveragerc now overrides are reported', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT + '\n[tool.coverage.report]\nfail_under = 50\n' });
+  const r = apply(dir, { ...PY_ANSWERS, modules: [...PY_ANSWERS.modules, 'unit'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /\[tool\.coverage\].*\.coveragerc/);
+});
+
 test('python needs a pyproject.toml in the folder', () => {
   const dir = makeProject({ 'README.md': '' });
   const r = apply(dir, PY_ANSWERS);

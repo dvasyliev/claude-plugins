@@ -419,7 +419,7 @@ try {
 // A tool reads its own file before pyproject.toml, so the settings the project has there stop counting.
 if (stackIds.some((id) => catalog.stacks[id].language === "python")) {
   const pyproject = readFileSync("pyproject.toml", "utf8");
-  const tables = [["ruff", "ruff.toml"], ["pytest.ini_options", "pytest.ini"], ["pyright", "pyrightconfig.json"], ["basedpyright", "pyrightconfig.json"]];
+  const tables = [["ruff", "ruff.toml"], ["pytest.ini_options", "pytest.ini"], ["pyright", "pyrightconfig.json"], ["basedpyright", "pyrightconfig.json"], ["coverage", ".coveragerc"]];
   for (const [table, file] of tables)
     if (paths.includes(file) && new RegExp(`^\\[tool\\.${table.replace(".", "\\.")}[\\].]`, "m").test(pyproject))
       notes.push(`pyproject.toml has [tool.${table}]; ${file} now wins, so move its settings there`);
