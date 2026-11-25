@@ -503,13 +503,13 @@
               "script": "test"
             }
           ],
-          "devDependencies": [
-            "vitest",
-            "jsdom",
-            "@vitejs/plugin-react",
-            "@testing-library/react",
-            "@testing-library/dom"
-          ]
+          "devDependencies": ["vitest"]
+        },
+        "react": {
+          "devDependencies": ["jsdom", "@vitejs/plugin-react", "@testing-library/react", "@testing-library/dom"]
+        },
+        "nextjs": {
+          "devDependencies": ["jsdom", "@vitejs/plugin-react", "@testing-library/react", "@testing-library/dom"]
         },
         "python": {
           "scripts": {

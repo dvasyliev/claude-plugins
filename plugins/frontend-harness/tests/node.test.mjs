@@ -93,3 +93,11 @@ test('node gets its resilience and unit test rules and the wshobson skills', () 
   for (const skill of ['nodejs-backend-patterns', 'modern-javascript-patterns', 'javascript-testing-patterns']) assert.ok(paths.includes(`.claude/skills/${skill}`), skill);
   assert.equal(paths.some((p) => p.includes('vercel') || p.includes('python-')), false);
 });
+
+test('unit brings the React test packages to React and Next.js only', async () => {
+  const { effective } = await import('../tasks/lib/stacks.mjs');
+  const catalog = JSON.parse(readFileSync(new URL('../modules.json', import.meta.url), 'utf8'));
+  const devDeps = (stack) => effective(catalog.modules.unit, stack, catalog, {}).devDependencies;
+  assert.deepEqual(devDeps('node'), ['vitest']);
+  for (const stack of ['react', 'nextjs']) assert.deepEqual(devDeps(stack), ['vitest', 'jsdom', '@vitejs/plugin-react', '@testing-library/react', '@testing-library/dom']);
+});
