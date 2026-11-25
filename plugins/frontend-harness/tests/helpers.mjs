@@ -18,8 +18,15 @@ const COMMON = ['core', 'feature-workflow', 'LINTER', 'knip', 'jscpd', 'tailwind
 export const ALL_REACT = COMMON.map((m) => (m === 'LINTER' ? 'oxlint' : m));
 export const ALL_NEXT = COMMON.map((m) => (m === 'LINTER' ? 'eslint' : m));
 
+// The environment for child processes: without GIT_* variables (GIT_INDEX_FILE, GIT_DIR ...) that a
+// running git hook sets, so the commands here never touch the repository that runs the tests.
+function cleanEnv(extra = {}) {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+  return { ...env, ...extra };
+}
+
 function git(dir, ...args) {
-  const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+  const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8', env: cleanEnv() });
   assert.equal(r.status, 0, `git ${args.join(' ')}: ${r.stderr}`);
 }
 
@@ -41,7 +48,7 @@ export function apply(dir, answers, env = {}) {
   const r = spawnSync('node', [APPLY, JSON.stringify(answers)], {
     cwd: dir,
     encoding: 'utf8',
-    env: { ...process.env, HARNESS_NO_INSTALL: '1', ...env },
+    env: cleanEnv({ HARNESS_NO_INSTALL: '1', ...env }),
   });
   return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
