@@ -5,6 +5,7 @@ import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, statSync
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renameModules } from '../tasks/lib/stacks.mjs';
 import { REACT_PKG, apply, makeProject } from './helpers.mjs';
 
 const harnessJson = (dir) => JSON.parse(readFileSync(join(dir, '.claude/harness.json'), 'utf8'));
@@ -59,7 +60,7 @@ test('a react + python project with the old modules updates to the new ones that
   const old = {
     stacks: ['react', 'python'],
     srcDirs: { python: ['app'] },
-    modules: ['core', 'oxlint', 'ruff', 'types', 'unused', 'unit', 'best-practices', 'resilience', 'e2e'],
+    modules: ['core', 'oxlint', 'ruff', 'types', 'unused', 'unit', 'best-practices', 'resilience', 'e2e', 'imports'],
   };
   const dir = makeProject({
     'package.json': REACT_PKG,
@@ -69,8 +70,23 @@ test('a react + python project with the old modules updates to the new ones that
   assert.equal(apply(dir, {}).status, 0);
   const json = harnessJson(dir);
   const expected = ['core', 'oxlint', 'ruff', 'file-size', 'prettier', 'tsc', 'basedpyright', 'knip', 'vulture', 'deptry', 'vitest', 'pytest',
-    'react-practices', 'python-practices', 'playwright'];
+    'react-practices', 'python-practices', 'playwright', 'import-linter'];
   assert.deepEqual([...json.modules].sort(), [...expected].sort());
+  // The same checks and commands the old combined modules gave, the Python ones on the Python folders only.
+  const commands = Object.fromEntries(json.checks.map((c) => [c.name, c.command]));
+  assert.deepEqual(
+    {
+      types: commands.types, knip: commands.knip, test: commands.test,
+      basedpyright: commands.basedpyright, vulture: commands.vulture, deptry: commands.deptry,
+      imports: commands.imports, pytest: commands.pytest, 'file-size': commands['file-size'],
+    },
+    {
+      types: 'npm run -s typecheck', knip: 'npm run -s knip', test: 'npm run -s test',
+      basedpyright: 'uv run basedpyright', vulture: 'uv run vulture app --min-confidence 80',
+      deptry: 'uv run deptry . --experimental-namespace-package', imports: 'uv run lint-imports',
+      pytest: 'uv run pytest || [ $? -eq 5 ]', 'file-size': 'bash .claude/checks/file-size.sh app',
+    },
+  );
   const files = (d) => Object.fromEntries(readdirSync(d, { recursive: true, withFileTypes: true })
     .filter((e) => e.isFile() && !e.parentPath.includes('.git/') && !e.parentPath.endsWith('.git'))
     .map((e) => [join(e.parentPath, e.name), readFileSync(join(e.parentPath, e.name), 'utf8')]));
@@ -114,6 +130,15 @@ test('every module is in a group, its files are in modules/<group>/<module>/, an
   }
   for (const [old, next] of Object.entries(catalog.renamed))
     for (const id of [next].flat()) assert.ok(id in catalog.modules || id in catalog.renamed, `${old} -> ${id}`);
+});
+
+test('no renamed name is also a module, and every renamed name resolves to modules only', () => {
+  const plugin = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const catalog = JSON.parse(readFileSync(join(plugin, 'modules.json'), 'utf8'));
+  for (const old of Object.keys(catalog.renamed)) {
+    assert.ok(!(old in catalog.modules), `${old} is renamed and a module`);
+    for (const id of renameModules([old], catalog.renamed)) assert.ok(id in catalog.modules, `${old} -> ${id}`);
+  }
 });
 
 // A fake `npm` on PATH logs its arguments instead of installing.
