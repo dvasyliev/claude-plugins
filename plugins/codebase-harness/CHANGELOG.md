@@ -6,6 +6,7 @@
 
 - frontend-harness is now codebase-harness, in the dvasyliev marketplace
 - the python and node stacks, and several stacks in one project
+- dupes checks only JavaScript, TypeScript and Python files
 
 ## 0.45.0 (2026-11-23)
 
