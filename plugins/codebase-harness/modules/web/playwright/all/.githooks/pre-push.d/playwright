@@ -15,7 +15,14 @@ if [ -n "$green" ] && [ -n "$refs" ]; then
 	while read -r _ sha _ _; do
 		# A deleted branch pushes no code.
 		[ "$sha" = 0000000000000000000000000000000000000000 ] && continue
-		[ "$(git rev-parse "$sha^{tree}" 2>/dev/null)" = "$green" ] || same=false
+		[ "$(git rev-parse "$sha^{tree}" 2>/dev/null)" = "$green" ] && continue
+		# With `releases`: a release commit only raises the version and adds to the
+		# changelog, so it counts as green when its parent holds the code that passed.
+		if git log -1 --format=%s "$sha" 2>/dev/null | grep -Eq '^chore(\(.*\))?: release v[0-9]' &&
+			[ "$(git rev-parse "$sha^^{tree}" 2>/dev/null)" = "$green" ]; then
+			continue
+		fi
+		same=false
 	done <<EOT
 $refs
 EOT

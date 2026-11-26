@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { apply, cleanEnv, makeProject } from './helpers.mjs';
@@ -122,4 +122,31 @@ test('an unedited old pre-push is replaced by the dispatcher', () => {
   assert.equal(r.status, 0, r.stderr);
   const dispatcher = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'modules', 'web', 'playwright', 'all', '.githooks', 'pre-push'), 'utf8');
   assert.equal(readFileSync(hook, 'utf8'), dispatcher);
+});
+
+test('a release commit on top of the code that passed skips the tests; other changed code runs them', () => {
+  const dir = setup();
+  const git = (...args) => {
+    const r = spawnSync('git', ['-c', 'user.name=test', '-c', 'user.email=test@example.com', ...args], { cwd: dir, encoding: 'utf8', env: cleanEnv() });
+    assert.equal(r.status, 0, r.stderr);
+    return r.stdout.trim();
+  };
+  const commit = (subject) => {
+    writeFileSync(join(dir, 'CHANGELOG.md'), `${subject}\n`);
+    git('add', 'CHANGELOG.md');
+    git('commit', '-q', '--no-verify', '-m', subject);
+    return git('rev-parse', 'HEAD');
+  };
+  const pushSha = (sha) => {
+    rmSync(join(dir, 'verify.log'), { force: true });
+    const r = spawnSync('sh', ['.githooks/pre-push', 'origin', 'url'], { cwd: dir, input: `refs/heads/main ${sha} refs/heads/main ${'0'.repeat(40)}\n`, encoding: 'utf8', env: cleanEnv() });
+    assert.equal(r.status, 0, r.stderr);
+    return existsSync(join(dir, 'verify.log'));
+  };
+  git('add', '-A');
+  git('commit', '-q', '--no-verify', '-m', 'feat: app');
+  writeFileSync(join(git('rev-parse', '--git-dir').replace(/^(?!\/)/, `${dir}/`), 'e2e-green'), git('rev-parse', 'HEAD^{tree}') + '\n');
+  assert.equal(pushSha(commit('chore: release v1.1.0')), false);
+  assert.equal(pushSha(commit('chore(app): release v1.1.1')), true, 'its parent is not the code that passed');
+  assert.equal(pushSha(commit('fix: other')), true);
 });
