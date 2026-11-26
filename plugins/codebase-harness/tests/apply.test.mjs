@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renameModules } from '../tasks/lib/stacks.mjs';
 import { REACT_PKG, apply, makeProject } from './helpers.mjs';
@@ -274,4 +274,43 @@ test('ci writes the workflow; dependency-updates lists only the package managers
   r = apply(python, { modules: ['core', 'ruff'] });
   assert.equal(r.status, 0, r.stderr);
   assert.ok(!existsSync(join(python, '.github')), 'the file and its folders go with the module');
+});
+
+test('modules that bring the same path must bring the same text', () => {
+  const plugin = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const modules = join(plugin, 'modules');
+  const catalog = JSON.parse(readFileSync(join(plugin, 'modules.json'), 'utf8'));
+  // The stacks a module applies to (its own `stacks` may name languages), and whether two modules can be in one project:
+  // some stack of each, the same or two that do not exclude each other.
+  const stacksOf = (id) => {
+    const m = catalog.modules[id];
+    const names = m.stacks ?? catalog.groups[m.group].stacks ?? Object.keys(catalog.stacks);
+    return Object.keys(catalog.stacks).filter((s) => names.includes(s) || names.includes(catalog.stacks[s].language));
+  };
+  const excludes = (a, b) => catalog.stacks[a].excludes?.includes(b) || catalog.stacks[b].excludes?.includes(a);
+  const together = (a, b) => stacksOf(a).some((x) => stacksOf(b).some((y) => !excludes(x, y)));
+  const sources = {};
+  for (const group of readdirSync(modules)) {
+    for (const id of readdirSync(join(modules, group))) {
+      const root = join(modules, group, id);
+      for (const d of readdirSync(root, { recursive: true, withFileTypes: true })) {
+        if (!d.isFile() || d.name === '.DS_Store') continue;
+        const file = join(d.parentPath, d.name);
+        const [folder, ...rest] = relative(root, file).split(sep);
+        // Only <module>/all|<language>|<stack>/ folders bring project files.
+        if (!['all', 'js', 'python', 'react', 'nextjs', 'node'].includes(folder)) continue;
+        ((sources[rest.join('/')] ??= {})[id] ??= []).push(file);
+      }
+    }
+  }
+  for (const [path, byModule] of Object.entries(sources)) {
+    const ids = Object.keys(byModule);
+    for (const [i, a] of ids.entries()) {
+      for (const b of ids.slice(i + 1)) {
+        if (!together(a, b)) continue;
+        const texts = new Set([...byModule[a], ...byModule[b]].map((f) => readFileSync(f, 'utf8')));
+        assert.equal(texts.size, 1, `${path} comes from both ${a} and ${b} with different text`);
+      }
+    }
+  }
 });

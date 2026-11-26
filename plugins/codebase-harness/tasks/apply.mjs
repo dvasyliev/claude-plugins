@@ -134,8 +134,9 @@ function unmerge(target, added, keep = {}) {
 }
 
 // Files: modules/<group>/<module>/all/, <language>/ and <stack>/ for each stack the module applies to, each written at
-// the same path in the project; a later folder replaces the same path. Two stacks give one path only with the same text.
+// the same path in the project; a later folder replaces the same path. Two stacks, or two modules, give one path only with the same text.
 const files = {};
+const owner = {};
 for (const [id, m] of modules) {
   const from = {};
   for (const stackId of stacksOf[id]) {
@@ -149,7 +150,9 @@ for (const [id, m] of modules) {
     }
     for (const [path, source] of Object.entries(mine)) {
       if (path in from && readFileSync(files[path], "utf8") !== readFileSync(source, "utf8")) fail(`${path} comes from both ${from[path]} and ${stackId}`);
+      if (path in owner && owner[path] !== id && readFileSync(files[path], "utf8") !== readFileSync(source, "utf8")) fail(`${path} comes from both ${owner[path]} and ${id}`);
       from[path] ??= stackId;
+      owner[path] ??= id;
       files[path] = source;
     }
   }
