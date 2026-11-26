@@ -1,5 +1,5 @@
 {
-  ".claude/harness.json": "57ea416a163f32a31239dbf7b5d9f2de1b7b9858c6841b581c340aac999fdf97",
+  ".claude/harness.json": "bf1924e0bdc50f2089464a513bfb68ecb7a96043e6241ee16d4be3d51f87c8d7",
   ".claude/hooks/check-all.sh": "8b2f589ce2f155d2283ab6836c95f04d74a9b437c52dc4e78ae086f35efacb9f",
   ".claude/hooks/format-lint-file.sh": "38a50babced455a4ef4e0e0978358baec3376f3e62989db42d5ba17accef7eb2",
   ".claude/hooks/guard.sh": "66ef8afc394336ae8b87b17498ef9fc37424d83cc04b1efc1db08209595ada16",
@@ -24,7 +24,8 @@
   ".githooks/post-checkout": "09378704f0f0dc9b6f4d39b124ea886aebec604ccfd0f6e52ae253b6f15f94c0",
   ".githooks/post-merge": "89f116ed006bb133555af93523d9b5ec73c1f3905e92824492ed10b2097d116c",
   ".githooks/pre-commit": "1eeed37f200a8e5b157134c343774fe96530ff0bf7801c81020ed6332432ef1f",
-  ".githooks/pre-push": "596e9f41c6ac3b7b72a42931546fda942efe20075bab0870b1d499a95390645c",
+  ".githooks/pre-push": "2624d8fcd8f122bc2377222120826ce76531fde7330447a0af4f649ad8ce50db",
+  ".githooks/pre-push.d/playwright": "c6dea5edc343e7096a11d761b73e92384f6d0e5de02d7e82c28f156c0b2ed67e",
   ".githooks/run-script.sh": "fc0f1db716cca8fee555a62088fc1320a531c04a734c6d992a32b1d6813a3536",
   ".githooks/verify.sh": "251a0d11b25c8e4e9e5c4f54670f4a14edc159d3c0c48127ace1c4ff29f48067",
   ".github/dependabot.yml": "e40990d114f0569d07c07f29d5f2aee1497ec6a8cd6e595ac06bfa9e4512d43c",
