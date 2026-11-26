@@ -19,7 +19,7 @@ function repo(files, { tag, commits = [] } = {}) {
     writeFileSync(join(bin, name), `#!/bin/sh\necho "${name} $*" >> "${bin}/${name}.log"\n${body}`);
     chmodSync(join(bin, name), 0o755);
   };
-  fake('uv', `if [ "$1" = version ]; then sed -i.bak "s/^version = .*/version = \\"$2\\"/" pyproject.toml && rm pyproject.toml.bak; fi\n`);
+  fake('uv', `if [ "$1" = --version ]; then echo 'uv 0.7.0'; fi\nif [ "$1" = version ]; then sed -i.bak "s/^version = .*/version = \\"$2\\"/" pyproject.toml && rm pyproject.toml.bak; fi\n`);
   fake('pnpm', '');
   const env = cleanEnv({ PATH: `${bin}:${process.env.PATH}` });
   const git = (...args) => {
@@ -139,4 +139,41 @@ test('a package.json without version next to pyproject.toml is skipped', () => {
   assert.equal(r.run().stdout, 'released v0.2.1');
   assert.equal(r.read('package.json'), pkg());
   assert.match(r.read('pyproject.toml'), /version = "0\.2\.1"/);
+});
+
+test('unrelated staged and unstaged files stay out of the release commit', () => {
+  const r = repo({ 'package.json': pkg('1.0.0'), 'a.txt': 'a\n', 'b.txt': 'b\n' }, { tag: 'v1.0.0', commits: [['fix: a']] });
+  writeFileSync(join(r.dir, 'a.txt'), 'changed\n');
+  writeFileSync(join(r.dir, 'b.txt'), 'changed\n');
+  r.git('add', 'a.txt');
+  assert.equal(r.run().stdout, 'released v1.0.1');
+  assert.equal(r.git('show', '--name-only', '--format=', 'HEAD').split('\n').sort().join(), 'CHANGELOG.md,package.json');
+  assert.equal(r.git('status', '--porcelain'), 'M  a.txt\n M b.txt');
+});
+
+test('a dirty file the release touches stops it and changes nothing', () => {
+  for (const file of ['package.json', 'CHANGELOG.md']) {
+    const r = repo({ 'package.json': pkg('1.0.0'), 'CHANGELOG.md': '# Changelog\n\n' }, { tag: 'v1.0.0', commits: [['fix: a']] });
+    writeFileSync(join(r.dir, file), r.read(file) + '\n');
+    const head = r.git('rev-parse', 'HEAD');
+    const out = r.run();
+    assert.equal(out.status, 1);
+    assert.equal(out.stderr, `release: ${file} has uncommitted changes; commit or stash them first`);
+    assert.equal(r.git('rev-parse', 'HEAD'), head);
+    assert.equal(r.git('tag', '--list'), 'v1.0.0');
+    assert.equal(r.git('status', '--porcelain'), `M ${file}`);
+  }
+});
+
+test('a commit hook that rejects the release gives a release message and exit 1', () => {
+  const r = repo({ 'package.json': pkg('1.0.0') }, { tag: 'v1.0.0', commits: [['fix: a']] });
+  mkdirSync(join(r.dir, '.hooks'));
+  writeFileSync(join(r.dir, '.hooks', 'pre-commit'), '#!/bin/sh\nexit 1\n');
+  chmodSync(join(r.dir, '.hooks', 'pre-commit'), 0o755);
+  r.git('config', 'core.hooksPath', join(r.dir, '.hooks'));
+  const out = r.run();
+  assert.equal(out.status, 1);
+  assert.match(out.stderr, /release: commit failed; the version files are changed but not committed/);
+  assert.doesNotMatch(out.stderr, /at .*release\.mjs/);
+  assert.equal(r.git('tag', '--list'), 'v1.0.0');
 });

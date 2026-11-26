@@ -54,31 +54,57 @@ const next =
   : breaking || commits.some((c) => c.type === "feat") ? `${major}.${minor + 1}.0`
   : `${major}.${minor}.${patch + 1}`;
 
-// Write the version with the stack's own tool, and remember which files that changed.
-const dirty = () => new Set(execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).split("\n").filter(Boolean).map((l) => l.slice(3)));
-const before = dirty();
-if (useNpm) {
-  const manager = existsSync("pnpm-lock.yaml") ? "pnpm" : "npm";
-  run(manager, "version", next, "--no-git-tag-version", "--allow-same-version");
+// Stop before writing anything when the files the release touches have uncommitted changes.
+const manager = existsSync("pnpm-lock.yaml") ? "pnpm" : "npm";
+const touched = [...(useNpm ? ["package.json", manager === "pnpm" ? "pnpm-lock.yaml" : "package-lock.json"] : []), ...(table ? ["pyproject.toml", "uv.lock"] : []), "CHANGELOG.md"];
+const changed = () => execFileSync("git", ["status", "--porcelain", "--", ...touched], { encoding: "utf8" }).split("\n").filter(Boolean).map((l) => l.slice(3));
+const dirty = new Set(changed());
+if (dirty.size) stop(`${[...dirty][0]} has uncommitted changes; commit or stash them first`);
+
+// uv 0.7 or newer writes the Python version.
+if (table) {
+  let uv = "";
+  try {
+    uv = run("uv", "--version");
+  } catch {}
+  const [, uvMajor, uvMinor] = uv.match(/(\d+)\.(\d+)/) ?? [];
+  if (!uv || Number(uvMajor) === 0 && Number(uvMinor) < 7) stop("uv 0.7 or newer is needed to write the Python version");
 }
-if (table) run("uv", "version", next);
 
-// CHANGELOG.md: the new release on top.
-const group = (title, list) => (list.length ? [`### ${title}`, "", ...list.map((c) => `- ${c.text} (${c.hash})`), ""] : []);
-const section = [
-  `## ${next} (${new Date().toISOString().slice(0, 10)})`,
-  "",
-  ...group("Breaking", commits.filter((c) => c.breaking)),
-  ...group("Features", commits.filter((c) => !c.breaking && c.type === "feat")),
-  ...group("Fixes", commits.filter((c) => !c.breaking && c.type === "fix")),
-  ...group("Other", commits.filter((c) => !c.breaking && c.type !== "feat" && c.type !== "fix")),
-].join("\n");
-const old = existsSync("CHANGELOG.md") ? readFileSync("CHANGELOG.md", "utf8").replace(/^# Changelog\n\n/, "") : "";
-writeFileSync("CHANGELOG.md", `# Changelog\n\n${section}\n${old}`);
+// Write the version with the stack's own tool, add the changelog, commit and tag.
+let step = "";
+try {
+  if (useNpm) {
+    step = `${manager} version`;
+    run(manager, "version", next, "--no-git-tag-version", "--allow-same-version");
+  }
+  if (table) {
+    step = "uv version";
+    run("uv", "version", next);
+  }
 
-// Commit only the files this release changed, so nobody else's work comes along.
-const files = [...new Set([...dirty()].filter((f) => !before.has(f) || f === "CHANGELOG.md").concat("CHANGELOG.md"))];
-git("add", "--", ...files);
-git("commit", "-m", `chore: release v${next}`, "--", ...files);
-git("tag", "-a", `v${next}`, "-m", `v${next}`);
+  // CHANGELOG.md: the new release on top.
+  step = "CHANGELOG.md";
+  const group = (title, list) => (list.length ? [`### ${title}`, "", ...list.map((c) => `- ${c.text} (${c.hash})`), ""] : []);
+  const section = [
+    `## ${next} (${new Date().toISOString().slice(0, 10)})`,
+    "",
+    ...group("Breaking", commits.filter((c) => c.breaking)),
+    ...group("Features", commits.filter((c) => !c.breaking && c.type === "feat")),
+    ...group("Fixes", commits.filter((c) => !c.breaking && c.type === "fix")),
+    ...group("Other", commits.filter((c) => !c.breaking && c.type !== "feat" && c.type !== "fix")),
+  ].join("\n");
+  const old = existsSync("CHANGELOG.md") ? readFileSync("CHANGELOG.md", "utf8").replace(/^# Changelog\n\n/, "") : "";
+  writeFileSync("CHANGELOG.md", `# Changelog\n\n${section}\n${old}`);
+
+  // Commit only the files this release changed (all were clean before), so nobody else's work comes along.
+  step = "commit";
+  const files = changed();
+  git("add", "--", ...files);
+  git("commit", "-m", `chore: release v${next}`, "--", ...files);
+  step = "tag";
+  git("tag", "-a", `v${next}`, "-m", `v${next}`);
+} catch {
+  stop(`${step} failed; the version files are changed but not committed`);
+}
 console.log(`released v${next}`);
