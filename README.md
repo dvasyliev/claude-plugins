@@ -4,18 +4,20 @@
   <img src="assets/repo-banner.svg" alt="claude-plugins: Claude Code plugins in one marketplace, dvasyliev" width="100%">
 </p>
 
-<p align="center">
+<p>
   <a href="https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml"><img src="https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml/badge.svg" alt="CI" height="20"></a>
-  &nbsp;
-  <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Claude_Code-D97757?logo=claude&amp;logoColor=white" alt="Built for Claude Code" height="20"></a>
-  &nbsp;
-  <a href="https://github.com/dvasyliev"><img src="https://img.shields.io/badge/@dvasyliev-181717?logo=github&amp;logoColor=white" alt="Author: @dvasyliev" height="20"></a>
-  &nbsp;
-  <a href="LICENSE"><img src="https://img.shields.io/badge/MIT-DFB317" alt="MIT license" height="20"></a>
+  <a href="#add-the-marketplace"><img src="https://img.shields.io/badge/marketplace-dvasyliev-D97757?logo=claude&amp;logoColor=white" alt="Marketplace: dvasyliev" height="20"></a>
+  <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/built-Claude_Code-D97757?logo=claude&amp;logoColor=white" alt="Built with Claude Code" height="20"></a>
+  <a href="https://github.com/dvasyliev"><img src="https://img.shields.io/badge/creator-@dvasyliev-181717?logo=github&amp;logoColor=white" alt="Creator: @dvasyliev" height="20"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-DFB317" alt="MIT license" height="20"></a>
 </p>
 
-<p align="center">
-  <a href="#plugins"><b>Plugins</b></a> &nbsp;&nbsp;&nbsp; <a href="#add-the-marketplace"><b>Add the marketplace</b></a> &nbsp;&nbsp;&nbsp; <a href="#contributing"><b>Contributing</b></a>
+<p>
+  <a href="#plugins"><b>Plugins</b></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="#add-the-marketplace"><b>Add the marketplace</b></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="#contributing"><b>Contributing</b></a>
 </p>
 
 > [!IMPORTANT]
