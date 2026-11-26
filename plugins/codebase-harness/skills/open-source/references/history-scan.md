@@ -126,11 +126,17 @@ The project folder keeps the old history. From here on, the skill's steps 3 to 7
 
 ### Push
 
-Only after a yes to the force push itself, and before step 7 protects the default branch (the ruleset blocks force pushes). List the remote branches and tags first (`git ls-remote --heads --tags origin`): every one that holds the old history must be replaced or deleted, or the leaked data stays on GitHub. Name in the yes each remote branch the new history does not have. Never delete a remote branch the backup lacks (`git --git-dir <backup> show-ref --verify refs/heads/<name>` fails): its commits would be lost; fetch it and fix it first.
+Claude never runs these pushes: the project's guard blocks a force push, and it cannot be undone. Give the user the exact commands to run themselves, in a terminal or with `!` in front in Claude Code, only after a yes to the force push itself, and before step 7 protects the default branch (the ruleset blocks force pushes).
 
-Run every push below with `SKIP_RELEASE=1 SKIP_VERIFY=1` in front (`SKIP_RELEASE=1 SKIP_VERIFY=1 git push --force ...`). The remote still has the old commits, so the release step would stop with "pull first", and a pull brings the old history, leak included, back. The end-to-end tests are skipped too: the code is what was checked before the push.
+Before the commands, warn in plain words: this replaces the history on GitHub for good; every commit, branch and tag listed below is overwritten or deleted there; every clone and fork must clone again; open pull requests go stale; the only copy of the old history is the backup.
 
-- After a rewrite (from the rewritten clone): `git push --force --all origin`, then `git push --force --tags origin`. Then delete the remote branches and tags the rewrite removed (`git push origin --delete <name>`).
-- After starting over: `git push --force origin <branch>`, then `git push --force --tags origin`. Then delete every other remote branch and every remote tag the new history does not have (`git push origin --delete <name>`), each one named in the yes.
+List the remote branches and tags first (`git ls-remote --heads --tags origin`): every one that holds the old history must be replaced or deleted, or the leaked data stays on GitHub. Name in the yes each remote branch the new history does not have. Never put a remote branch the backup lacks (`git --git-dir <backup> show-ref --verify refs/heads/<name>` fails) in the delete commands: its commits would be lost; fetch it and fix it first.
+
+Every push gets `SKIP_RELEASE=1 SKIP_VERIFY=1` in front (`SKIP_RELEASE=1 SKIP_VERIFY=1 git push --force ...`). The remote still has the old commits, so the release step would stop with "pull first", and a pull brings the old history, leak included, back. The end-to-end tests are skipped too: the code is what was checked before the push.
+
+- After a rewrite (run in the rewritten clone, `cd` to it first): `git push --force --all origin`, then `git push --force --tags origin`. Then delete the remote branches and tags the rewrite removed (`git push origin --delete <name>`, one per name).
+- After starting over: `git push --force origin <branch>`, then `git push --force --tags origin`. Then delete every other remote branch and every remote tag the new history does not have (`git push origin --delete <name>`, one per name), each one named in the yes.
+
+Write the commands out in full, with the real branch, tag and folder names, in one block the user can copy. When the user says they ran them, check with `git ls-remote --heads --tags origin` that the remote matches the new history (each sha equals the local one, no old branch or tag left) and say what still differs.
 
 Say what breaks: every clone and fork must clone again; open pull requests go stale. GitHub keeps old commits reachable by their hash and in pull request refs for a while; for a leaked key that is one more reason to revoke it, and for personal data the user can push to a new repository instead or ask GitHub Support to purge the cached views.

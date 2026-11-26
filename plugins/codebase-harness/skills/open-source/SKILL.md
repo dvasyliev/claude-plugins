@@ -15,6 +15,7 @@ Going public happens once, and what is in the git history goes public with it. T
 
 - A key or token that was ever committed is leaked. Say so first, before any other finding or fix: revoke it and make a new one wherever it was issued. Cleaning the history does not undo a leak.
 - Never rewrite the history, start it over, force-push or change a GitHub setting without the user's explicit yes to that exact step. A yes to one step is not a yes to the next.
+- Never run a force push or a remote branch or tag delete: give the user the exact commands, with a warning of what they overwrite (`references/history-scan.md`, "Push").
 - Before any change to the history, make a backup with `git clone --mirror` (see `references/history-scan.md`) and say where it is.
 - Never overwrite a file the project has; offer to add what it misses.
 - Everything the skill writes is in English.
@@ -38,7 +39,7 @@ Then ask how to fix the history, one question, only when there are findings the 
 - **Start over:** one commit with the current tree, in a fresh history. Loses every commit and tag; the skill tags the version from `package.json` or `pyproject.toml` on the new commit.
 - **Rewrite:** `git filter-repo` removes the paths, replaces the strings and maps the emails. Keeps the history; every clone and fork breaks, open pull requests go stale.
 
-Each choice that changes the history then needs its own yes for the backup-and-rewrite and, when the repository is on GitHub, another for the force push. Carry it out as `references/history-scan.md` says:
+Each choice that changes the history then needs its own yes for the backup-and-rewrite and, when the repository is on GitHub, another for the force push, which the user runs. Carry it out as `references/history-scan.md` says:
 
 - **Rewrite** runs now, in a fresh clone. From then on, steps 3 to 7 run in that clone, never in the project folder, which keeps the old history: a commit there would sit on it. Turn the git hooks on in the clone first (the project's install, or `git config core.hooksPath .githooks`). Tell the user to work from the clone from now on.
 - **Start over** runs in step 6, in place of its commit, so the one new commit holds step 3's cleaned files and step 4's new ones, and none of the secrets.
@@ -73,7 +74,7 @@ Commit the added and changed files in one commit, `docs: prepare the project to 
 
 Only for a repository on GitHub. Each step below is its own question; run its command only after a yes to it. Without `gh`, give the user the steps in the GitHub settings instead. In this order:
 
-1. **Push.** A changed history first, with its force push (`references/history-scan.md`, "Push"); otherwise `git push` the step 6 commit. With `releases` and `releaseOn: "push"`, a push to the default branch also releases; say so.
+1. **Push.** A changed history first: the user runs the force push from the commands the skill gives (`references/history-scan.md`, "Push"), and the skill checks the remote after; otherwise `git push` the step 6 commit. With `releases` and `releaseOn: "push"`, a push to the default branch also releases; say so.
 2. **Make it public:** `gh repo edit --visibility public --accept-visibility-change-consequences` (or Settings, General, Danger Zone). Only after the history is fixed and pushed and every leaked key is revoked: once public, anyone can clone it.
 3. **Private vulnerability reporting** (security reports reach the maintainers, not a public issue): `gh api -X PUT repos/<owner>/<repo>/private-vulnerability-reporting`.
 4. **Protect the default branch** (no force push, no deletion): `gh api -X POST repos/<owner>/<repo>/rulesets --input -` with:
