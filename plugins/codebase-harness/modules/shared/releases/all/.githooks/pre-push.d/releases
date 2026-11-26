@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# The releases step of .githooks/pre-push: releases on a push of the default branch (.githooks/release.mjs).
+# Way out for a human: SKIP_RELEASE=1 git push skips this step only
+[ -n "$SKIP_RELEASE" ] && exit 0
+exec node .githooks/release.mjs --hook

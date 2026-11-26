@@ -314,3 +314,38 @@ test('modules that bring the same path must bring the same text', () => {
     }
   }
 });
+
+test('releases applies the script, the step and the release script; releaseOn defaults to push', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG });
+  let r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'releases'] });
+  assert.equal(r.status, 0, r.stderr);
+  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts.release, 'node .githooks/release.mjs');
+  assert.equal(pkg.scripts.prepare, 'git config core.hooksPath .githooks');
+  for (const path of ['.githooks/pre-push', '.githooks/pre-push.d/releases', '.githooks/release.mjs']) {
+    assert.ok(statSync(join(dir, path)).mode & 0o100, `${path} is executable`);
+  }
+  assert.equal(harnessJson(dir).releaseOn, 'push');
+  r = apply(dir, { releaseOn: 'manual' });
+  assert.equal(r.status, 0, r.stderr);
+  r = apply(dir, {});
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(harnessJson(dir).releaseOn, 'manual', 'the answer survives an update');
+  r = apply(dir, { modules: ['core', 'oxlint'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal('releaseOn' in harnessJson(dir), false);
+});
+
+test('removing releases keeps the dispatcher while playwright stays, and removes it with both gone', () => {
+  const dir = makeProject({ 'package.json': REACT_PKG });
+  let r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'playwright', 'releases'] });
+  assert.equal(r.status, 0, r.stderr);
+  r = apply(dir, { modules: ['core', 'oxlint', 'playwright'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(existsSync(join(dir, '.githooks/pre-push')));
+  assert.ok(!existsSync(join(dir, '.githooks/pre-push.d/releases')));
+  assert.ok(!existsSync(join(dir, '.githooks/release.mjs')));
+  r = apply(dir, { modules: ['core', 'oxlint'] });
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(!existsSync(join(dir, '.githooks/pre-push')));
+});

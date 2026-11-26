@@ -2,7 +2,7 @@
 // Releases the project: raises the version from the Conventional Commits since the last vX.Y.Z tag
 // (breaking: major, or minor below 1.0; feat: minor; anything else: patch), writes it to package.json
 // (npm or pnpm) and pyproject.toml (uv), adds the commits to CHANGELOG.md, commits and tags.
-// Usage: node .githooks/release.mjs   (run in the project root)
+// Usage: node .githooks/release.mjs   (run in the project root; `--hook` from the pre-push step, with the refs on stdin)
 // Prints `released v<version>` or `nothing to release`; a stop prints `release: <reason>` to stderr,
 // exits 1 and changes nothing.
 import { execFileSync } from "node:child_process";
@@ -14,6 +14,29 @@ const stop = (reason) => {
   console.error(`release: ${reason}`);
   process.exit(1);
 };
+
+// Hook mode (.githooks/pre-push.d/releases): release only when the current branch is the default one and it is being
+// pushed, and `releaseOn` in .claude/harness.json is not "manual". A release then stops the push, so the next push
+// sends the release commit with the rest.
+const hook = process.argv.includes("--hook");
+if (hook) {
+  const harness = existsSync(".claude/harness.json") ? JSON.parse(readFileSync(".claude/harness.json", "utf8")) : {};
+  if ((harness.releaseOn ?? "push") !== "push") process.exit(0);
+  let main = "main";
+  try {
+    main = git("symbolic-ref", "--short", "-q", "refs/remotes/origin/HEAD").replace(/^origin\//, "") || main;
+  } catch {}
+  let branch = "";
+  try {
+    branch = git("symbolic-ref", "--short", "-q", "HEAD");
+  } catch {}
+  // One "<local ref> <local sha> <remote ref> <remote sha>" line per ref pushed; a deleted branch has an all-zero sha.
+  const pushed = readFileSync(0, "utf8")
+    .split("\n")
+    .map((line) => line.trim().split(/\s+/))
+    .some(([ref, sha]) => ref === `refs/heads/${main}` && sha && !/^0+$/.test(sha));
+  if (branch !== main || !pushed) process.exit(0);
+}
 
 // The current version of each stack. A package.json without a version is skipped when there is a pyproject.toml.
 const pkg = existsSync("package.json") ? JSON.parse(readFileSync("package.json", "utf8")) : null;
@@ -106,5 +129,9 @@ try {
   git("tag", "-a", `v${next}`, "-m", `v${next}`);
 } catch {
   stop(`${step} failed; the version files are changed but not committed`);
+}
+if (hook) {
+  console.error(`released v${next}; push again to send it`);
+  process.exit(1);
 }
 console.log(`released v${next}`);

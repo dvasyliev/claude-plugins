@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Writes the chosen modules (modules.json, modules/) into the project in the current folder.
-// Usage: node apply.mjs '{"stacks": ["nextjs"], "modules": [...], "skipChecks": [...], "docsLanguage": "English"}'
+// Usage: node apply.mjs '{"stacks": ["nextjs"], "modules": [...], "skipChecks": [...], "docsLanguage": "English", "releaseOn": "push"}'
 // An answer left out keeps its value from the last run (.claude/harness.json).
 import { execSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -17,7 +17,7 @@ const old = readJson(".claude/harness.json", {});
 const withStacks = ({ framework, ...a }) => (framework && !a.stacks ? { ...a, stacks: [framework] } : a);
 const passed = withStacks(JSON.parse(process.argv[2] || "{}"));
 // srcDirs merge per stack: an update that passes one stack's folders keeps the others'.
-const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, ...withStacks(old), ...passed, srcDirs: { ...old.srcDirs, ...passed.srcDirs } };
+const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, releaseOn: "push", ...withStacks(old), ...passed, srcDirs: { ...old.srcDirs, ...passed.srcDirs } };
 // Modules renamed since the project's last run (`renamed` in modules.json) go by their new names; a new name that
 // applies to none of the chosen stacks is not installed (below), like any such module.
 const catalog = readJson(join(root, "modules.json"));
@@ -407,6 +407,8 @@ writeJson(".claude/harness.json", {
   skipChecks: [...skip],
   docsLanguage: answers.docsLanguage,
   libraries: answers.libraries,
+  // When the releases module releases: on a push of the default branch ("push") or by hand ("manual").
+  ...(modules.some(([id]) => id === "releases") && { releaseOn: answers.releaseOn }),
   port,
   checks,
   fileChecks,

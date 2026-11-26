@@ -70,6 +70,8 @@ forbidden_modules =
 
 One contract per answer. With no answer, leave `import-linter` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `import-linter` without asking, and write no `.importlinter`, which import-linter would read instead.
 
+**`releases`**: offer it only when the project has no release tool of its own (none of `.release-please-manifest.json`, `.releaserc*`, `release.config.*`, `.changeset/`) and every tag matches `v*.*.*` (`git tag --list`); a user who asks for it gets it anyway. With `releases`, ask `releaseOn` in the user's language: release on a push of the default branch (`push`, the default) or only by hand with the `release` script (`manual`).
+
 Ask about `skipChecks` only when the user asks to turn a check off, or in step 4.
 
 ### Libraries
@@ -89,7 +91,7 @@ An answer is the option's `id`, `none` for "No library", or the name the user ga
 ## 3. Run the template
 
 ```bash
-node <template>/tasks/apply.mjs '{"stacks": ["<stack>", ...], "srcDirs": {"<stack>": ["<folder>", ...]}, "modules": [...], "skipChecks": [...], "docsLanguage": "<language>", "libraries": {"<section id>": "<answer>"}}'
+node <template>/tasks/apply.mjs '{"stacks": ["<stack>", ...], "srcDirs": {"<stack>": ["<folder>", ...]}, "modules": [...], "skipChecks": [...], "docsLanguage": "<language>", "releaseOn": "<push or manual>", "libraries": {"<section id>": "<answer>"}}'
 ```
 
 On an update, leave out the answers that do not change; they keep their values from `.claude/harness.json`. `docsLanguage` is the language of specs and plans (default English); ask if the project's docs do not show it. The dev server port, which the hooks and the end-to-end tests use, is the one the project's `dev` script sets (`--port` or `-p`), else one `apply.mjs` derives from the folder name (3000–3999) and adds to the `dev` script, so projects on one machine rarely share it. To change it, change the `dev` script.

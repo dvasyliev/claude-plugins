@@ -177,3 +177,73 @@ test('a commit hook that rejects the release gives a release message and exit 1'
   assert.doesNotMatch(out.stderr, /at .*release\.mjs/);
   assert.equal(r.git('tag', '--list'), 'v1.0.0');
 });
+
+// Hook mode: what .githooks/pre-push.d/releases runs, with the refs being pushed on stdin.
+const ZERO = '0000000000000000000000000000000000000000';
+function hookRepo({ branch = 'main', harness } = {}) {
+  const r = repo({ 'package.json': pkg('1.0.0') }, { tag: 'v1.0.0', commits: [['feat: a']] });
+  r.git('checkout', '-q', '-B', branch);
+  if (harness) {
+    mkdirSync(join(r.dir, '.claude'));
+    writeFileSync(join(r.dir, '.claude', 'harness.json'), JSON.stringify(harness));
+    r.git('add', '-A');
+    r.git('commit', '-q', '-m', 'chore: harness');
+  }
+  const hook = (lines, env = {}) => {
+    const out = spawnSync('node', [SCRIPT, '--hook'], { cwd: r.dir, encoding: 'utf8', input: lines.join('\n') + '\n', env: { ...cleanEnv({ PATH: `${join(r.dir, '.bin')}:${process.env.PATH}` }), ...env } });
+    return { status: out.status, stdout: out.stdout.trim(), stderr: out.stderr.trim() };
+  };
+  const push = (ref = `refs/heads/${branch}`) => [`${ref} ${r.git('rev-parse', 'HEAD')} ${ref} ${ZERO}`];
+  return { ...r, hook, push };
+}
+
+test('hook mode releases on a push of the default branch and stops the push', () => {
+  const r = hookRepo();
+  const out = r.hook(r.push());
+  assert.equal(out.status, 1);
+  assert.equal(out.stderr, 'released v1.1.0; push again to send it');
+  assert.equal(r.git('cat-file', '-t', 'v1.1.0'), 'tag');
+});
+
+test('hook mode does nothing for a feature branch, a tag push, or a branch delete', () => {
+  const feature = hookRepo({ branch: 'feature' });
+  assert.equal(feature.hook(feature.push()).status, 0);
+  const tag = hookRepo();
+  assert.equal(tag.hook(tag.push('refs/tags/v9.9.9')).status, 0);
+  const del = hookRepo();
+  assert.equal(del.hook([`(delete) ${ZERO} refs/heads/main ${del.git('rev-parse', 'HEAD')}`]).status, 0);
+  for (const r of [feature, tag, del]) assert.equal(r.git('tag', '--list'), 'v1.0.0');
+});
+
+test('hook mode does nothing with releaseOn manual', () => {
+  const r = hookRepo({ harness: { releaseOn: 'manual' } });
+  const out = r.hook(r.push());
+  assert.deepEqual([out.status, out.stderr], [0, '']);
+  assert.equal(r.git('tag', '--list'), 'v1.0.0');
+});
+
+test('hook mode does nothing with SKIP_RELEASE=1', () => {
+  const r = hookRepo();
+  const hooks = join(dirname(SCRIPT));
+  mkdirSync(join(r.dir, '.githooks', 'pre-push.d'), { recursive: true });
+  copyFileSync(SCRIPT, join(r.dir, '.githooks', 'release.mjs'));
+  copyFileSync(join(hooks, 'pre-push.d', 'releases'), join(r.dir, '.githooks', 'pre-push.d', 'releases'));
+  writeFileSync(join(r.dir, '.git', 'info', 'exclude'), '.githooks\n');
+  const step = (env) => spawnSync('sh', ['.githooks/pre-push.d/releases', 'origin', 'url'], { cwd: r.dir, encoding: 'utf8', input: r.push().join('\n') + '\n', env: cleanEnv(env) });
+  assert.equal(step({ SKIP_RELEASE: '1' }).status, 0);
+  assert.equal(r.git('tag', '--list'), 'v1.0.0');
+  const out = step({});
+  assert.equal(out.status, 1);
+  assert.equal(out.stderr.trim(), 'released v1.1.0; push again to send it');
+});
+
+test('hook mode uses origin/HEAD as the default branch', () => {
+  const main = hookRepo();
+  main.git('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/trunk');
+  assert.equal(main.hook(main.push()).status, 0);
+  assert.equal(main.git('tag', '--list'), 'v1.0.0');
+  const trunk = hookRepo({ branch: 'trunk' });
+  trunk.git('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/trunk');
+  assert.equal(trunk.hook(trunk.push()).status, 1);
+  assert.equal(trunk.git('cat-file', '-t', 'v1.1.0'), 'tag');
+});
