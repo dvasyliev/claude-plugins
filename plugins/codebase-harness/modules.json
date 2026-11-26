@@ -674,6 +674,11 @@
         }
       }
     },
+    "releases": {
+      "description": "Releases from Conventional Commits: the version, CHANGELOG.md, a commit and a vX.Y.Z tag, on push to the default branch or by hand.",
+      "group": "shared",
+      "category": "git"
+    },
     "ci": {
       "description": "A GitHub Actions workflow that runs every check on each push to main and each pull request.",
       "group": "shared",
