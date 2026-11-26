@@ -10,6 +10,7 @@ skills/setup/                              /codebase-harness:setup: picks module
 skills/update/                             /codebase-harness:update: the same, as an update
 skills/libraries/                          /codebase-harness:libraries: chooses or changes the libraries at any time
 skills/audit/                              /codebase-harness:audit: checks existing code against the modules' rules, asks what to fix, fixes it
+skills/open-source/                        /codebase-harness:open-source: checks history and files for secrets, adds the public-repository files, sets up GitHub
 references/questions.md                    how the skills ask questions (AskUserQuestion)
 modules.json                               every stack and module
 modules/<group>/<module>/all/              a module's files for every stack it applies to, at their paths in the project
@@ -28,7 +29,7 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 | Module | `modules.json` `modules`: one tool or thing a project gets, in a `group` and a `category` (the kind of check: `formatting`, `linting`, `types`, `code-health`, `testing`, ...; a group too big for one setup question splits between categories). Applies to its group's stacks, or to the stacks or languages in its own `stacks` when it has them. Brings files, `scripts` (package.json), `checks` / `fileChecks` (run by the hooks), `settings` (.claude/settings.json), `mcpServers` (.mcp.json), `gitignore` (lines for .gitignore), npm `devDependencies`, `install` commands with the paths each `creates` (and the `.mcp.json` servers it adds in `mcp`), and `audit`: the rule files and skill folders the audit skill checks code against. `by.<language or stack>` holds any of these fields for one language or stack, merged over the module's own (language first, then stack). |
 | Renamed modules | `modules.json` `renamed`: an old module name to its new one, or to an array of them when it split (`types` to `tsc` and `basedpyright`). `apply.mjs` replaces the old names in the stored and the passed `modules`, following a chain to the end, and drops a new name that applies to none of the project's stacks; check names (`skipChecks`) do not change. No old name may also be a module. |
 | How a module is chosen | `required` always; `auto` exactly when its `detect` matches (package.json or files); `linter` exactly one per stack; `recommended` suggested; the rest offered, one question per group. |
-| Answers | `stacks`, `modules`, `skipChecks`, `docsLanguage`, `libraries`: passed to `apply.mjs`, kept in `.claude/harness.json`. |
+| Answers | `stacks`, `modules`, `skipChecks`, `docsLanguage`, `libraries`, `releaseOn` (`push` or `manual`, only while `releases` is installed): passed to `apply.mjs`, kept in `.claude/harness.json`. |
 
 ## What apply.mjs writes in a project
 
@@ -48,6 +49,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 ## Conventions
 
 - Plain files, no templating. A file whose text depends on the language or stack gets one version per language or stack (`<language>/`, `<stack>/`). The exceptions are what `apply.mjs` writes from the answers: the two rules, and `.github/dependabot.yml`, which names only the package managers of the chosen stacks.
+- Several modules may bring the same file (`.githooks/pre-push` from `playwright` and `releases`) only with equal text; `apply.mjs` refuses otherwise. That file runs each executable `.githooks/pre-push.d/*`, one per module, then `.githooks/pre-push.local`.
 - Modules stand alone: no file needs another module to be installed. A step that only applies with another module says so in plain text ("With `playwright`: ...").
 - The project's own work wins: edited files are merged, not overwritten; a script, setting or hooks path the project set stays; the harness takes back only what it added.
 - `modules.json` lists the modules in the order their checks run, cheap ones first, not by group; the groups' order is that of `groups`.

@@ -66,6 +66,12 @@ Everything goes into your project's own files (`.claude/`, `.githooks/`, configs
 2. Run `/codebase-harness:audit` and pick what to fix. For a big project, audit a few modules at a time: `/codebase-harness:audit core`.
 3. Run the audit once more. The fixes move files, so Claude sees the code in a new way and may find a bit more. Stop when it finds only small things: each run finds a few new ones because Claude does not answer the same way twice, and the checks catch new problems on every change anyway.
 
+**A project going public:**
+
+1. Run `/codebase-harness:open-source`. It first looks for secrets and personal data in the git history and the files, and tells you what it finds.
+2. Pick the files to add and the modules to install, and it commits them.
+3. It then offers to push, make the repository public, turn on private vulnerability reporting and protect the default branch, asking before each one.
+
 ## Install
 
 You need [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), [Node.js](https://nodejs.org), git and a project in one or more of these stacks: React (Vite), Next.js, Python (with [uv](https://docs.astral.sh/uv/), which runs every Python tool) or Node.js. In the project's folder:
@@ -110,6 +116,7 @@ Use the scope you installed with, then run `/reload-plugins`.
 | `/codebase-harness:update` | Brings the harness to the newest version of the plugin and keeps your own edits. |
 | `/codebase-harness:libraries` | Picks one library for each job: forms, data, dates and so on. |
 | `/codebase-harness:audit` | Checks code written before the harness against its rules, shows what breaks them, and fixes what you pick. To check only some modules: `/codebase-harness:audit core libraries`. |
+| `/codebase-harness:open-source` | Gets a project ready to go public: checks the history and files for secrets and personal data, adds a license, security policy, contributing guide and issue and pull request templates, offers `ci` and `releases`, then sets up GitHub. Each risky step waits for your yes. |
 
 With the `feature-workflow` module, your project also gets:
 
@@ -153,6 +160,7 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 | `pre-commit` | Before each commit, looks for passwords and keys and checks the changed files. | Recommended |
 | `sync-deps` | Runs the package install (`npm install` or `pnpm install`, and `uv sync` on Python) for you after a pull or branch switch that changed the lockfile. | Optional |
 | `ci` | Runs every check on GitHub (GitHub Actions) on each push to `main` and each pull request, so code pushed without the hooks is checked too. | Recommended |
+| `releases` | Makes a release from your commit messages: raises the version, writes `CHANGELOG.md`, commits and tags `vX.Y.Z`. Runs on a push of the default branch, or only when you run `npm run release` (`node .githooks/release.mjs` without a JavaScript stack). After a release the push stops; push again to send the release commit and tag. `SKIP_RELEASE=1` skips it. Setup offers it only when the project has no release tool of its own. | Optional |
 | `dependency-updates` | Dependabot opens a pull request each week with new versions of your packages and GitHub Actions. | Optional |
 | `context7` | Lets Claude read the current docs of your libraries, not old ones from memory. | Recommended |
 | `libraries` | One chosen library for each job, so Claude does not add new ones. | Recommended |
