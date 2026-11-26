@@ -20,9 +20,6 @@
   <a href="#contributing"><b>Contributing</b></a>
 </p>
 
-> [!IMPORTANT]
-> ⚠️ **Using frontend-harness?** It is the previous version of codebase-harness. See the [migration from frontend-harness](plugins/codebase-harness/README.md#migration-from-frontend-harness).
-
 My [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugins, in one marketplace, `dvasyliev`.
 
 ## Plugins
@@ -30,6 +27,11 @@ My [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugins, 
 | Plugin | What it does |
 |---|---|
 | [codebase-harness](plugins/codebase-harness/README.md) | Sets up hooks, rules and checks so Claude checks its own work and writes code that fits your project: React, Next.js, Python or Node. |
+
+## Renamed: frontend-harness is now codebase-harness
+
+> [!IMPORTANT]
+> frontend-harness was renamed to codebase-harness when it got Python and Node support. If you installed frontend-harness, move to codebase-harness with [these steps](plugins/codebase-harness/README.md#migration-from-frontend-harness). Your project keeps its harness files.
 
 ## Add the marketplace
 
