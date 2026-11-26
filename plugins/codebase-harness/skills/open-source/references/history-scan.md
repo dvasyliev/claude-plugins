@@ -84,7 +84,17 @@ How bad, from worst: **leaked** (a key, token, password or private key: revoke a
 Each fix only after the user's explicit yes to it. First, every time:
 
 1. **Revoke leaked keys.** Say it before anything else. A key that was pushed anywhere, even to a private repository, stays leaked after any rewrite: forks, clones, caches and CI logs keep it.
-2. **Back up.** `git clone --mirror . "../$(basename "$PWD")-backup-$(date +%Y%m%d).git"`, and tell the user where it is. It keeps every branch and tag, so it holds the leaked data too: keep it private, delete it when the new history is pushed and checked.
+2. **Fetch every branch.** With an `origin` remote, a branch that is only on the remote is in neither the backup nor the clone the rewrite runs in (`git clone --no-local .` copies local branches only). Fetch, then make a local branch for each remote one that has none:
+
+   ```bash
+   git fetch origin --prune --tags
+   git for-each-ref --format='%(refname:lstrip=3)' refs/remotes/origin | grep -vx HEAD | while read -r b; do
+     git show-ref -q --verify "refs/heads/$b" || git branch "$b" "origin/$b"
+   done
+   ```
+
+   The backup, the rewrite and `git push --all` then cover them too.
+3. **Back up.** `git clone --mirror . "../$(basename "$PWD")-backup-$(date +%Y%m%d).git"`, and tell the user where it is. It keeps every branch and tag, so it holds the leaked data too: keep it private, delete it when the new history is pushed and checked.
 
 ### Start over
 
@@ -112,11 +122,13 @@ The old commits stay in this folder until git drops them. Drop them only after t
 
 Check with the scans above that the findings are gone, and that the newest commit has the same files as before apart from the ones the rewrite changed: compare `git ls-tree -r <branch>` in the project and in the rewritten clone, and run the `check` script there (install the dependencies first). `git filter-repo` removes the `origin` remote: add the GitHub one back in the clone (`git remote add origin <url>`) before the push.
 
-The project folder keeps the old history. From here on, the skill's steps 3 to 7 run in the rewritten clone, never in the project folder: a commit there would sit on the old history. Tell the user to work from the rewritten clone (or a fresh clone of the new history once it is pushed), copy over the ignored files they need (such as `.env`), and delete the old folder when done.
+The project folder keeps the old history. From here on, the skill's steps 3 to 7 run in the rewritten clone, never in the project folder: a commit there would sit on the old history. A clone has no git hooks turned on, so turn them on there first, before steps 3 to 7: with the project's install when it sets `core.hooksPath` (`pnpm install`, `npm install`), else `git config core.hooksPath .githooks`. Tell the user to work from the rewritten clone (or a fresh clone of the new history once it is pushed), copy over the ignored files they need (such as `.env`), and delete the old folder when done.
 
 ### Push
 
-Only after a yes to the force push itself, and before step 7 protects the default branch (the ruleset blocks force pushes). List the remote branches and tags first (`git ls-remote --heads --tags origin`): every one that holds the old history must be replaced or deleted, or the leaked data stays on GitHub.
+Only after a yes to the force push itself, and before step 7 protects the default branch (the ruleset blocks force pushes). List the remote branches and tags first (`git ls-remote --heads --tags origin`): every one that holds the old history must be replaced or deleted, or the leaked data stays on GitHub. Name in the yes each remote branch the new history does not have. Never delete a remote branch the backup lacks (`git --git-dir <backup> show-ref --verify refs/heads/<name>` fails): its commits would be lost; fetch it and fix it first.
+
+Run every push below with `SKIP_RELEASE=1 SKIP_VERIFY=1` in front (`SKIP_RELEASE=1 SKIP_VERIFY=1 git push --force ...`). The remote still has the old commits, so the release step would stop with "pull first", and a pull brings the old history, leak included, back. The end-to-end tests are skipped too: the code is what was checked before the push.
 
 - After a rewrite (from the rewritten clone): `git push --force --all origin`, then `git push --force --tags origin`. Then delete the remote branches and tags the rewrite removed (`git push origin --delete <name>`).
 - After starting over: `git push --force origin <branch>`, then `git push --force --tags origin`. Then delete every other remote branch and every remote tag the new history does not have (`git push origin --delete <name>`), each one named in the yes.
