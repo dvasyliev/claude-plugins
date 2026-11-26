@@ -54,7 +54,7 @@ if (hook) {
 // The current version of each stack. A package.json without a version is skipped when there is a pyproject.toml.
 const pkg = existsSync("package.json") ? JSON.parse(readFileSync("package.json", "utf8")) : null;
 const pyText = existsSync("pyproject.toml") ? readFileSync("pyproject.toml", "utf8") : null;
-const table = pyText?.match(/^\[project\][ \t]*\n([\s\S]*?)(?=^\[|(?![\s\S]))/m);
+const table = pyText?.match(/^\[project\][ \t]*\r?\n([\s\S]*?)(?=^\[|(?![\s\S]))/m);
 const pyVersion = table?.[1].match(/^version\s*=\s*["']([^"']+)["']/m)?.[1];
 if (table && !pyVersion) stop("pyproject.toml has no static [project] version (is it dynamic?)");
 const npmVersion = pkg?.version;
@@ -64,6 +64,7 @@ if (pyVersion && npmVersion && pyVersion !== npmVersion) {
 }
 const useNpm = pkg && (npmVersion || !table);
 const current = pyVersion ?? npmVersion ?? "0.0.0";
+if (!/^\d+\.\d+\.\d+$/.test(current)) stop(`version ${current} is not X.Y.Z; set it to one first`);
 
 // Commits since the last release tag (none: all of them), without the release commits themselves.
 let tag = "";
@@ -89,6 +90,14 @@ const next =
   breaking && major > 0 ? `${major + 1}.0.0`
   : breaking || commits.some((c) => c.type === "feat") ? `${major}.${minor + 1}.0`
   : `${major}.${minor}.${patch + 1}`;
+// A tag for the next version (left by a release that was undone, say) would make the tag step fail after the commit.
+let tagged = true;
+try {
+  execFileSync("git", ["rev-parse", "-q", "--verify", `refs/tags/v${next}`], { stdio: "ignore" });
+} catch {
+  tagged = false;
+}
+if (tagged) stop(`tag v${next} already exists`);
 
 // Stop before writing anything when the files the release touches have uncommitted changes.
 const manager = existsSync("pnpm-lock.yaml") ? "pnpm" : "npm";
@@ -131,7 +140,7 @@ try {
     ...group("Other", commits.filter((c) => !c.breaking && c.type !== "feat" && c.type !== "fix")),
   ].join("\n");
   const old = existsSync("CHANGELOG.md") ? readFileSync("CHANGELOG.md", "utf8").replace(/^# Changelog\n\n/, "") : "";
-  writeFileSync("CHANGELOG.md", `# Changelog\n\n${section}\n${old}`);
+  writeFileSync("CHANGELOG.md", `# Changelog\n\n${old ? `${section}\n${old}` : section}`);
 
   // Commit only the files this release changed (all were clean before), so nobody else's work comes along.
   step = "commit";

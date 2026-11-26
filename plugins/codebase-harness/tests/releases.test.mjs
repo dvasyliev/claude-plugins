@@ -273,3 +273,42 @@ test('hook mode does not release when the remote branch has commits the local on
   const behind = r.hook([`refs/heads/main ${base} refs/heads/main ${r.git('rev-parse', 'HEAD~1')}`]);
   assert.equal(behind.status, 1);
 });
+
+test('a version that is not X.Y.Z stops and changes nothing', () => {
+  for (const files of [{ 'package.json': pkg('1.0.0-beta.1') }, { 'pyproject.toml': '[project]\nname = "app"\nversion = "0.1"\n' }]) {
+    const r = repo(files, { commits: [['fix: a']] });
+    const head = r.git('rev-parse', 'HEAD');
+    const out = r.run();
+    assert.equal(out.status, 1);
+    assert.match(out.stderr, /^release: version \S+ is not X\.Y\.Z; set it to one first$/);
+    assert.equal(r.git('rev-parse', 'HEAD'), head);
+    assert.equal(r.git('status', '--porcelain'), '');
+    assert.equal(r.log('uv'), '');
+  }
+});
+
+test('a new CHANGELOG.md ends with one newline, and an old one keeps its releases below', () => {
+  const r = repo({ 'package.json': pkg('1.0.0') }, { tag: 'v1.0.0', commits: [['fix: a']] });
+  r.run();
+  assert.doesNotMatch(r.read('CHANGELOG.md'), /\n\n$/);
+  const s = repo({ 'package.json': pkg('1.0.0'), 'CHANGELOG.md': '# Changelog\n\n## 1.0.0 (2026-01-01)\n\n### Fixes\n\n- old (abc1234)\n' }, { tag: 'v1.0.0', commits: [['fix: a']] });
+  s.run();
+  assert.match(s.read('CHANGELOG.md'), /^# Changelog\n\n## 1\.0\.1 \([^)]*\)\n\n### Fixes\n\n- a \([0-9a-f]+\)\n\n## 1\.0\.0 \(2026-01-01\)\n\n### Fixes\n\n- old \(abc1234\)\n$/);
+});
+
+test('an existing tag for the next version stops and changes nothing', () => {
+  const r = repo({ 'package.json': pkg('1.0.0') }, { tag: 'v1.0.0', commits: [['fix: a']] });
+  // A v1.0.1 tag on a commit outside this branch, so the last tag is still v1.0.0.
+  r.git('tag', 'v1.0.1', r.git('commit-tree', 'HEAD^{tree}', '-m', 'elsewhere'));
+  const head = r.git('rev-parse', 'HEAD');
+  const out = r.run();
+  assert.deepEqual([out.status, out.stderr], [1, 'release: tag v1.0.1 already exists']);
+  assert.equal(r.git('rev-parse', 'HEAD'), head);
+  assert.equal(r.git('status', '--porcelain'), '');
+});
+
+test('a pyproject.toml with CRLF line ends is read', () => {
+  const r = repo({ 'pyproject.toml': '[project]\r\nname = "app"\r\nversion = "0.1.0"\r\n' }, { tag: 'v0.1.0', commits: [['fix: a']] });
+  assert.equal(r.run().stdout, 'released v0.1.1; push.followTags is on, so git push sends the tag');
+  assert.match(r.log('uv'), /^uv version 0\.1\.1$/m);
+});
