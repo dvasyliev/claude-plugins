@@ -27,7 +27,7 @@
   ".githooks/pre-push": "2624d8fcd8f122bc2377222120826ce76531fde7330447a0af4f649ad8ce50db",
   ".githooks/pre-push.d/playwright": "c6dea5edc343e7096a11d761b73e92384f6d0e5de02d7e82c28f156c0b2ed67e",
   ".githooks/pre-push.d/releases": "5b808091cca555ee6eff6c1a7f8b7aa70d09fe4e6fd1d02d815ec7ca643fb454",
-  ".githooks/release.mjs": "85fa46d38b9a1a142c19bd884ee8735af5adcb96370559f894bea99b021eac6a",
+  ".githooks/release.mjs": "bf44e0b86604c08c28f457f0f8e0289df4b736e4f9ad80a6061c64106cfe1233",
   ".githooks/run-script.sh": "fc0f1db716cca8fee555a62088fc1320a531c04a734c6d992a32b1d6813a3536",
   ".githooks/verify.sh": "251a0d11b25c8e4e9e5c4f54670f4a14edc159d3c0c48127ace1c4ff29f48067",
   ".github/dependabot.yml": "e40990d114f0569d07c07f29d5f2aee1497ec6a8cd6e595ac06bfa9e4512d43c",

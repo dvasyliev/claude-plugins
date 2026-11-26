@@ -59,7 +59,7 @@ test('a feat since the last tag raises minor, writes the changelog, commits and 
     { tag: 'v1.2.3', commits: [['feat: a'], ['fix: b'], ['docs: c']] },
   );
   const out = r.run();
-  assert.deepEqual([out.status, out.stdout], [0, 'released v1.3.0']);
+  assert.deepEqual([out.status, out.stdout], [0, 'released v1.3.0; push.followTags is on, so git push sends the tag']);
   assert.equal(version(r.read('package.json')), '1.3.0');
   assert.equal(version(r.read('package-lock.json')), '1.3.0');
   const changelog = r.read('CHANGELOG.md');
@@ -71,21 +71,22 @@ test('a feat since the last tag raises minor, writes the changelog, commits and 
   assert.equal(r.git('cat-file', '-t', 'v1.3.0'), 'tag');
   assert.equal(r.git('rev-parse', 'v1.3.0^{commit}'), r.git('rev-parse', 'HEAD'));
   assert.equal(r.git('status', '--porcelain'), '');
+  assert.equal(r.git('config', '--local', 'push.followTags'), 'true');
 });
 
 test('breaking raises major, or minor below 1.0', () => {
   const a = repo({ 'package.json': pkg('1.2.3') }, { tag: 'v1.2.3', commits: [['feat!: x']] });
-  assert.equal(a.run().stdout, 'released v2.0.0');
+  assert.equal(a.run().stdout, 'released v2.0.0; push.followTags is on, so git push sends the tag');
   const b = repo({ 'package.json': pkg('0.4.1') }, { tag: 'v0.4.1', commits: [['feat!: x']] });
-  assert.equal(b.run().stdout, 'released v0.5.0');
+  assert.equal(b.run().stdout, 'released v0.5.0; push.followTags is on, so git push sends the tag');
   const c = repo({ 'package.json': pkg('1.2.3') }, { tag: 'v1.2.3', commits: [['fix: x', 'BREAKING CHANGE: y']] });
-  assert.equal(c.run().stdout, 'released v2.0.0');
+  assert.equal(c.run().stdout, 'released v2.0.0; push.followTags is on, so git push sends the tag');
   assert.match(c.read('CHANGELOG.md'), /### Breaking\n\n- x \(/);
 });
 
 test('without a tag every commit counts, and no version starts from 0.0.0', () => {
   const r = repo({ 'package.json': pkg() }, { commits: [['fix: a'], ['feat: b']] });
-  assert.equal(r.run().stdout, 'released v0.1.0');
+  assert.equal(r.run().stdout, 'released v0.1.0; push.followTags is on, so git push sends the tag');
   assert.equal(version(r.read('package.json')), '0.1.0');
   const changelog = r.read('CHANGELOG.md');
   assert.match(changelog, /- a \(/);
@@ -101,7 +102,7 @@ test('release commits do not count, and no commits means nothing to release', ()
 
 test('python version is written with uv version', () => {
   const r = repo({ 'pyproject.toml': '[project]\nname = "app"\nversion = "0.1.0"\n' }, { tag: 'v0.1.0', commits: [['fix: a']] });
-  assert.equal(r.run().stdout, 'released v0.1.1');
+  assert.equal(r.run().stdout, 'released v0.1.1; push.followTags is on, so git push sends the tag');
   assert.match(r.log('uv'), /^uv version 0\.1\.1$/m);
   assert.match(r.read('pyproject.toml'), /version = "0\.1\.1"/);
   assert.equal(r.git('status', '--porcelain'), '');
@@ -136,7 +137,7 @@ test('a pnpm project uses pnpm version', () => {
 
 test('a package.json without version next to pyproject.toml is skipped', () => {
   const r = repo({ 'package.json': pkg(), 'pyproject.toml': '[project]\nname = "app"\nversion = "0.2.0"\n' }, { tag: 'v0.2.0', commits: [['fix: a']] });
-  assert.equal(r.run().stdout, 'released v0.2.1');
+  assert.equal(r.run().stdout, 'released v0.2.1; push.followTags is on, so git push sends the tag');
   assert.equal(r.read('package.json'), pkg());
   assert.match(r.read('pyproject.toml'), /version = "0\.2\.1"/);
 });
@@ -146,7 +147,7 @@ test('unrelated staged and unstaged files stay out of the release commit', () =>
   writeFileSync(join(r.dir, 'a.txt'), 'changed\n');
   writeFileSync(join(r.dir, 'b.txt'), 'changed\n');
   r.git('add', 'a.txt');
-  assert.equal(r.run().stdout, 'released v1.0.1');
+  assert.equal(r.run().stdout, 'released v1.0.1; push.followTags is on, so git push sends the tag');
   assert.equal(r.git('show', '--name-only', '--format=', 'HEAD').split('\n').sort().join(), 'CHANGELOG.md,package.json');
   assert.equal(r.git('status', '--porcelain'), 'M  a.txt\n M b.txt');
 });
@@ -203,6 +204,7 @@ test('hook mode releases on a push of the default branch and stops the push', ()
   assert.equal(out.status, 1);
   assert.equal(out.stderr, 'released v1.1.0; push again to send it');
   assert.equal(r.git('cat-file', '-t', 'v1.1.0'), 'tag');
+  assert.equal(r.git('config', '--local', 'push.followTags'), 'true');
 });
 
 test('hook mode does nothing for a feature branch, a tag push, or a branch delete', () => {
@@ -246,4 +248,28 @@ test('hook mode uses origin/HEAD as the default branch', () => {
   trunk.git('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/trunk');
   assert.equal(trunk.hook(trunk.push()).status, 1);
   assert.equal(trunk.git('cat-file', '-t', 'v1.1.0'), 'tag');
+});
+
+test('hook mode releases on `git push origin HEAD`, whose local ref is HEAD', () => {
+  const r = hookRepo();
+  const out = r.hook([`HEAD ${r.git('rev-parse', 'HEAD')} refs/heads/main ${ZERO}`]);
+  assert.equal(out.status, 1);
+  assert.equal(out.stderr, 'released v1.1.0; push again to send it');
+});
+
+test('hook mode does not release when the remote branch has commits the local one lacks', () => {
+  const r = hookRepo();
+  const base = r.git('rev-parse', 'HEAD');
+  // A remote commit made on top of base, then dropped locally: known but not an ancestor of HEAD.
+  r.git('commit', '-q', '--allow-empty', '-m', 'fix: remote');
+  const remote = r.git('rev-parse', 'HEAD');
+  r.git('reset', '-q', '--hard', base);
+  for (const sha of [remote, 'f'.repeat(40)]) {
+    const out = r.hook([`refs/heads/main ${base} refs/heads/main ${sha}`]);
+    assert.deepEqual([out.status, out.stderr], [0, 'release: origin/main has commits you do not have; pull first']);
+  }
+  assert.equal(r.git('tag', '--list'), 'v1.0.0');
+  // A remote that is behind is fine.
+  const behind = r.hook([`refs/heads/main ${base} refs/heads/main ${r.git('rev-parse', 'HEAD~1')}`]);
+  assert.equal(behind.status, 1);
 });

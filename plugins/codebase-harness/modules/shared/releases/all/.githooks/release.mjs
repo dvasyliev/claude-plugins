@@ -3,7 +3,7 @@
 // (breaking: major, or minor below 1.0; feat: minor; anything else: patch), writes it to package.json
 // (npm or pnpm) and pyproject.toml (uv), adds the commits to CHANGELOG.md, commits and tags.
 // Usage: node .githooks/release.mjs   (run in the project root; `--hook` from the pre-push step, with the refs on stdin)
-// Prints `released v<version>` or `nothing to release`; a stop prints `release: <reason>` to stderr,
+// Prints `released v<version>` (and turns on push.followTags) or `nothing to release`; a stop prints `release: <reason>` to stderr,
 // exits 1 and changes nothing.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -30,12 +30,25 @@ if (hook) {
   try {
     branch = git("symbolic-ref", "--short", "-q", "HEAD");
   } catch {}
-  // One "<local ref> <local sha> <remote ref> <remote sha>" line per ref pushed; a deleted branch has an all-zero sha.
-  const pushed = readFileSync(0, "utf8")
+  if (branch !== main) process.exit(0);
+  // One "<local ref> <local sha> <remote ref> <remote sha>" line per ref pushed. The local ref may be `HEAD`
+  // (`git push origin HEAD`), so the line that counts sends this commit to the default branch.
+  const head = git("rev-parse", "HEAD");
+  const line = readFileSync(0, "utf8")
     .split("\n")
-    .map((line) => line.trim().split(/\s+/))
-    .some(([ref, sha]) => ref === `refs/heads/${main}` && sha && !/^0+$/.test(sha));
-  if (branch !== main || !pushed) process.exit(0);
+    .map((l) => l.trim().split(/\s+/))
+    .find(([, sha, remoteRef]) => remoteRef === `refs/heads/${main}` && sha === head);
+  if (!line) process.exit(0);
+  // A remote branch with commits this one lacks rejects the push; releasing first would leave the tag off the branch.
+  const remoteSha = line[3];
+  if (remoteSha && !/^0+$/.test(remoteSha)) {
+    try {
+      execFileSync("git", ["merge-base", "--is-ancestor", remoteSha, "HEAD"], { stdio: "ignore" });
+    } catch {
+      console.error(`release: origin/${main} has commits you do not have; pull first`);
+      process.exit(0);
+    }
+  }
 }
 
 // The current version of each stack. A package.json without a version is skipped when there is a pyproject.toml.
@@ -130,8 +143,10 @@ try {
 } catch {
   stop(`${step} failed; the version files are changed but not committed`);
 }
+// So a plain `git push` sends the tag along with the release commit.
+git("config", "--local", "push.followTags", "true");
 if (hook) {
   console.error(`released v${next}; push again to send it`);
   process.exit(1);
 }
-console.log(`released v${next}`);
+console.log(`released v${next}; push.followTags is on, so git push sends the tag`);
