@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <style>
+    text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .cursor { animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0 } }
+    .out { opacity: 0; animation: out 8s infinite both; }
+    .o2 { animation-delay: .4s; } .o3 { animation-delay: .8s; }
+    @keyframes out { 0%, 38% { opacity: 0 } 42%, 95% { opacity: 1 } 100% { opacity: 0 } }
+  </style>
+  <defs>
+    <clipPath id="type"><rect x="700" y="120" height="40" width="0">
+      <animate attributeName="width" dur="8s" repeatCount="indefinite" values="0;0;400;400;0" keyTimes="0;.05;.35;.95;1"/>
+    </rect></clipPath>
+  </defs>
+
+  <rect width="1200" height="400" fill="#D97757"/>
+
+  <!-- name and what it is -->
+  <path d="M585 84 l8 19 19 8 -19 8 -8 19 -8 -19 -19 -8 19 -8 z" fill="#fff"/>
+  <text x="70" y="190" font-size="76" font-weight="800" fill="#fff">claude-plugins</text>
+  <text x="72" y="248" font-size="28" fill="#fff" fill-opacity=".85">Claude Code plugins in one</text>
+  <text x="72" y="288" font-size="28" fill="#fff" fill-opacity=".85">marketplace: dvasyliev.</text>
+
+  <!-- terminal -->
+  <rect x="640" y="60" width="500" height="280" rx="28" fill="#1F1E1D"/>
+  <circle cx="680" cy="95" r="8" fill="#FF5F57"/>
+  <circle cx="706" cy="95" r="8" fill="#FEBC2E"/>
+  <circle cx="732" cy="95" r="8" fill="#28C840"/>
+
+  <text class="mono" x="672" y="148" font-size="22" fill="#D97757">$</text>
+  <text class="mono" x="700" y="148" font-size="20" fill="#fff" clip-path="url(#type)">claude plugin marketplace add</text>
+  <text class="mono" x="700" y="178" font-size="20" fill="#fff" clip-path="url(#type2)">dvasyliev/claude-plugins</text>
+  <clipPath id="type2"><rect x="700" y="155" height="40" width="0">
+    <animate attributeName="width" dur="8s" repeatCount="indefinite" values="0;0;300;300;0" keyTimes="0;.2;.35;.95;1"/>
+  </rect></clipPath>
+
+  <text class="mono out" x="672" y="232" font-size="20" fill="#28C840">✔ Added marketplace dvasyliev</text>
+  <text class="mono out o2" x="672" y="266" font-size="20" fill="#fff" fill-opacity=".7">  codebase-harness</text>
+  <text class="mono out o3" x="672" y="300" font-size="22" fill="#D97757">$ <tspan class="cursor" fill="#fff">▌</tspan></text>
+</svg>
