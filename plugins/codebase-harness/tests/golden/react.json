@@ -19,7 +19,7 @@
   ".claude/settings.json": "39b3ba8904eefbfb5bb306cf1380b2573cd20ce4e55fbb4a812b1073070d189a",
   ".claude/skills/feature-workflow/SKILL.md": "74f62fd820382173717a97fdf13a6f3e52bfca6b7708dacfb29fdab08e9104e6",
   ".claude/skills/improve-harness/SKILL.md": "ed9ba63b5caeeb5f67f9ff60ca12908b7903df4bdc1d9e8e2be6ffc10f2a2c2c",
-  ".claude/skills/improve-harness/references/symptoms.md": "c8ed9c19aeb9cabbd8d365d8f8e945c97f45295f34d90e6bbd172769207117b4",
+  ".claude/skills/improve-harness/references/symptoms.md": "3b94683d9368c6e90fb0eb961a4b85c0b7efa87d3d983998ab8e552b216ed58a",
   ".githooks/commit-msg": "27d8d387296754108346288ccf029c6eb96096153b45dc09e0d135b0b4cfcb12",
   ".githooks/post-checkout": "09378704f0f0dc9b6f4d39b124ea886aebec604ccfd0f6e52ae253b6f15f94c0",
   ".githooks/post-merge": "89f116ed006bb133555af93523d9b5ec73c1f3905e92824492ed10b2097d116c",

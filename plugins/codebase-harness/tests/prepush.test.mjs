@@ -91,7 +91,7 @@ test('SKIP_VERIFY=1 skips the tests but not the other steps', () => {
   addStep(dir, '.githooks/pre-push.local');
   const r = push(dir, { SKIP_VERIFY: '1' });
   assert.equal(r.status, 0, r.stderr);
-  assert.equal(r.log.length, 2);
+  assert.deepEqual(r.log, [`.githooks/pre-push.d/a ${REFS}`, `.githooks/pre-push.local ${REFS}`]);
   assert.equal(r.verify, '');
 });
 
@@ -108,4 +108,18 @@ test('an edited old pre-push conflicts instead of being overwritten', () => {
   const r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'playwright'] });
   assert.equal(r.status, 0, r.stderr);
   assert.match(readFileSync(hook, 'utf8'), /<<<<<<< project/);
+});
+
+test('an unedited old pre-push is replaced by the dispatcher', () => {
+  const dir = setup();
+  const hook = join(dir, '.githooks', 'pre-push');
+  const harness = join(dir, '.claude', 'harness.json');
+  const json = JSON.parse(readFileSync(harness, 'utf8'));
+  json.base['.githooks/pre-push'] = OLD_HOOK;
+  writeFileSync(harness, JSON.stringify(json, null, 2) + '\n');
+  writeFileSync(hook, OLD_HOOK);
+  const r = apply(dir, { stacks: ['react'], modules: ['core', 'oxlint', 'playwright'] });
+  assert.equal(r.status, 0, r.stderr);
+  const dispatcher = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'modules', 'web', 'playwright', 'all', '.githooks', 'pre-push'), 'utf8');
+  assert.equal(readFileSync(hook, 'utf8'), dispatcher);
 });
