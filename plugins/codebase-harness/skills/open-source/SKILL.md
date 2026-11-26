@@ -22,7 +22,7 @@ Going public happens once, and what is in the git history goes public with it. T
 ## 1. Look at the project
 
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: the skill commits its changes, and the changes may be another agent's.
-2. Visibility: `gh repo view --json visibility,owner,name`. Without `gh` or an `origin` remote, ask whether the repository is public, private, or not on GitHub yet.
+2. Visibility: `gh repo view --json visibility,owner,name`. Without `gh` or an `origin` remote, ask whether the repository is on GitHub. The user runs this skill to make the project public, so a repository that is private now is going public. Ask only when that is unclear (the user said it stays private for now): a project that stays private gets no `LICENSE` and no license question.
 3. Which of these exist: `LICENSE` (or `LICENSE.md`, `LICENSE.txt`), `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md` (also at the root or in `docs/`, where GitHub reads them too).
 4. Whether `.claude/harness.json` exists, and its `modules`. Without it the skill still works; it only skips step 5.
 
@@ -38,7 +38,12 @@ Then ask how to fix the history, one question, only when there are findings the 
 - **Start over:** one commit with the current tree, in a fresh history. Loses every commit and tag; the skill tags the version from `package.json` or `pyproject.toml` on the new commit.
 - **Rewrite:** `git filter-repo` removes the paths, replaces the strings and maps the emails. Keeps the history; every clone and fork breaks, open pull requests go stale.
 
-Each choice that changes the history then needs its own yes for the backup-and-rewrite and, when the repository is on GitHub, another for the force push. Carry it out as `references/history-scan.md` says. A personal email the user keeps in new commits: show how to set the GitHub noreply address (`git config user.email <id>+<login>@users.noreply.github.com`).
+Each choice that changes the history then needs its own yes for the backup-and-rewrite and, when the repository is on GitHub, another for the force push. Carry it out as `references/history-scan.md` says:
+
+- **Rewrite** runs now, in a fresh clone. From then on, steps 3 to 7 run in that clone, never in the project folder, which keeps the old history: a commit there would sit on it. Tell the user to work from the clone from now on.
+- **Start over** runs in step 6, in place of its commit, so the one new commit holds step 3's cleaned files and step 4's new ones, and none of the secrets.
+
+ A personal email the user keeps in new commits: show how to set the GitHub noreply address (`git config user.email <id>+<login>@users.noreply.github.com`).
 
 ## 3. Current files
 
@@ -51,21 +56,27 @@ Each choice that changes the history then needs its own yes for the backup-and-r
 
 List the missing ones and ask which to add (`multiSelect: true`, one option per file). For a file that exists, offer to add only what it misses.
 
-- **`LICENSE`** (only when the project is going public; a project that stays private gets no license and no license question): ask which license: MIT (recommended), Apache-2.0; "Other" takes any SPDX id GitHub knows (`gh api /licenses --jq '.[].spdx_id'`). Get the official text with `gh api /licenses/<spdx id, lowercase> --jq .body` (without `gh`: `https://api.github.com/licenses/<id>`, field `body`). The owner defaults to the `origin` owner's name (`gh api /users/<owner> --jq '.name // .login'`); ask to confirm it. Fill in the placeholders: for MIT `[year]` (this year) and `[fullname]`; for Apache-2.0 `[yyyy]` and `[name of copyright owner]` in its appendix, the rest unchanged; for another license, the placeholders it has. Also set `license` to the SPDX id in `package.json` (`"license": "MIT"`) and in `pyproject.toml` (`license = "MIT"` under `[project]`), where the file exists.
+- **`LICENSE`** (not for a project that stays private, as step 1 says): ask which license: MIT (recommended), Apache-2.0; "Other" takes any SPDX id GitHub knows (`gh api /licenses --jq '.[].spdx_id'`). Get the official text with `gh api /licenses/<spdx id, lowercase> --jq .body` (without `gh`: `https://api.github.com/licenses/<id>`, field `body`). The owner defaults to the `origin` owner's name (`gh api /users/<owner> --jq '.name // .login'`); ask to confirm it. Fill in the placeholders: for MIT `[year]` (this year) and `[fullname]`; for Apache-2.0 `[yyyy]` and `[name of copyright owner]` in its appendix, the rest unchanged; for another license, the placeholders it has. Also set `license` to the SPDX id in `package.json` (`"license": "MIT"`) and in `pyproject.toml` (`license = "MIT"` under `[project]`), where the file exists.
 - **`CODE_OF_CONDUCT.md`:** Contributor Covenant 2.1, offered only when the user gives a contact for reports (an email or a link). Fetch `https://raw.githubusercontent.com/EthicalSource/contributor_covenant/2.1/content/version/2/1/code_of_conduct.md`, drop the `+++` front matter at its top, and put the contact in place of `[INSERT CONTACT METHOD]`.
 - **`CONTRIBUTING.md`** and **`SECURITY.md`:** written for this project, as `references/docs.md` says.
-- **Issue and PR templates:** copy `.github/ISSUE_TEMPLATE/bug.yml`, `feature.yml`, `config.yml` and `.github/pull_request_template.md` from `<template>/skills/open-source/files/`. In `config.yml`, write the security link as the full URL of this repository (`https://github.com/<owner>/<repo>/security/advisories/new`). It works once private vulnerability reporting is on (step 6); if the user declines that, take the link out.
+- **Issue and PR templates:** copy `.github/ISSUE_TEMPLATE/bug.yml`, `feature.yml`, `config.yml` and `.github/pull_request_template.md` from `<template>/skills/open-source/files/`. In `config.yml`, write the security link as the full URL of this repository (`https://github.com/<owner>/<repo>/security/advisories/new`). It works once private vulnerability reporting is on (step 7); if the user declines that, take the link out.
 
 ## 5. Modules
 
-Only with `.claude/harness.json`. Without `ci` (checks on every pull request) or `releases` (a version, CHANGELOG and tag from the commits), offer to run `/codebase-harness:setup` with a request to add the missing ones, such as "add ci and releases". Run it after step 7's commit, since setup stops on uncommitted changes.
+Only with `.claude/harness.json`. Without `ci` (checks on every pull request) or `releases` (a version, CHANGELOG and tag from the commits), offer to run `/codebase-harness:setup` with a request to add the missing ones, such as "add ci and releases". Run it after step 6's commit, since setup stops on uncommitted changes.
 
-## 6. GitHub
+## 6. Commit
 
-Only for a repository on GitHub. Each setting is its own question; run its `gh` command only after a yes to it. Without `gh`, give the user the steps in the GitHub settings instead.
+Commit the added and changed files in one commit, `docs: prepare the project to go public` (`chore:` when no doc was added). With `commitlint`, the message must pass it. With **start over** chosen in step 2, this commit is the new history's first commit instead (`references/history-scan.md`, "Start over"), after its yes.
 
-1. **Private vulnerability reporting** (security reports reach the maintainers, not a public issue): `gh api -X PUT repos/<owner>/<repo>/private-vulnerability-reporting`.
-2. **Protect `main`** (no force push, no deletion): `gh api -X POST repos/<owner>/<repo>/rulesets --input -` with:
+## 7. GitHub
+
+Only for a repository on GitHub. Each step below is its own question; run its command only after a yes to it. Without `gh`, give the user the steps in the GitHub settings instead. In this order:
+
+1. **Push.** A changed history first, with its force push (`references/history-scan.md`, "Push"); otherwise `git push` the step 6 commit. With `releases` and `releaseOn: "push"`, a push to the default branch also releases; say so.
+2. **Make it public:** `gh repo edit --visibility public --accept-visibility-change-consequences` (or Settings, General, Danger Zone). Only after the history is fixed and pushed and every leaked key is revoked: once public, anyone can clone it.
+3. **Private vulnerability reporting** (security reports reach the maintainers, not a public issue): `gh api -X PUT repos/<owner>/<repo>/private-vulnerability-reporting`.
+4. **Protect the default branch** (no force push, no deletion): `gh api -X POST repos/<owner>/<repo>/rulesets --input -` with:
 
    ```json
    {
@@ -77,12 +88,8 @@ Only for a repository on GitHub. Each setting is its own question; run its `gh` 
    }
    ```
 
-   Pull requests and passing checks before a merge are a further choice: ask whether to add `{ "type": "pull_request", "parameters": { "required_approving_review_count": 0, "dismiss_stale_reviews_on_push": false, "require_code_owner_review": false, "require_last_push_approval": false, "required_review_thread_resolution": false } }` and, with `ci`, `{ "type": "required_status_checks", "parameters": { "strict_required_status_checks_policy": false, "required_status_checks": [{ "context": "check" }] } }` (`check` is the `ci` workflow's job). They block pushes straight to `main`, which a user without pull requests makes, and `releases` with `releaseOn: "push"` too; say so.
+   Pull requests and passing checks before a merge are a further choice: ask whether to add `{ "type": "pull_request", "parameters": { "required_approving_review_count": 0, "dismiss_stale_reviews_on_push": false, "require_code_owner_review": false, "require_last_push_approval": false, "required_review_thread_resolution": false } }` and, with `ci`, `{ "type": "required_status_checks", "parameters": { "strict_required_status_checks_policy": false, "required_status_checks": [{ "context": "check" }] } }` (`check` is the `ci` workflow's job). They block pushes straight to the default branch, which a user without pull requests makes, and `releases` with `releaseOn: "push"` too; say so.
 
-A history rewrite must be pushed before this ruleset, since it blocks force pushes.
+On GitHub Free, 3 and 4 need a public repository (a private one needs a paid plan). If the user does not make it public now, do not run them: list them as steps for after the switch.
 
-Then list what is left to do by hand: the visibility switch itself (Settings, General, Danger Zone; or `gh repo edit --visibility public --accept-visibility-change-consequences`, only after a yes), the description and topics.
-
-## 7. Commit
-
-Commit the added and changed files in one commit, `docs: prepare the project to go public` (`chore:` when no doc was added). With `commitlint`, the message must pass it. Do not push; tell the user what is left: the steps above they skipped, revoking any leaked key, the force push if the history changed, and the visibility switch.
+At the end, tell the user what is left: the steps they skipped, revoking any leaked key, the description and topics on GitHub, and, after a rewrite, working from the rewritten clone.

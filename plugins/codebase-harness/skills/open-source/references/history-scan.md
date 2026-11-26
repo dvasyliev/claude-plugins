@@ -4,10 +4,15 @@ Four checks over every commit on every branch, a report, and the fixes. Run the 
 
 ## 1. Keys and tokens
 
-`gitleaks` scans every commit (`git log -p --all`) with its own rules. With `gitleaks` installed (`brew install gitleaks`):
+`gitleaks` scans every commit (`git log -p --all`) with its own rules. First a file for the report:
 
 ```bash
 report="$(mktemp)"
+```
+
+With `gitleaks` installed (`brew install gitleaks`):
+
+```bash
 gitleaks git --redact --no-banner --report-format json --report-path "$report"
 ```
 
@@ -83,26 +88,37 @@ Each fix only after the user's explicit yes to it. First, every time:
 
 ### Start over
 
-One commit with the current tree, in a fresh history. Every commit, branch and tag goes. Right for a small project whose history matters little.
+One commit with the current tree, in a fresh history. Every commit, branch and tag goes. Right for a small project whose history matters little. Run it in the project folder, in the skill's step 6 in place of its commit: by then step 3 has cleaned the files (secrets taken out, flagged files untracked with `git rm --cached`) and step 4 has added the new ones, so the new commit holds all of that and none of the secrets.
 
 ```bash
+branch="$(git branch --show-current)"
 git checkout --orphan fresh   # keeps the files and the index
+git add -A                    # step 3 and 4 changes; the folder was clean before them
 git commit -m "chore: first public version"
-git branch -D main && git branch -m main
+git branch -D "$branch" && git branch -m "$branch"
 ```
 
-Then, each after a yes: delete the other local branches (`git branch -D <branch>`) and the tags (`git tag -d $(git tag -l)`), since they hold the old history. Tag the version from `package.json` (`version`) or `pyproject.toml` (`[project] version`) on the new commit: `git tag -a v<version> -m "v<version>"`; with no version, no tag. With `releases`, that tag is where the next release counts from. Clean up locally with `git reflog expire --expire=now --all && git gc --prune=now`.
+Then, each after a yes: delete the other local branches (`git branch -D <branch>`) and the tags (`git tag -d $(git tag -l)`), since they hold the old history. Tag the version from `package.json` (`version`) or `pyproject.toml` (`[project] version`) on the new commit: `git tag -a v<version> -m "v<version>"`; with no version, no tag. With `releases`, that tag is where the next release counts from.
+
+The old commits stay in this folder until git drops them. Drop them only after the new history is pushed and checked, and only after a yes to this step, since it cannot be undone here (the backup still has them): `git reflog expire --expire=now --all && git gc --prune=now`.
 
 ### Rewrite
 
-`git filter-repo` rewrites every commit and keeps the history. Install it with `brew install git-filter-repo` or run it as `uvx git-filter-repo@2.47.0`. It refuses to run outside a fresh clone; run it in a fresh clone of the project (`git clone --no-local . ../<name>-rewrite`), check the result there, then push from that clone. Combine what the user chose in one run:
+`git filter-repo` rewrites every commit and keeps the history. Install it with `brew install git-filter-repo`; without it, write `uvx git-filter-repo@2.47.0` wherever the commands below say `git filter-repo`. It refuses to run outside a fresh clone; run it in a fresh clone of the project (`git clone --no-local . ../<name>-rewrite`), check the result there, then push from that clone. In a fresh clone it turns the remote branches into local ones, so it rewrites every branch. Combine what the user chose in one run:
 
 - Remove files from every commit: `git filter-repo --path <path> --path-glob '*.sql' --invert-paths`.
 - Replace strings: a file with one rule per line (`<secret>==>REMOVED`, `regex:[a-z]+@corp[.]example==>user@example.com`), then `git filter-repo --replace-text <file>`. Keep the file outside the project and delete it after: it holds the secrets.
 - Map emails: a mailmap file (`Jane Doe <123+jane@users.noreply.github.com> <jane@personal.example>`), then `git filter-repo --mailmap <file>`.
 
-Check with the scans above that the findings are gone, and that the newest commit has the same files as before apart from the ones the rewrite changed: compare `git ls-tree -r main` in the project and in the rewritten clone, and run the `check` script there. `git filter-repo` removes the `origin` remote: add the GitHub one back in the clone (`git remote add origin <url>`) before the push. The project folder keeps the old history; once the push is done, the user works from a fresh clone of the new one.
+Check with the scans above that the findings are gone, and that the newest commit has the same files as before apart from the ones the rewrite changed: compare `git ls-tree -r <branch>` in the project and in the rewritten clone, and run the `check` script there (install the dependencies first). `git filter-repo` removes the `origin` remote: add the GitHub one back in the clone (`git remote add origin <url>`) before the push.
+
+The project folder keeps the old history. From here on, the skill's steps 3 to 7 run in the rewritten clone, never in the project folder: a commit there would sit on the old history. Tell the user to work from the rewritten clone (or a fresh clone of the new history once it is pushed), copy over the ignored files they need (such as `.env`), and delete the old folder when done.
 
 ### Push
 
-Only after a yes to the force push itself, and before step 6 protects `main` (the ruleset blocks force pushes): `git push --force origin main`, then `git push --force --tags origin`, and delete the remote branches and tags the new history no longer has (`git push origin --delete <name>`). Say what breaks: every clone and fork must clone again; open pull requests go stale. GitHub keeps old commits reachable by their hash and in pull request refs for a while; for a leaked key that is one more reason to revoke it, and for personal data the user can push to a new repository instead or ask GitHub Support to purge the cached views.
+Only after a yes to the force push itself, and before step 7 protects the default branch (the ruleset blocks force pushes). List the remote branches and tags first (`git ls-remote --heads --tags origin`): every one that holds the old history must be replaced or deleted, or the leaked data stays on GitHub.
+
+- After a rewrite (from the rewritten clone): `git push --force --all origin`, then `git push --force --tags origin`. Then delete the remote branches and tags the rewrite removed (`git push origin --delete <name>`).
+- After starting over: `git push --force origin <branch>`, then `git push --force --tags origin`. Then delete every other remote branch and every remote tag the new history does not have (`git push origin --delete <name>`), each one named in the yes.
+
+Say what breaks: every clone and fork must clone again; open pull requests go stale. GitHub keeps old commits reachable by their hash and in pull request refs for a while; for a leaked key that is one more reason to revoke it, and for personal data the user can push to a new repository instead or ask GitHub Support to purge the cached views.

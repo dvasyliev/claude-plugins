@@ -14,7 +14,7 @@ Written for this project, in English, from what the project has: read `package.j
 
 ## SECURITY.md
 
-1. **Reporting.** Do not open a public issue. Report through GitHub private vulnerability reporting: the "Report a vulnerability" button on the Security tab (`https://github.com/<owner>/<repo>/security/advisories/new`). Step 6 of the skill turns it on; if the user declines, give a private contact instead (ask for one), never a public one.
+1. **Reporting.** Do not open a public issue. Report through GitHub private vulnerability reporting: the "Report a vulnerability" button on the Security tab (`https://github.com/<owner>/<repo>/security/advisories/new`). Step 7 of the skill turns it on; if the user declines, give a private contact instead (ask for one), never a public one.
 2. **What to include.** The version, how to reproduce, what an attacker can do.
 3. **What happens next.** When the user will answer (ask; "within a week" when they have no answer) and that the fix is released before the report is made public.
 4. **Supported versions.** From the tags (`git tag -l 'v*' --sort=-v:refname`): the newest minor version gets fixes, as a small table (`| Version | Supported |`, `1.4.x` yes, older no). With no tags: "only the latest commit on `main`". Ask the user if they support more.
