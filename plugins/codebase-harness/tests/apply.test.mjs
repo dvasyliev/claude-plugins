@@ -259,6 +259,30 @@ test('every raw.githubusercontent.com download in the catalog names a tag or com
   for (const url of urls) assert.doesNotMatch(url.split('/')[5], /^(master|main|HEAD)$/, url);
 });
 
+test('every raw.githubusercontent.com URL, docker image and npx -y in skills/ names a tag, commit or exact version', () => {
+  const skills = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills');
+  const files = readdirSync(skills, { recursive: true, withFileTypes: true }).filter((d) => d.isFile()).map((d) => join(d.parentPath, d.name));
+  let urls = 0;
+  let images = 0;
+  for (const file of files) {
+    const text = readFileSync(file, 'utf8');
+    for (const [url] of text.matchAll(/https:\/\/raw\.githubusercontent\.com\/[^\s"'`)]+/g)) {
+      urls++;
+      assert.match(url.split('/')[5], /^(v?\d+(\.\d+)*|[0-9a-f]{40})$/, `${file}: ${url}`);
+    }
+    for (const [, flags] of text.matchAll(/npx -y((?: -p \S+)+| [^\s<"]+)/g)) {
+      for (const pkg of flags.trim().split(/\s+/).filter((w) => w !== '-p')) {
+        assert.match(pkg, /^(@[^/\s]+\/)?[^@\s]+@\d+\.\d+\.\d+$/, `${file}: npx -y ${pkg}`);
+      }
+    }
+    for (const [image] of text.matchAll(/docker run [^\n`]*/g)) {
+      images++;
+      assert.match(image, / [\w./-]+:v?\d+\.\d+\.\d+ /, `${file}: ${image}`);
+    }
+  }
+  assert.ok(urls > 0 && images > 0, `found ${urls} raw URLs and ${images} docker images in skills/`);
+});
+
 test('ci writes the workflow; dependency-updates lists only the package managers of the chosen stacks', () => {
   const ecosystems = (dir) => [...readFileSync(join(dir, '.github/dependabot.yml'), 'utf8').matchAll(/package-ecosystem: (\S+)/g)].map((m) => m[1]);
   const pyproject = '[project]\nname = "app"\n';
