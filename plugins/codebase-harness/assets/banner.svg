@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <style>
+    text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .scene { opacity: 0; animation: show 9s infinite both; }
+    .s2 { animation-delay: 3s; }
+    .s3 { animation-delay: 6s; }
+    @keyframes show { 0% { opacity: 0 } 3% { opacity: 1 } 30% { opacity: 1 } 33.3% { opacity: 0 } 100% { opacity: 0 } }
+    .tick { opacity: 0; animation: tick 9s infinite both; }
+    .t2 { animation-delay: .4s; } .t3 { animation-delay: .8s; } .t4 { animation-delay: 1.2s; }
+    @keyframes tick { 0%, 3% { opacity: 0 } 6%, 30% { opacity: 1 } 33.3%, 100% { opacity: 0 } }
+    .fail { animation: fail 9s infinite both; animation-delay: 3s; }
+    @keyframes fail { 0%, 14% { opacity: 1 } 16%, 100% { opacity: 0 } }
+    .fixed { opacity: 0; animation: fixed 9s infinite both; animation-delay: 3s; }
+    @keyframes fixed { 0%, 14% { opacity: 0 } 16%, 30% { opacity: 1 } 33.3%, 100% { opacity: 0 } }
+  </style>
+
+  <rect width="1200" height="400" fill="#2F6B55"/>
+
+  <!-- name and what it does -->
+  <path d="M560 92 l8 19 19 8 -19 8 -8 19 -8 -19 -19 -8 19 -8 z" fill="#fff"/>
+  <text x="70" y="190" font-size="58" font-weight="800" fill="#fff">codebase-harness</text>
+  <text x="72" y="248" font-size="28" fill="#fff" fill-opacity=".85">Claude checks its own work</text>
+  <text x="72" y="288" font-size="28" fill="#fff" fill-opacity=".85">before it says done.</text>
+
+  <rect x="640" y="60" width="500" height="240" rx="28" fill="#fff"/>
+
+  <!-- 1: every check passes -->
+  <g class="scene s1" font-size="26" font-weight="700">
+    <text x="700" y="122" fill="#1F2A24">format</text>
+    <text x="700" y="166" fill="#1F2A24">lint</text>
+    <text x="700" y="210" fill="#1F2A24">types</text>
+    <text x="700" y="254" fill="#1F2A24">tests</text>
+    <g fill="#2F6B55" font-size="30">
+      <text class="tick" x="1060" y="122">✓</text>
+      <text class="tick t2" x="1060" y="166">✓</text>
+      <text class="tick t3" x="1060" y="210">✓</text>
+      <text class="tick t4" x="1060" y="254">✓</text>
+    </g>
+    <text x="890" y="355" font-size="30" fill="#fff" text-anchor="middle">✅ Checks after every edit</text>
+  </g>
+
+  <!-- 2: a failure gets fixed -->
+  <g class="scene s2">
+    <rect x="690" y="100" width="400" height="56" rx="12" fill="#F3F5F4"/>
+    <text x="712" y="137" font-size="22" font-weight="700" fill="#1F2A24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">user.ts:12</text>
+    <text class="fail" x="1060" y="140" font-size="30" font-weight="800" fill="#D64545">✗</text>
+    <text class="fixed" x="1060" y="140" font-size="30" font-weight="800" fill="#2F6B55">✓</text>
+    <text class="fail" x="712" y="215" font-size="24" fill="#D64545">Type 'string' is not 'number'</text>
+    <text class="fixed" x="712" y="215" font-size="24" fill="#2F6B55">Fixed by Claude</text>
+    <text x="890" y="355" font-size="30" font-weight="700" fill="#fff" text-anchor="middle">🔧 Fixes what breaks</text>
+  </g>
+
+  <!-- 3: stacks -->
+  <g class="scene s3" font-size="26" font-weight="700" text-anchor="middle">
+    <rect x="680" y="100" width="200" height="60" rx="30" fill="#2F6B55"/>
+    <text x="780" y="140" fill="#fff">React</text>
+    <rect x="900" y="100" width="200" height="60" rx="30" fill="#2F6B55"/>
+    <text x="1000" y="140" fill="#fff">Next.js</text>
+    <rect x="680" y="180" width="200" height="60" rx="30" fill="#2F6B55"/>
+    <text x="780" y="220" fill="#fff">Node</text>
+    <rect x="900" y="180" width="200" height="60" rx="30" fill="#2F6B55"/>
+    <text x="1000" y="220" fill="#fff">Python</text>
+    <text x="890" y="355" font-size="30" fill="#fff">🧩 Fits your stack</text>
+  </g>
+</svg>

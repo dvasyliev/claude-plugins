@@ -1,8 +1,30 @@
 # codebase-harness
 
-[![CI](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdvasyliev%2Fclaude-plugins%2Fmain%2Fplugins%2Fcodebase-harness%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version)](CHANGELOG.md)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+<p align="center">
+  <img src="assets/banner.svg" alt="codebase-harness: Claude checks its own work before it says done" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml"><img src="https://github.com/dvasyliev/claude-plugins/actions/workflows/ci.yml/badge.svg" alt="CI" height="20"></a>
+  &nbsp;
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdvasyliev%2Fclaude-plugins%2Fmain%2Fplugins%2Fcodebase-harness%2F.claude-plugin%2Fplugin.json&amp;query=%24.version&amp;label=version&amp;color=2F6B55" alt="Version" height="20"></a>
+  &nbsp;
+  <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Claude_Code-D97757?logo=claude&amp;logoColor=white" alt="Built for Claude Code" height="20"></a>
+  &nbsp;
+  <a href="https://github.com/dvasyliev"><img src="https://img.shields.io/badge/@dvasyliev-181717?logo=github&amp;logoColor=white" alt="Author: @dvasyliev" height="20"></a>
+  &nbsp;
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/MIT-DFB317" alt="MIT license" height="20"></a>
+</p>
+
+<p align="center">
+  <a href="#stacks"><img src="https://img.shields.io/badge/React-61DAFB?logo=react&amp;logoColor=black" alt="React" height="20"></a>
+  &nbsp;
+  <a href="#stacks"><img src="https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&amp;logoColor=white" alt="Next.js" height="20"></a>
+  &nbsp;
+  <a href="#stacks"><img src="https://img.shields.io/badge/Node-5FA04E?logo=nodedotjs&amp;logoColor=white" alt="Node" height="20"></a>
+  &nbsp;
+  <a href="#stacks"><img src="https://img.shields.io/badge/Python-3776AB?logo=python&amp;logoColor=white" alt="Python" height="20"></a>
+</p>
 
 Claude Code plugin that sets up hooks, rules and checks so Claude writes code that fits your project, whatever its stack: React, Next.js, Python or Node
 
