@@ -20,8 +20,6 @@
   <a href="#contributing"><b>Contributing</b></a>
 </p>
 
-My [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugins, in one marketplace, `dvasyliev`.
-
 ## Plugins
 
 | Plugin | What it does |
