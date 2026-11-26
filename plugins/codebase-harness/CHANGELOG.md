@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.3.0 (2026-11-26)
+
+### Features
+
+- open-source skill (6033943)
+- releases module (ad20afa)
+- release script for the releases module (b444c4c)
+- pre-push runs one step per module from .githooks/pre-push.d (d9cf745)
+- modules may share a file with the same text (432113d)
+- ci and dependency-updates modules for GitHub (e86b22c)
+
+### Fixes
+
+- open-source skill hands the force push to the user (412fc0a)
+- open-source skill covers remote-only branches and hooks in the clone (617b30b)
+- playwright pre-push step skips the suite for a release commit on green code (caf6184)
+- release script stops on odd versions and existing tags, reads CRLF pyproject (8529bb4)
+- open-source skill gates every history step and runs in the right order (199c584)
+- implementer subagents run dupes and knip before committing (ccb9ce0)
+- release hook matches HEAD pushes, skips behind remotes, sets push.followTags (19247da)
+- release script stops on dirty files and reports failed steps (a540e46)
+
+### Other
+
+- stacks in the banner in their own colours with logos (31c6355)
+- labelled badges, left-aligned (e38da04)
+- banner and badges in the README (8b9c5c3)
+- setup merges the pre-push dispatcher and checks two versions (08a7a93)
+- open-source skill and releases module (2eed66f)
+- pre-push migration and skip tests (c3e81e4)
+
 ## 1.2.0 (2026-11-25)
 
 ### Features
