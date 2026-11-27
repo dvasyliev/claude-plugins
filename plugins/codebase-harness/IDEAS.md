@@ -23,3 +23,7 @@ Changes worth making later. Not planned yet.
 ## Monorepos
 
 `releases` keeps one version and one tag for the repository. A monorepo needs one tag per package (`<package>-vX.Y.Z`), each counting only the commits that touch its folder, as the repository's own `scripts/release.mjs` does.
+
+## Boundary check on React
+
+Next.js gets folder boundaries from `eslint-plugin-boundaries`, but React (Vite) with `oxlint` has none. Offer `dependency-cruiser` on the pages and units of a React app (pages import units only through their public entry, units never import pages), as it already does on Node.

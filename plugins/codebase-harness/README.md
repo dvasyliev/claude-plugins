@@ -59,7 +59,7 @@ codebase-harness makes Claude check its own work. After every change, it checks 
 | ❌ Claude adds a new library for a job the project already has one for. | ✅ One library for each job, and Claude uses it. |
 | ❌ The code slowly fills up with copied, unused and very long code. | ✅ Tools catch it on every change, and Claude cleans it up. |
 | ❌ A force push, a bad commit message or a leaked password slips through. | ✅ Risky commands are blocked, and every commit is checked. |
-| ❌ Code written before the rules does not follow them. | ✅ An audit shows where, and fixes what you pick. |
+| ❌ Code written before the rules does not follow them. | ✅ An audit shows where, and fixes what you pick. Setup and update offer it. |
 | ❌ Setting all this up by hand takes days. | ✅ One command sets it up, another updates it. |
 
 Everything goes into your project's own files (`.claude/`, `.githooks/`, configs, `package.json` or `pyproject.toml`), so it works without the plugin and for everyone who clones the project.
@@ -164,7 +164,7 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 
 | Module | What it does for you | Status |
 |---|---|---|
-| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Keeps `CLAUDE.md` and the rules under 200 lines. | Required |
+| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Keeps `CLAUDE.md` and the rules under 200 lines. Gives Claude a rule for where code goes (the structure rule, by stack), and on JavaScript a rule for modern, safe code. At session start it names a Node version that does not match `.nvmrc` or `.node-version`. | Required |
 | `feature-workflow` | Claude works in steps: describe the feature, plan it, write tests first, check it in the browser. Offers a separate worktree when another agent or session works in the repo at the same time, or for an experiment. | Recommended |
 | `context-size` | Warns before every message once the chat is over 200K tokens, so you `/compact` it or start over with `/clear`. | Recommended |
 | `dupes` | Finds copied code in JavaScript, TypeScript and Python files (jscpd). | Recommended |
@@ -215,7 +215,7 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 | Module | What it does for you | Status |
 |---|---|---|
 | `basedpyright` | Checks Python types. | Required |
-| `ruff` | Formats and lints Python. | Linter |
+| `ruff` | Formats and lints Python. Also flags swallowed errors (`S110`, `BLE001`), which can turn older code red on update. | Linter |
 | `file-size` | Stops Python files over 500 lines. | Required |
 | `vulture` | Finds Python code nobody uses. | Recommended |
 | `deptry` | Finds Python packages that are unused, missing, or used but not listed. | Recommended |
