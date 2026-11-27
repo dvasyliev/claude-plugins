@@ -12,7 +12,7 @@ When to use what the platform gives and when to reach for a library. The platfor
 Go through these in order and stop at the first that fits.
 
 1. **Logic specific to this project** (its data rules, permissions, domain calculations): write it. No library knows it.
-2. **The platform solves the whole job:** use it. It adds no dependency.
+2. **The platform solves the whole job:** use it. It adds no dependency. The platform is the project's lowest Node version (`engines.node`, else `.nvmrc`): a newer API (such as `RegExp.escape`, Node 24) counts only when that version has it.
 3. **The platform solves only part of it, and the rest needs workaround code:** use a library.
 4. **Generic logic is written, or is about to be written, more than once:** use a library, if the logic is hard to get right (retries, parsing, validation). If the repeat is a few simple lines, a shared helper is enough.
 

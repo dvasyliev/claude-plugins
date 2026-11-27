@@ -16,11 +16,24 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # JavaScript: Node and the project's packages, with pnpm when it has pnpm-lock.yaml.
+      # JavaScript: the Node the project asks for (lts/* when it names none), and its packages,
+      # with pnpm when it has pnpm-lock.yaml.
+      - id: node
+        if: hashFiles('package.json') != ''
+        run: |
+          if [ -f .nvmrc ]; then file=.nvmrc
+          elif [ -f .node-version ]; then file=.node-version
+          elif [ -f .tool-versions ] && grep -Eq '^nodejs[[:space:]]' .tool-versions; then file=.tool-versions
+          elif [ -f mise.toml ] && grep -Eq '^[[:space:]]*node[[:space:]]*=' mise.toml; then file=mise.toml
+          elif jq -e '.engines.node // .volta.node' package.json >/dev/null 2>&1; then file=package.json
+          else file=; fi
+          [ -n "$file" ] && echo "file=$file" >> "$GITHUB_OUTPUT"
+          exit 0
       - if: hashFiles('package.json') != ''
         uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          node-version-file: ${{ steps.node.outputs.file }}
+          node-version: ${{ steps.node.outputs.file == '' && 'lts/*' || '' }}
       - if: hashFiles('pnpm-lock.yaml') != ''
         run: npm install -g "$(jq -r '(.packageManager // "pnpm") | split("+")[0]' package.json)"
       - if: hashFiles('package.json') != ''

@@ -108,6 +108,19 @@ With the `libraries` module, settle which library each job uses. The jobs are th
 
 An answer is the option's `id`, `none` for "No library", or the name the user gave.
 
+### Node version
+
+With a `js` stack, run this after the modules are chosen and before step 3, so a check that cannot run is never installed unnoticed.
+
+1. Read `node --version` and the version the project wants (`.nvmrc`, `.node-version`, `engines.node`).
+2. For each chosen module with npm packages, read each package's `engines.node` (`npm view <package> engines.node`).
+3. When the running Node is outside a range, say which tool and which range, and offer these in this order:
+   - Switch Node: write `.nvmrc`, and with nvm run `nvm install <v>` and `nvm alias default <v>`. nvm does not switch for hooks, and hooks run on the `node` in `PATH`; volta and mise switch through their shims.
+   - Pin the newest major of the tool that supports this Node (found with `npm view <package>@<major> engines.node`), installed as `<package>@<major>` after the run.
+   - Leave the module out.
+   - Keep the module and add its check to `skipChecks` until Node changes.
+4. When `.nvmrc` and the running Node differ, say that hooks and checks run on the one in `PATH`.
+
 ## 3. Run the template
 
 ```bash

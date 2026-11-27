@@ -2,7 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanEnv, makeProject } from './helpers.mjs';
@@ -13,12 +14,12 @@ function project(harness, files = {}) {
   return makeProject({ '.claude/harness.json': JSON.stringify(harness), ...files });
 }
 
-function run(dir, hook, args, input = '') {
+function run(dir, hook, args, input = '', env = {}) {
   const r = spawnSync('bash', [join(hooks, hook), ...args], {
     cwd: dir,
     input,
     encoding: 'utf8',
-    env: cleanEnv({ CLAUDE_PROJECT_DIR: dir }),
+    env: cleanEnv({ CLAUDE_PROJECT_DIR: dir, ...env }),
   });
   return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
@@ -129,6 +130,42 @@ test('session-start.sh asks for uv sync in a Python project without .venv, and n
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /Python dependencies are not installed \(uv sync\)/);
   assert.doesNotMatch(r.stdout, /port/);
+});
+
+// session-start.sh with a fake `node --version` first in PATH.
+function nodeLine(files, nodeVersion) {
+  const dir = project({ checks: [], fileChecks: [] }, files);
+  const bin = mkdtempSync(join(tmpdir(), 'fake-node-'));
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, 'node'), `#!/bin/sh\necho ${nodeVersion}\n`);
+  chmodSync(join(bin, 'node'), 0o755);
+  const r = run(dir, 'session-start.sh', [], '', { PATH: `${bin}:${process.env.PATH}` });
+  assert.equal(r.status, 0, r.stderr);
+  return r.stdout.split('\n').filter((l) => /node/i.test(l));
+}
+
+test('session-start.sh names a Node that differs from .nvmrc', () => {
+  assert.deepEqual(nodeLine({ '.nvmrc': '24\n' }, 'v25.8.2'), [
+    '- WARNING: node on PATH is v25.8.2, the project asks for 24 (.nvmrc). Hooks and checks run on v25.8.2.',
+  ]);
+});
+
+test('session-start.sh is quiet when node matches .nvmrc or .node-version', () => {
+  assert.deepEqual(nodeLine({ '.nvmrc': 'v24.18\n' }, 'v24.18.1'), []);
+  assert.deepEqual(nodeLine({ '.node-version': '24.18.1\n' }, 'v24.18.1'), []);
+  assert.deepEqual(nodeLine({ '.nvmrc': '24\r\n' }, 'v24.1.0'), []);
+});
+
+test('session-start.sh warns from .node-version, and matches whole parts only', () => {
+  assert.match(nodeLine({ '.node-version': '22\n' }, 'v24.1.0')[0], /asks for 22 \(\.node-version\)/);
+  assert.match(nodeLine({ '.nvmrc': '2\n' }, 'v24.1.0')[0], /asks for 2 \(\.nvmrc\)/);
+});
+
+test('session-start.sh says nothing about node without a version file or with an alias or range', () => {
+  assert.deepEqual(nodeLine({}, 'v24.1.0'), []);
+  for (const v of ['lts/*', 'lts/iron', 'node', '22.x', '^22', '>=22']) {
+    assert.deepEqual(nodeLine({ '.nvmrc': `${v}\n` }, 'v24.1.0'), [], v);
+  }
 });
 
 test('guard.sh blocks force push, skipped git hooks and secret env files, and lets the rest through', () => {
