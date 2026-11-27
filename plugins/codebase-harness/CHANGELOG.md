@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.4.0 (2026-11-27)
+
+### Features
+
+- setup and update offer an audit of existing code (0549f3f)
+- rules against swallowed errors and hidden retries, child process limits (cf83cc1)
+- name a Node mismatch at session start and in setup; CI uses its Node (bd7f029)
+- dependency-cruiser module checks unit boundaries on Node (d874da6)
+- python structure rule with src layout and default import contracts (ddf2674)
+- structure rule for node with flat role-named files and a public entry (9970ee5)
+- structure rule from the research, with growth steps and a composition root (3eb5b43)
+- structure rule shared by every stack, with a part per stack (88ec7c6)
+
+### Fixes
+
+- close final review gaps in update, setup, structure rules and pytest (cf34ffc)
+- update finds new audit areas from base, not an old catalog (817a06e)
+- dependency-cruiser setup records the baseline after the constants (abf38f5)
+- import-linter setup says when default contracts apply and the ignore order (ff1d1b3)
+- structure rule places shared code and types by stack (888f493)
+
+### Other
+
+- describe structure rules, Node check and swallowed-error rules (995dce4)
+- keep bare lines where the module does not bring the skill (b4d9edf)
+- rules keep only what the installed skills do not say (c5a6b69)
+
 ## 1.3.0 (2026-11-26)
 
 ### Features
