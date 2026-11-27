@@ -85,7 +85,7 @@ test('node-practices brings the outside-services rule and the wshobson skills; v
   const dir = makeProject({ 'package.json': EXPRESS_PKG });
   const r = apply(dir, { stacks: ['node'], modules: ['core', 'oxlint', 'vitest', 'node-practices'] });
   assert.equal(r.status, 0, r.stderr);
-  assert.match(read(dir, '.claude/rules/external-requests.md'), /^paths:\n {2}- "\*\*\/\*\.\{js,mjs,cjs,ts\}"\n---$/m);
+  assert.match(read(dir, '.claude/rules/external-requests.md'), /^paths:\n {2}- "\*\*\/\*\.\{js,mjs,cjs,ts,mts,cts\}"\n---$/m);
   assert.match(read(dir, '.claude/rules/external-requests.md'), /AbortSignal\.timeout\(/);
   assert.match(read(dir, '.claude/rules/external-requests.md'), /msw/);
   assert.doesNotMatch(read(dir, '.claude/rules/tests-unit.md'), /jsdom|Testing Library|src\/\*\*/);

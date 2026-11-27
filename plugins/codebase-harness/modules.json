@@ -75,6 +75,7 @@
       "required": true,
       "by": {
         "js": {
+          "audit": [".claude/rules/javascript.md"],
           "scripts": {
             "check": {
               "command": ".claude/hooks/check-all.sh --force",

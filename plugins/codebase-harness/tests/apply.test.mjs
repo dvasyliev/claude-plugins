@@ -392,3 +392,26 @@ test("an edited structure.md keeps the project's line after the rewrite", () => 
   assert.ok(text.includes('## Growing'));
   assert.ok(!text.includes('<<<<<<<'));
 });
+
+test('javascript.md is written on react, nextjs and node, and not on python alone', () => {
+  const next = '{"name":"smoke","private":true,"dependencies":{"next":"16.0.0","react":"19.2.0","react-dom":"19.2.0"}}';
+  const cases = [
+    [{ 'package.json': REACT_PKG }, { stacks: ['react'], modules: ['core', 'oxlint'] }, true],
+    [{ 'package.json': next }, { stacks: ['nextjs'], modules: ['core', 'eslint'] }, true],
+    [{ 'package.json': '{}' }, { stacks: ['node'], modules: ['core', 'oxlint'] }, true],
+    [{ 'pyproject.toml': '[project]\nname = "app"\nversion = "0.1.0"\n' }, { stacks: ['python'], modules: ['core', 'ruff'] }, false],
+  ];
+  for (const [files, answers, expected] of cases) {
+    const dir = makeProject(files);
+    const r = apply(dir, answers);
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(existsSync(join(dir, '.claude/rules/javascript.md')), expected, answers.stacks[0]);
+  }
+});
+
+test('ruff.toml selects S110 and BLE001', () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const text = readFileSync(join(here, '..', 'modules', 'python', 'ruff', 'all', 'ruff.toml'), 'utf8');
+  const select = text.match(/^select = \[(.*)\]$/m)[1];
+  for (const code of ['S110', 'BLE001']) assert.ok(select.includes(`"${code}"`), code);
+});

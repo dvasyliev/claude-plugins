@@ -206,7 +206,7 @@
       "title": "Validation",
       "stacks": ["node"],
       "platform": "TypeScript types and JSDoc check nothing at run time; data from outside the code can be anything.",
-      "use": " for data from outside the code: request bodies, query values, files, settings from the environment. Do not check these by hand or cast them.",
+      "use": " for data from outside the code: request bodies, query values, files, settings from the environment, another program's output. Do not check these by hand or cast them.",
       "notes": [
         "Validate where the data comes in (a route, a script's input); code behind it gets typed data and does not check again.",
         "Validate a third-party API's response only where a wrong answer would do real harm."
@@ -286,7 +286,6 @@
       "stacks": ["python"],
       "platform": "one try; a failure goes back to the caller. No hand-written retry loop with `time.sleep`.",
       "use": " for a call that can pass on its own (a timeout, 429, 502, 503, 504), only inside the service's client.",
-      "notes": ["Never wrap a client call in a second retry."],
       "options": [
         {
           "id": "tenacity",
@@ -338,7 +337,7 @@
       "title": "Data validation",
       "stacks": ["python"],
       "platform": "`dataclasses` for data the code builds itself; they check nothing at run time.",
-      "use": " for data from outside the code: request bodies, files, settings from the environment. Do not check these by hand or cast them.",
+      "use": " for data from outside the code: request bodies, files, settings from the environment, another program's output. Do not check these by hand or cast them.",
       "notes": [
         "Validate where the data comes in; code behind it gets typed models and does not check again.",
         "Validate a third-party API's response only where a wrong answer would do real harm."
