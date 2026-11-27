@@ -53,6 +53,8 @@ Skills come with their modules; there is no separate skill question.
 
 **`import-linter`** (Python): offer it only when the package has a units subpackage with two or more units, or the Python folders hold two or more top-level packages. The package must also import: `uv run python -c "import <package>"` succeeds. If it does not, say the project needs a build system first (see `structure-python.md`) and leave the module out.
 
+The default contracts below apply when there is a units subpackage. With several top-level packages and no units subpackage, write `root_packages` (list them) in place of `root_package`, ask "which package must never import which", and write one `forbidden` contract per answer.
+
 Propose these default contracts in `.importlinter` at the root, which the project owns:
 
 - `forbidden`: shared never imports units.
@@ -80,7 +82,7 @@ ancestors =
     <package>.<units>
 ```
 
-Violations that exist at install go into the contract's `ignore_imports`, so only new ones fail. To fill it, run `uv run lint-imports` once and take each `<importer> -> <imported>` line under the BROKEN contracts: the exact pair (`app.shared.s -> app.features.a`), not its parent package. Tell the user how many were added.
+Violations that exist at install go into the contract's `ignore_imports`, so only new ones fail. Do it in this order: write `.importlinter`, run `uv run lint-imports`, add each `<importer> -> <imported>` line under the BROKEN contracts to `ignore_imports` (the exact pair, such as `app.shared.s -> app.features.a`, not its parent package), and run again until every contract is KEPT. For a chain in the BROKEN output (the first line starts in the source package, the next lines are indented), add its first line, the import written in the source package. Tell the user how many were added.
 
 With no contract wanted, leave `import-linter` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `import-linter` without asking, and write no `.importlinter`, which import-linter would read instead.
 
