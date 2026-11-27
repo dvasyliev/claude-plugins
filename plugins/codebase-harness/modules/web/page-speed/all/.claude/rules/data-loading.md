@@ -9,7 +9,7 @@ paths:
 
 Every feature and every change to a page keeps these rules and those in `page-loading.md`. Check them while building, and measure as `page-loading.md` says before calling the work done.
 
-They add to the general React performance practices.
+They add to the general React performance practices (no request waterfalls, parallel fetching, small props, bundle size, re-renders).
 
 ## Load lists in batches
 
@@ -32,3 +32,4 @@ A list here is any repeated set of items: a row, a grid, a feed, a table.
 ## Media
 
 - When the media host already serves the needed sizes, load from it directly, with the size in the URL, not through an optimizing proxy.
+- Only the first screen loads eagerly; the rest stays lazy.

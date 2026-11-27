@@ -11,7 +11,7 @@ The app renders in the browser, so a page is as fast as the JavaScript it loads 
 
 - Each route is its own chunk (`React.lazy` or the router's lazy routes); a page never waits for another page's code.
 - Render the page's frame at once, with a skeleton for each part whose data is still loading; never a blank screen or one spinner for the whole page.
-- Start a page's requests in the route's loader if the router has one, else at the top of the page.
+- Start a page's requests together and early (in the route's loader if the router has one, else at the top of the page), not one component after another as they mount.
 - Prefetch the code and data of a likely next page (on link hover or when the link comes into view), so navigation is instant.
 
 ## Cache

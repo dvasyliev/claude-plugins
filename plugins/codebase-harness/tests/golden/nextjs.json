@@ -5,7 +5,7 @@
   ".claude/hooks/guard.sh": "66ef8afc394336ae8b87b17498ef9fc37424d83cc04b1efc1db08209595ada16",
   ".claude/hooks/session-start.sh": "1a0bb3dee1d62d1d16d48729aa85542f3c78c77e870681b33eff57a13a50c8f0",
   ".claude/rules/commits.md": "583c56f8598612ba4cb34c7fa2b9719c0ea572066a3f6b024dfe83e5a77c856f",
-  ".claude/rules/data-loading.md": "71a1ecec6933d5e2caea680564bcb9f9c618ccf38e0ef974d3d818cd15f37d23",
+  ".claude/rules/data-loading.md": "3265e3ef1c8a328b71b0f47497bef5b0866ecd526d492e16047add0e4fcb3cae",
   ".claude/rules/external-requests.md": "ac5faf0303ccb1a62ffb5ea6c1d2f732a6be5882dda8662247e9c2178062c3fa",
   ".claude/rules/feature-workflow.md": "89085e154b7914b52b74e1067744d6907a65c146174f7654c19ea09b31260f0e",
   ".claude/rules/harness.md": "5a4a69d2c400b4e76e913672cee12a6f7d9b48b00823f44cdfdcca95cda3fc1c",
