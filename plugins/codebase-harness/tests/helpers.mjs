@@ -45,7 +45,12 @@ export function makeProject(files) {
 }
 
 export function apply(dir, answers, env = {}) {
-  const r = spawnSync('node', [APPLY, JSON.stringify(answers)], {
+  return applyFrom(APPLY, dir, answers, env);
+}
+
+// Like apply, but runs the given apply.mjs (for example one in a copy of the plugin).
+export function applyFrom(applyPath, dir, answers, env = {}) {
+  const r = spawnSync('node', [applyPath, JSON.stringify(answers)], {
     cwd: dir,
     encoding: 'utf8',
     env: cleanEnv({ HARNESS_NO_INSTALL: '1', ...env }),

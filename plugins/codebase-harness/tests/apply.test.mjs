@@ -1,12 +1,12 @@
 // apply.mjs answers: stacks in place of one framework, and the checks on them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renameModules } from '../tasks/lib/stacks.mjs';
-import { REACT_PKG, apply, makeProject } from './helpers.mjs';
+import { REACT_PKG, apply, applyFrom, makeProject } from './helpers.mjs';
 
 const harnessJson = (dir) => JSON.parse(readFileSync(join(dir, '.claude/harness.json'), 'utf8'));
 
@@ -372,4 +372,23 @@ test('removing releases keeps the dispatcher while playwright stays, and removes
   r = apply(dir, { modules: ['core', 'oxlint'] });
   assert.equal(r.status, 0, r.stderr);
   assert.ok(!existsSync(join(dir, '.githooks/pre-push')));
+});
+
+test("an edited structure.md keeps the project's line after the rewrite", () => {
+  const copy = mkdtempSync(join(tmpdir(), 'harness-plugin-'));
+  const plugin = join(dirname(fileURLToPath(import.meta.url)), '..');
+  for (const name of ['modules', 'modules.json', 'tasks', '.claude-plugin']) cpSync(join(plugin, name), join(copy, name), { recursive: true });
+  const dir = makeProject({ 'package.json': REACT_PKG });
+  const answers = { stacks: ['react'], modules: ['core', 'oxlint'] };
+  assert.equal(apply(dir, answers).status, 0);
+  const rule = join(dir, '.claude', 'rules', 'structure.md');
+  // Not at the end: two edits at the same spot would conflict.
+  writeFileSync(rule, readFileSync(rule, 'utf8').replace('# Structure\n', '# Structure\n\n- Project line.\n'));
+  appendFileSync(join(copy, 'modules', 'shared', 'core', 'all', '.claude', 'rules', 'structure.md'), '\n## Growing\n');
+  const r = applyFrom(join(copy, 'tasks', 'apply.mjs'), dir, answers);
+  assert.equal(r.status, 0, r.stderr);
+  const text = readFileSync(rule, 'utf8');
+  assert.ok(text.includes('- Project line.'));
+  assert.ok(text.includes('## Growing'));
+  assert.ok(!text.includes('<<<<<<<'));
 });

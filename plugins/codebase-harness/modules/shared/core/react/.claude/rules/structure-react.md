@@ -4,7 +4,7 @@ How `structure.md` applies to a React + Vite project.
 
 ## Units and shared folders
 
-- **Units** are pages: one folder per page, holding its components and its other code.
+- **Units** are pages: one folder per page, holding its components and its other code. Pages never import each other, so shared code moves at its second consumer.
 - **Shared components** go in `src/components/`, in topic subfolders.
 - **The generic topic** is `src/components/ui/`: buttons, dialogs, carousels, skeletons.
 - **Data fetching, external APIs and shared types** go in `src/lib/`, split into topic subfolders once it grows, even when one page uses them.
