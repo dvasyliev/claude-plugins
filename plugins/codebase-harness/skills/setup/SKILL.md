@@ -51,24 +51,38 @@ Exactly one `linter` module is installed per stack: choose the one the project a
 
 Skills come with their modules; there is no separate skill question.
 
-**`import-linter`** (Python): offer it only when the Python folders hold two or more packages (a folder with `__init__.py`, or the packages inside a `src/` folder). List them and ask which must never import which (such as "`tools` never imports `pipelines`"). Write the answers to `.importlinter` at the root, which the project owns:
+**`import-linter`** (Python): offer it only when the package has a units subpackage with two or more units, or the Python folders hold two or more top-level packages. The package must also import: `uv run python -c "import <package>"` succeeds. If it does not, say the project needs a build system first (see `structure-python.md`) and leave the module out.
+
+Propose these default contracts in `.importlinter` at the root, which the project owns:
+
+- `forbidden`: shared never imports units.
+- `acyclic_siblings`: no cycles between units.
+- `independence`: units never import each other. Offer it as an option, since it is stricter than `structure.md`'s default.
+
+The user confirms the units and shared package names. "Which package must never import which" stays for other pairs, one `forbidden` contract per answer.
 
 ```ini
 [importlinter]
-root_packages =
-    <package>
-    <package>
+root_package = <package>
 
-[importlinter:contract:<source>-not-<target>]
-name = <source> never imports <target>
+[importlinter:contract:shared-not-units]
+name = Shared code never imports a unit
 type = forbidden
 source_modules =
-    <source>
+    <package>.<shared>
 forbidden_modules =
-    <target>
+    <package>.<units>
+
+[importlinter:contract:units-acyclic]
+name = No cycles between units
+type = acyclic_siblings
+ancestors =
+    <package>.<units>
 ```
 
-One contract per answer. With no answer, leave `import-linter` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `import-linter` without asking, and write no `.importlinter`, which import-linter would read instead.
+Violations that exist at install go into the contract's `ignore_imports`, so only new ones fail. To fill it, run `uv run lint-imports` once and take each `<importer> -> <imported>` line under the BROKEN contracts: the exact pair (`app.shared.s -> app.features.a`), not its parent package. Tell the user how many were added.
+
+With no contract wanted, leave `import-linter` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `import-linter` without asking, and write no `.importlinter`, which import-linter would read instead.
 
 **`releases`**: offer it only when the project has no release tool of its own (none of `.release-please-manifest.json`, `.releaserc*`, `release.config.*`, `.changeset/`) and every tag matches `v*.*.*` (`git tag --list`); a user who asks for it gets it anyway. When `package.json` and `pyproject.toml` both have a version and the two differ, say so and ask which to keep before installing `releases`, then set the other to it: the release stops on different versions, so every push of the default branch would be blocked. With `releases`, ask `releaseOn` in the user's language: release on a push of the default branch (`push`, the default) or only by hand with the `release` script (`manual`).
 

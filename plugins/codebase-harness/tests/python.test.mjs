@@ -272,3 +272,11 @@ test('a python-only project with a dev script in package.json gets no port', () 
   assert.equal(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).scripts.dev, 'vite');
   assert.equal('port' in harnessJson(dir), false);
 });
+
+test('structure-python.md names the test import mode and the script entry', () => {
+  const dir = makeProject({ 'pyproject.toml': PYPROJECT });
+  assert.equal(apply(dir, PY_ANSWERS).status, 0);
+  const rule = readFileSync(join(dir, '.claude/rules/structure-python.md'), 'utf8');
+  assert.ok(rule.includes('--import-mode=importlib'));
+  assert.ok(rule.includes('[project.scripts]'));
+});

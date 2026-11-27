@@ -218,7 +218,7 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 | `file-size` | Stops Python files over 500 lines. | Required |
 | `vulture` | Finds Python code nobody uses. | Recommended |
 | `deptry` | Finds Python packages that are unused, missing, or used but not listed. | Recommended |
-| `import-linter` | Checks which package must never import which, as written in `.importlinter` or `[tool.importlinter]` in `pyproject.toml`. Offered when the code has two or more packages. | Optional |
+| `import-linter` | Checks the imports: the default contracts from the structure rule (shared never imports a unit, no cycles between units), plus the project's own, as written in `.importlinter` or `[tool.importlinter]` in `pyproject.toml`. Offered when the code has two or more units or packages. | Optional |
 | `pytest` | Runs unit tests (pytest), with coverage and mocked HTTP. | Recommended |
 | `python-practices` | Gives Claude guides for Python: patterns to avoid, code style, errors, project structure, retries and tests. Calls to other services get time limits, and retries only inside a service's client. | Recommended |
 
