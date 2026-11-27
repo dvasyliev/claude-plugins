@@ -151,6 +151,7 @@ Then read the `harness:` lines it printed, `git status` and `git diff`:
 4. **`CLAUDE.md`:** if "What this is" or "Architecture" still hold the `<...>` placeholders, read the project (`package.json`, README, folders, main modules) and write them, then show the user what you wrote.
 5. **Commit** only the files the harness wrote or you merged (including the removal of `.claude/harness-base/` in a project from before 0.28), with the message `chore(harness): install harness <version>` or `chore(harness): update harness to <version>`.
 6. Tell the user, in short: modules installed or removed, version, what still needs them (`/mcp` sign-in, a conflict you could not merge).
+7. **Audit offer (an install into a project that already has code):** when git tracks source files in the chosen stacks' `srcDirs` (`git ls-files -- <srcDirs>` lists any), ask with `AskUserQuestion`, as `../../references/questions.md` says: run `/codebase-harness:audit` now, to check the existing code against the new rules? One question, `multiSelect: false`, header "Audit", options "Audit now" (recommended; runs the audit skill) and "Later" (its description names the command: "run `/codebase-harness:audit` when you want it"). Skip this on an update (the update skill makes its own offer) and in a project with no code yet.
 
 ## Improving the harness itself
 
