@@ -89,6 +89,8 @@ test('node-practices brings the outside-services rule and the wshobson skills; v
   assert.match(read(dir, '.claude/rules/external-requests.md'), /AbortSignal\.timeout\(/);
   assert.match(read(dir, '.claude/rules/external-requests.md'), /msw/);
   assert.doesNotMatch(read(dir, '.claude/rules/tests-unit.md'), /jsdom|Testing Library|src\/\*\*/);
+  assert.match(read(dir, '.claude/rules/structure-node.md'), /index\.ts/);
+  assert.match(read(dir, '.claude/rules/structure-node.md'), /UNITS/);
   const { paths } = JSON.parse(read(dir, '.claude/harness.json'));
   for (const skill of ['nodejs-backend-patterns', 'modern-javascript-patterns', 'javascript-testing-patterns']) assert.ok(paths.includes(`.claude/skills/${skill}`), skill);
   assert.equal(paths.some((p) => p.includes('vercel') || p.includes('python-')), false);
