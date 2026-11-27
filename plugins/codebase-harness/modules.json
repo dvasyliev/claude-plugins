@@ -82,8 +82,18 @@
             }
           }
         },
+        "react": {
+          "audit": [".claude/rules/structure-react.md"]
+        },
+        "nextjs": {
+          "audit": [".claude/rules/structure-nextjs.md"]
+        },
         "node": {
+          "audit": [".claude/rules/structure-node.md"],
           "gitignore": ["node_modules/"]
+        },
+        "python": {
+          "audit": [".claude/rules/structure-python.md"]
         }
       },
       "settings": {
@@ -268,7 +278,7 @@
       }
     },
     "eslint": {
-      "description": "ESLint with type-aware typescript-eslint rules, strict accessibility rules (jsx-a11y), no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
+      "description": "ESLint with type-aware typescript-eslint rules, strict accessibility rules (jsx-a11y), no import cycles, a 400-line file limit and (on Next) the folder rules from structure-nextjs.md. Needs TypeScript below 6.1.",
       "group": "web",
       "category": "linting",
       "detect": {

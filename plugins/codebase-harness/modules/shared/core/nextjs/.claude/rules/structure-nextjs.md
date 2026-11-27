@@ -1,6 +1,6 @@
-# Structure
+# Structure in Next.js
 
-Where a new or moved file goes in a Next.js App Router project. Follow these rules for new and moved files; do not move existing files unless asked.
+How `structure.md` applies to a Next.js App Router project: its units are routes.
 
 ## Next.js docs
 
@@ -17,18 +17,18 @@ Sections of `project-structure`:
 
 ## Where a file goes
 
-Decide by who imports it. A route's subroutes count as that route, except for `/`: its own files go in a `home` topic of `app/components/`.
+A route's subroutes count as that route, except for `/`: its own files go in a `home` topic of `app/components/`.
 
-- **One route uses it:** keep it in that route, next to its `page.tsx`: components in a `_components` folder, other code (helpers, server actions) in a `_lib` folder, even for one file. Besides these two, a route folder holds only special files, subroutes, `@slot` and `(group)` folders, and tests. Do not extract code before a second user appears.
-- **Two or more routes use it:** move it in the same change: components to a topic subfolder of `app/components/`, other code to `lib/`. Generic pieces with no app data (buttons, dialogs, carousels, skeletons) go in the `ui` topic. Test: it would work unchanged in an app about something else.
+- **One route uses it:** keep it in that route, next to its `page.tsx`: components in a `_components` folder, other code (helpers, server actions) in a `_lib` folder, even for one file. Besides these two, a route folder holds only special files, subroutes, `@slot` and `(group)` folders, and tests.
+- **Two or more routes use it:** components go to a topic subfolder of `app/components/`, other code to `lib/`. The generic topic is `app/components/ui/`.
 - **Data fetching, external APIs and shared types** go in the root `lib/`, even for one route, split into topic subfolders once it grows. A hook that calls the app's own API routes from the browser, or such a call inside a component, is component code and goes where those components go; a plain module of such calls is other code.
 
 Before adding a component, search the shared folder for one that already does it.
 
 ## Folders
 
-- **Files that belong together** (one component and its parts, or 3+ files on one topic) go in a subfolder named after them. Apart from a route's `_components` and `_lib` and the topics of `app/components/`, do not create a folder for a single file.
-- At most 3–4 levels of nested folders. Route segments (`app/<route>/[id]`) do not count, since the URL sets them.
+- A route's `_components` and `_lib` and the topics of `app/components/` are folders even for a single file.
+- Route segments (`app/<route>/[id]`) do not count towards the nesting limit, since the URL sets them.
 - Next.js still reads special file names in a folder without the `_` prefix, such as `app/components/`: never name a file there after a convention in "Routing Files" or "Metadata file conventions" (`page.tsx`, `error.tsx`, `icon.tsx`).
 
 ## Tests and imports

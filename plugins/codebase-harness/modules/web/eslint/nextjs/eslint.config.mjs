@@ -43,7 +43,7 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // Shared code is imported through `@/`, never `../` (.claude/rules/structure.md),
+  // Shared code is imported through `@/`, never `../` (.claude/rules/structure-nextjs.md),
   // in the end-to-end tests too.
   {
     files: [
@@ -65,7 +65,7 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // File placement (.claude/rules/structure.md). A route folder is private to
+  // File placement (.claude/rules/structure-nextjs.md). A route folder is private to
   // its route: other routes, shared components and lib/ may not import from it.
   // lib/ imports nothing from app/.
   {

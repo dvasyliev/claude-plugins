@@ -55,7 +55,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 - `modules.json` lists the modules in the order their checks run, cheap ones first, not by group; the groups' order is that of `groups`.
 - Package manager: npm or pnpm, whichever the project has (`pnpm-lock.yaml` means pnpm). Scripts and hooks check for the lockfile and use `pnpm` / `pnpm exec`, else `npm` / `npx`. Prose may write `npm run <script>` or `npx <tool>`; `apply.mjs` adds a line to `.claude/rules/harness.md` that says what to run instead in a pnpm project. Where a step only needs "the script", say "the `check` script".
 - Everything in the plugin is written in English.
-- Files are written for any project: no file, route, component or service name from the project where a fix was found.
+- Everything added to the plugin (a rule, a skill step, a check, a file or module name) is written for any project, so every project can reuse it: no name of the project, feature, file, route, component or service where the need was found. Name things by their kind (a unit, a service client, a route) and give examples that would fit an app about something else.
 
 ## Changing the harness
 
