@@ -286,7 +286,6 @@
       "stacks": ["python"],
       "platform": "one try; a failure goes back to the caller. No hand-written retry loop with `time.sleep`.",
       "use": " for a call that can pass on its own (a timeout, 429, 502, 503, 504), only inside the service's client.",
-      "notes": ["Never wrap a client call in a second retry: the tries multiply."],
       "options": [
         {
           "id": "tenacity",

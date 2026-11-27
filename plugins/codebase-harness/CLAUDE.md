@@ -56,6 +56,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 - Package manager: npm or pnpm, whichever the project has (`pnpm-lock.yaml` means pnpm). Scripts and hooks check for the lockfile and use `pnpm` / `pnpm exec`, else `npm` / `npx`. Prose may write `npm run <script>` or `npx <tool>`; `apply.mjs` adds a line to `.claude/rules/harness.md` that says what to run instead in a pnpm project. Where a step only needs "the script", say "the `check` script".
 - Everything in the plugin is written in English.
 - Everything added to the plugin (a rule, a skill step, a check, a file or module name) is written for any project, so every project can reuse it: no name of the project, feature, file, route, component or service where the need was found. Name things by their kind (a unit, a service client, a route) and give examples that would fit an app about something else.
+- A rule never repeats what an external skill (one a module installs from another repo) says. It holds only a choice among the skill's options, a one-line override where the skill shows what the rule forbids (naming the skill), what no skill covers, and what a check enforces. A rule in a module that does not bring the skill keeps a choice as one bare line. Rules describe best practice, not a project's current layout; the audit brings existing code in line.
 
 ## Changing the harness
 
