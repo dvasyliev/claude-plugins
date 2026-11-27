@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 (2026-11-27)
+
+### Other
+
+- plain technology badges with icons, drop the creator badge (4c072f4)
+
 ## 1.4.0 (2026-11-27)
 
 ### Features
