@@ -2,6 +2,7 @@ const fs = require("node:fs");
 
 // Setup writes this: the folders whose subfolders are units (features, modules, ...), as a path
 // regex. Change it when the project's units live in other folders; a "src/" prefix is optional.
+// Use only non-capturing groups (?:...): a (...) group breaks the rules.
 const UNITS = "(?:src/)?(?:features|modules|domains|commands|routes|jobs)/";
 // Setup writes this: the folders of code every unit may use (shared, lib, ...), as a path regex.
 // Change it when the project's shared code lives in other folders.

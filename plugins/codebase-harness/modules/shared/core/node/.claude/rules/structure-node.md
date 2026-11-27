@@ -10,6 +10,7 @@ How `structure.md` applies to a Node.js server, bot or command-line tool. Paths 
 - **Folders:** the project picks one parent folder for its units and one name for shared code, and keeps them: `src/modules/` with `src/shared/`, or `src/features/` with `src/lib/`.
 - **Inside a unit:** files are flat and named `<thing>.<role>.ts` (`order.routes.ts`, `order.service.ts`, `order.schema.ts`). A subfolder appears only by the Folders rule of `structure.md`.
 - **Public entry:** units may import each other, only through `index.ts`. A unit's `index.ts` is its public API: it exports what the composition root mounts and what other units may call. Nothing else is imported from outside the unit.
+- **Generic code:** `shared/<what it does>.ts`, never `utils.ts` (with the project's shared folder name).
 - **Command-line tools:** a command's file mirrors the command path (`commands/db/migrate.ts` for `tool db migrate`).
 - **Imports:** inside a unit, `./`. To shared code, `#` subpath imports (`"imports": { "#shared/*": "./src/shared/*" }` in `package.json`) when the project has them, else relative paths that never enter another unit's inner files.
 - **SDKs and ORMs:** each is imported in one shared module (its client), never in units.

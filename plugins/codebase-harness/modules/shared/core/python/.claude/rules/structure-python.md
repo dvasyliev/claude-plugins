@@ -10,7 +10,7 @@ How `structure.md` applies to a Python project. Paths below start at the package
 ## Layout
 
 - **Package:** a root `pyproject.toml` with a build system and `[project.scripts]`, and the code in `src/<package>/` (what `uv init --package` makes).
-- **Mixed repo:** when the other language also uses `src/`, the package is `src/<package>/` next to that code, and `pyproject.toml` stays at the root (`structure.md`, Mixed languages).
+- **Mixed repo:** when the other language also uses `src/`, the package is `src/<package>/` next to that code, and `pyproject.toml` stays at the root (`structure.md`, "Code in another language that the project runs").
 - **No build system:** a project made with plain `uv init` cannot import its own package from tests or import-linter. Add one (`uv init --package` writes it) when it gets a second module folder.
 
 ## Units and shared code
@@ -25,7 +25,7 @@ How `structure.md` applies to a Python project. Paths below start at the package
 ## Imports and tests
 
 - **Imports:** absolute, as `python-project-structure` says. No `sys.path` changes.
-- **Tests:** the parallel `tests/` folder (`python-project-structure`, Pattern 4, Option B), run with `--import-mode=importlib`.
+- **Tests:** the parallel `tests/` folder (`python-project-structure`, Pattern 4, Option B), run with `--import-mode=importlib`, which the pytest config sets.
 
 ## Enforced
 

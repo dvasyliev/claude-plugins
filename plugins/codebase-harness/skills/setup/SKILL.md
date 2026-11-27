@@ -86,9 +86,9 @@ Violations that exist at install go into the contract's `ignore_imports`, so onl
 
 With no contract wanted, leave `import-linter` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `import-linter` without asking, and write no `.importlinter`, which import-linter would read instead.
 
-**`dependency-cruiser`** (Node): offer it only when the source folders have a units folder: a folder of two or more folders, each holding code. A units folder anywhere counts, not only under `src/` (such as `bot/handlers/`). Show the units and shared folders you found, ask the user to confirm, and write them into the `UNITS` and `SHARED` lines at the top of `.dependency-cruiser.cjs`. With no units folder, leave the module out and say why.
+**`dependency-cruiser`** (Node): offer it only when the source folders have a units folder: a folder of two or more folders, each holding code. A units folder anywhere counts, not only under `src/` (such as `bot/handlers/`). Show the units and shared folders you found, ask the user to confirm, and write them into the `UNITS` and `SHARED` lines at the top of `.dependency-cruiser.cjs`, using only non-capturing groups `(?:...)`: a `(...)` group breaks the rules. With no units folder, leave the module out and say why.
 
-Then check that the constants match files: run `npx depcruise {srcDirs} --config .dependency-cruiser.cjs --output-type json` and count the modules whose `source` matches `UNITS`. With none, the check would pass on everything: fix the constant before going on. The packages need a supported Node, which the "Node version" check covers before this run. The install records the baseline against the default `UNITS` and `SHARED`, so once the constants are written and match, run `npm run deps:baseline` again (it rewrites `.dependency-cruiser-known-violations.json`) and say how many violations it recorded; only new ones fail. On an update, a `.dependency-cruiser.cjs` already there stays as it is.
+After step 3 writes the file (not before: apply would treat a file written earlier as the project's own), and only when the module is newly installed (setup, or an update that adds it), edit the constants, then check that they match files: run `npx depcruise {srcDirs} --config .dependency-cruiser.cjs --output-type json` and count the modules whose `source` matches `UNITS`. With none, the check would pass on everything: fix the constant before going on. The packages need a supported Node, which the "Node version" check covers before step 3. The install records the baseline against the default `UNITS` and `SHARED`, so once the constants match, re-record it with `npm run deps:baseline` (it rewrites `.dependency-cruiser-known-violations.json`) and say how many violations it recorded; only new ones fail. On any other update never re-record the baseline: it would absorb new violations. `apply.mjs` merges the config's template changes; the project's constants stay.
 
 **`releases`**: offer it only when the project has no release tool of its own (none of `.release-please-manifest.json`, `.releaserc*`, `release.config.*`, `.changeset/`) and every tag matches `v*.*.*` (`git tag --list`); a user who asks for it gets it anyway. When `package.json` and `pyproject.toml` both have a version and the two differ, say so and ask which to keep before installing `releases`, then set the other to it: the release stops on different versions, so every push of the default branch would be blocked. With `releases`, ask `releaseOn` in the user's language: release on a push of the default branch (`push`, the default) or only by hand with the `release` script (`manual`).
 
@@ -110,15 +110,15 @@ An answer is the option's `id`, `none` for "No library", or the name the user ga
 
 ### Node version
 
-With a `js` stack, run this after the modules are chosen and before step 3, so a check that cannot run is never installed unnoticed.
+With a `js` stack, run this after the modules are chosen and before step 3 ("Run the template"), so a check that cannot run is never installed unnoticed.
 
 1. Read `node --version` and the version the project wants (`.nvmrc`, `.node-version`, `engines.node`).
-2. For each chosen module with npm packages, read each package's `engines.node` (`npm view <package> engines.node`).
+2. For each chosen module with npm packages, read each package's `engines.node` for the version that is installed (`package.json` or the lockfile) or that npm would install; `npm view <package> engines.node` reads `latest` and can raise a false alarm when npm would pick a fitting version.
 3. When the running Node is outside a range, say which tool and which range, and offer these in this order:
    - Switch Node: write `.nvmrc`, and with nvm run `nvm install <v>` and `nvm alias default <v>`. nvm does not switch for hooks, and hooks run on the `node` in `PATH`; volta and mise switch through their shims.
-   - Pin the newest major of the tool that supports this Node (found with `npm view <package>@<major> engines.node`), installed as `<package>@<major>` after the run.
+   - Pin the newest major of the tool that supports this Node (found with `npm view <package>@<major> engines.node`), installed before step 3 (`npm install -D <package>@<major>`, or the project's package manager).
    - Leave the module out.
-   - Keep the module and add its check to `skipChecks` until Node changes.
+   - Keep the module and add its check to `skipChecks` until Node changes. This does not work for a module whose `install` command runs the tool (`dependency-cruiser`): `apply.mjs` stops at the first failed install command, `skipChecks` does not cover it, and the baseline file is never created. Pin it or leave it out.
 4. When `.nvmrc` and the running Node differ, say that hooks and checks run on the one in `PATH`.
 
 ## 3. Run the template

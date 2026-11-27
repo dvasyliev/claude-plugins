@@ -17,7 +17,7 @@ Sections of `project-structure`:
 
 ## Where a file goes
 
-A route's subroutes count as that route, except for `/`: its own files go in a `home` topic of `app/components/`. Routes never import each other (the eslint boundaries config enforces it), so shared code moves at its second consumer.
+A route's subroutes count as that route, except for `/`: its own files go in a `home` topic of `app/components/`. Routes never import each other (with `eslint`, the boundaries config enforces it), so shared code moves at its second consumer.
 
 - **One route uses it:** keep it in that route, next to its `page.tsx`: components in a `_components` folder, other code (helpers, server actions) in a `_lib` folder, even for one file. Besides these two, a route folder holds only special files, subroutes, `@slot` and `(group)` folders, and tests.
 - **Two or more routes use it:** components go to a topic subfolder of `app/components/`, other code to `lib/`. The generic topic is `app/components/ui/`.
@@ -35,3 +35,7 @@ Before adding a component, search the shared folder for one that already does it
 
 - A test sits next to its file and moves with it.
 - Import shared code through the project's path alias (such as `@/`); use `./` only for the same folder or a folder inside it.
+
+## Entry
+
+The framework is the entry: there is no composition-root file. Each client in `lib/` reads its own settings, server-only, and routes call the clients.

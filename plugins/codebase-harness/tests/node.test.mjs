@@ -141,6 +141,7 @@ test('dependency-cruiser adds the deps check, its scripts and the baseline insta
   assert.equal(scripts['deps:baseline'], 'depcruise-baseline src --config .dependency-cruiser.cjs');
   assert.equal(JSON.parse(read(dir, '.claude/harness.json')).checks.some((c) => c.name === 'deps'), true);
   assert.equal(existsSync(join(dir, '.dependency-cruiser.cjs')), true);
+  assert.ok(JSON.parse(read(dir, '.claude/harness.json')).paths.includes('.dependency-cruiser-known-violations.json'));
 });
 
 test('dependency-cruiser config takes the units folder setup writes', () => {
