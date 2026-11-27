@@ -86,6 +86,10 @@ Violations that exist at install go into the contract's `ignore_imports`, so onl
 
 With no contract wanted, leave `import-linter` out. On an update, a `.importlinter` already there stays as it is. A project whose `pyproject.toml` has `[tool.importlinter]` already has its contracts: install `import-linter` without asking, and write no `.importlinter`, which import-linter would read instead.
 
+**`dependency-cruiser`** (Node): offer it only when the source folders have a units folder: a folder of two or more folders, each holding code. A units folder anywhere counts, not only under `src/` (such as `bot/handlers/`). Show the units and shared folders you found, ask the user to confirm, and write them into the `UNITS` and `SHARED` lines at the top of `.dependency-cruiser.cjs`. With no units folder, leave the module out and say why.
+
+Then check that the constants match files: run `npx depcruise {srcDirs} --config .dependency-cruiser.cjs --output-type json` and count the modules whose `source` matches `UNITS`. With none, the check would pass on everything: fix the constant before going on. The packages need a supported Node, which the "Node version" check covers before this run. After the install, say how many violations the baseline recorded (`.dependency-cruiser-known-violations.json`); only new ones fail. On an update, a `.dependency-cruiser.cjs` already there stays as it is.
+
 **`releases`**: offer it only when the project has no release tool of its own (none of `.release-please-manifest.json`, `.releaserc*`, `release.config.*`, `.changeset/`) and every tag matches `v*.*.*` (`git tag --list`); a user who asks for it gets it anyway. When `package.json` and `pyproject.toml` both have a version and the two differ, say so and ask which to keep before installing `releases`, then set the other to it: the release stops on different versions, so every push of the default branch would be blocked. With `releases`, ask `releaseOn` in the user's language: release on a push of the default branch (`push`, the default) or only by hand with the `release` script (`manual`).
 
 Ask about `skipChecks` only when the user asks to turn a check off, or in step 4.

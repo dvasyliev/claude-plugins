@@ -452,6 +452,36 @@
       ],
       "devDependencies": ["knip"]
     },
+    "dependency-cruiser": {
+      "description": "dependency-cruiser: units import each other only through their public entry, shared code never imports a unit, no cycles; checked at the end of every turn. Old violations are recorded at install and only new ones fail.",
+      "group": "node",
+      "category": "code-health",
+      "recommended": true,
+      "scripts": {
+        "deps": {
+          "command": "depcruise {srcDirs} --config .dependency-cruiser.cjs --ignore-known --output-type err",
+          "description": "import boundaries between units and shared code (dependency-cruiser)"
+        },
+        "deps:baseline": {
+          "command": "depcruise-baseline {srcDirs} --config .dependency-cruiser.cjs",
+          "description": "records today's boundary violations, so only new ones fail"
+        }
+      },
+      "checks": [
+        {
+          "name": "deps",
+          "script": "deps"
+        }
+      ],
+      "devDependencies": ["dependency-cruiser", "@swc/core"],
+      "install": [
+        {
+          "command": "npx depcruise-baseline {srcDirs} --config .dependency-cruiser.cjs",
+          "creates": [".dependency-cruiser-known-violations.json"]
+        }
+      ],
+      "audit": [".claude/rules/structure-node.md"]
+    },
     "vulture": {
       "description": "vulture: unused Python code in the source folders, checked at the end of every turn.",
       "group": "python",

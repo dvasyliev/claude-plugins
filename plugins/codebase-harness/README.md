@@ -207,6 +207,7 @@ Each module is one tool or one set of rules. Modules are grouped by the stacks t
 
 | Module | What it does for you | Status |
 |---|---|---|
+| `dependency-cruiser` | Checks the imports: units import each other only through their public entry, shared code never imports a unit, no cycles. Old violations are recorded when it is installed, so only new ones fail. Offered when the code has a folder of two or more units. | Recommended |
 | `node-practices` | Gives Claude guides for backend code, modern JavaScript and tests. Calls to other services get time limits, and retries only inside a service's client. | Recommended |
 
 ### Python

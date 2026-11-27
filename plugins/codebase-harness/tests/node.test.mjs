@@ -129,3 +129,42 @@ test('node with Python and no pyproject.toml fails before it writes package.json
   assert.match(r.stderr, /pyproject\.toml is missing/);
   assert.equal(existsSync(join(dir, 'package.json')), false);
 });
+
+const DEPS_ANSWERS = { stacks: ['node'], modules: ['core', 'oxlint', 'dependency-cruiser'], srcDirs: { node: ['src'] } };
+
+test('dependency-cruiser adds the deps check, its scripts and the baseline install', () => {
+  const dir = makeProject({ 'package.json': EXPRESS_PKG, 'src/a.mjs': '' });
+  const r = apply(dir, DEPS_ANSWERS);
+  assert.equal(r.status, 0, r.stderr);
+  const scripts = JSON.parse(read(dir, 'package.json')).scripts;
+  assert.equal(scripts.deps, 'depcruise src --config .dependency-cruiser.cjs --ignore-known --output-type err');
+  assert.equal(scripts['deps:baseline'], 'depcruise-baseline src --config .dependency-cruiser.cjs');
+  assert.equal(JSON.parse(read(dir, '.claude/harness.json')).checks.some((c) => c.name === 'deps'), true);
+  assert.equal(existsSync(join(dir, '.dependency-cruiser.cjs')), true);
+});
+
+test('dependency-cruiser config takes the units folder setup writes', () => {
+  const dir = makeProject({ 'package.json': EXPRESS_PKG, 'src/a.mjs': '' });
+  assert.equal(apply(dir, DEPS_ANSWERS).status, 0);
+  const text = read(dir, '.dependency-cruiser.cjs');
+  const exports = text.indexOf('module.exports');
+  assert.ok(text.indexOf('const UNITS =') >= 0 && text.indexOf('const UNITS =') < exports);
+  assert.ok(text.indexOf('const SHARED =') >= 0 && text.indexOf('const SHARED =') < exports);
+});
+
+test('dependency-cruiser stays out of react and python-only projects', () => {
+  const react = makeProject({ 'package.json': '{"name":"x","dependencies":{"react":"19.2.0"}}', 'src/a.ts': '' });
+  assert.equal(apply(react, { stacks: ['react'], modules: ['core', 'oxlint', 'dependency-cruiser'] }).status, 0);
+  assert.equal(existsSync(join(react, '.dependency-cruiser.cjs')), false);
+  const py = makeProject({ 'pyproject.toml': PYPROJECT, 'app/a.py': '' });
+  assert.equal(apply(py, { stacks: ['python'], modules: ['core', 'ruff', 'dependency-cruiser'] }).status, 0);
+  assert.equal(existsSync(join(py, '.dependency-cruiser.cjs')), false);
+});
+
+test('knip.json on node ignores @swc/core and the dependency-cruiser config', () => {
+  const dir = makeProject({ 'package.json': EXPRESS_PKG, 'src/a.mjs': '' });
+  assert.equal(apply(dir, { ...DEPS_ANSWERS, modules: [...DEPS_ANSWERS.modules, 'knip'] }).status, 0);
+  const knip = JSON.parse(read(dir, 'knip.json'));
+  assert.ok(knip.ignoreDependencies.includes('@swc/core'));
+  assert.ok(knip.entry.includes('!.dependency-cruiser.cjs'));
+});
