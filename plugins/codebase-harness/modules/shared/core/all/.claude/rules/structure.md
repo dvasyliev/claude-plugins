@@ -19,7 +19,7 @@ Before adding shared code, search the shared folder for code that already does i
 ## Top level and shared code
 
 - The top level names the product's units, not technical layers: no project-wide `controllers/`, `services/` or `models/`. Layers, if any, sit inside a unit as files named by role.
-- A project has one shared folder, named in the stack's rule, with topic subfolders named by content. A growing catch-all file (`utils.ts`, `helpers.py`) is not allowed.
+- Each kind of shared code has one place, named in the stack's rule, with topic subfolders named by content. A growing catch-all file (`utils.ts`, `helpers.py`) is not allowed.
 
 ## Imports
 
@@ -29,7 +29,7 @@ Before adding shared code, search the shared folder for code that already does i
 - Apart from the public entry, a unit's files are imported only from inside the unit.
 - Shared code never imports a unit. When shared code needs something from every unit (a list, a handler, a registration), the composition root passes it in.
 - No import cycles, between files or between folders.
-- Types go with the unit that owns them, and move to shared like any code.
+- Types go with the unit that owns them, and move to shared like any code, unless the stack's rule puts them elsewhere.
 
 ## Entry and composition root
 
